@@ -16,14 +16,10 @@
 		overflow: hidden;
 	}
 	p {font-family: "another-sans", sans-serif; line-height: 1;}
-	#images {
-		scroll-snap-align: start;
-		padding: 4vw;
+	#images img {
+		display: block;
+		width: 100%;
 	}
-	.row {display: flex; gap: 1vw;}
-	.col-10 {flex: 1;}
-	.col-10 img {width: 100%; display: block;}
-	.section-padtop {padding-top: 4vw;}
 </style>
 </head>
 <body>
@@ -31,20 +27,10 @@
 		<p>Another studio is a design partner to ambitious founders and brands to create identities, narratives, and experiences that shift perceptions and move worlds. See Work -></p>
 	</div>
 	<div id="images">
-		<div class="row">
-			<div class="col-10">
-				<img src="https://jjmoi.com/primemovers/primemovers-32.webp">
-			</div>
-			<div class="col-10">
-				<img src="https://jjmoi.com/primemovers/primemovers-27.webp">
-			</div>
-			<div class="col-10">
-				<img src="https://jjmoi.com/primemovers/primemovers-23.webp">
-			</div>
-			<div class="col-10">
-				<img src="https://jjmoi.com/primemovers/primemovers-36.webp">
-			</div>
-		</div>
+		<img src="https://jjmoi.com/primemovers/primemovers-32.webp">
+		<img src="https://jjmoi.com/primemovers/primemovers-27.webp">
+		<img src="https://jjmoi.com/primemovers/primemovers-23.webp">
+		<img src="https://jjmoi.com/primemovers/primemovers-36.webp">
 	</div>
 </body>
 <script>

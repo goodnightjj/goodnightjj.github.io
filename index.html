@@ -94,7 +94,7 @@
 		const imgs = document.querySelectorAll('img');
 		imgs.forEach(img => {
 			const rect = img.getBoundingClientRect();
-			if (rect.top < 0) {
+			if (rect.top <= 0) {
 				img.style.transform = 'scale(1)';
 				return;
 			}
@@ -102,10 +102,7 @@
 				img.style.transform = 'scale(0.8)';
 				return;
 			}
-			const imgCenter = rect.top + rect.height / 2;
-			const screenCenter = vh / 2;
-			const distFromCenter = Math.abs(imgCenter - screenCenter);
-			const progress = Math.max(0, 1 - distFromCenter / vh);
+			const progress = 1 - (rect.top / vh);
 			const scale = 0.8 + 0.2 * progress;
 			img.style.transform = `scale(${scale})`;
 		});

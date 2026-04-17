@@ -100,13 +100,16 @@
 			imgs.forEach(img => {
 				const rect = img.getBoundingClientRect();
 				if (rect.top < 0) {
+					img.style.transition = 'none';
 					img.style.transform = 'scale(1)';
 					return;
 				}
 				if (rect.top >= vh) {
+					img.style.transition = 'none';
 					img.style.transform = 'scale(0.8)';
 					return;
 				}
+				img.style.transition = '';
 				const imgCenter = rect.top + rect.height / 2;
 				const screenCenter = vh / 2;
 				const distFromCenter = Math.abs(imgCenter - screenCenter);

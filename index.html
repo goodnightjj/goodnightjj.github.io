@@ -69,6 +69,7 @@
 	const footer = document.getElementById('footer');
 	const p = txt.querySelector('p');
 	const fp = footer.querySelector('p');
+	let vh = window.innerHeight;
 
 	function fitText(textEl, containerH) {
 		const W = document.body.clientWidth;
@@ -84,42 +85,36 @@
 	}
 
 	function fit() {
-		const H = window.innerHeight;
-		fitText(p, H);
-		fitText(fp, H);
+		vh = window.innerHeight;
+		fitText(p, vh);
+		fitText(fp, vh);
 	}
 
-	let ticking = false;
 	function scaleImages() {
-		if (ticking) return;
-		ticking = true;
-		requestAnimationFrame(() => {
-			const imgs = document.querySelectorAll('img');
-			const vh = window.innerHeight;
-			imgs.forEach(img => {
-				const rect = img.getBoundingClientRect();
-				if (rect.top < 0) {
-					img.style.transform = 'scale(1)';
-					return;
-				}
-				if (rect.top >= vh) {
-					img.style.transform = 'scale(0.8)';
-					return;
-				}
-				const imgCenter = rect.top + rect.height / 2;
-				const screenCenter = vh / 2;
-				const distFromCenter = Math.abs(imgCenter - screenCenter);
-				const progress = Math.max(0, 1 - distFromCenter / vh);
-				const scale = 0.8 + 0.2 * progress;
-				img.style.transform = `scale(${scale})`;
-			});
-			ticking = false;
+		const imgs = document.querySelectorAll('img');
+		imgs.forEach(img => {
+			const rect = img.getBoundingClientRect();
+			if (rect.top < 0) {
+				img.style.transform = 'scale(1)';
+				return;
+			}
+			if (rect.top >= vh) {
+				img.style.transform = 'scale(0.8)';
+				return;
+			}
+			const imgCenter = rect.top + rect.height / 2;
+			const screenCenter = vh / 2;
+			const distFromCenter = Math.abs(imgCenter - screenCenter);
+			const progress = Math.max(0, 1 - distFromCenter / vh);
+			const scale = 0.8 + 0.2 * progress;
+			img.style.transform = `scale(${scale})`;
 		});
+		requestAnimationFrame(scaleImages);
 	}
 
 	new ResizeObserver(fit).observe(document.body);
+	window.addEventListener('resize', () => vh = window.innerHeight);
 	fit();
-	document.addEventListener('scroll', scaleImages, {passive: true});
-	scaleImages();
+	requestAnimationFrame(scaleImages);
 </script>
 </html>

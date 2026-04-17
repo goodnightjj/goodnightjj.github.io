@@ -12,20 +12,13 @@
 	#txt, #footer {width: 100%; height: 100vh; scroll-snap-align: start; overflow: hidden;}
 	p {font-family: "another-sans", sans-serif; line-height: 1;}
 	#images {margin-top: 50vw;}
-	img {
-		display: block;
-		width: 100%;
-		transform: scale(0.8);
-		transform-origin: top center;
-		transition: transform 0.1s linear;
-		margin: 0 0 -3% 0;
-	}
+	img {display: block; width: 100%; transform: scale(0.8); transform-origin: top center; transition: transform 0.15s linear; margin: 0 0 -3% 0;}
 	#footer {margin-top: 50vw; margin-bottom: 0; padding-bottom: 0;}
 </style>
 </head>
 <body>
 	<div id="txt">
-		<p>Another studio partners with ambitious founders and brands to create visual identities, narratives, and experiences that shift perceptions and move worlds.</p>
+		<p>Another studio partners with ambitious founders and brands to shape visual identities, craft narratives, and create experiences that shift perceptions and move worlds.</p>
 	</div>
 	<div id="images">
 		<img src="https://jjmoi.com/primemovers/primemovers-cover.webp">
@@ -115,32 +108,5 @@
 	fit();
 	document.addEventListener('scroll', scaleImages, {passive: true});
 	scaleImages();
-</script>
-</html>
-
-
-
-		<p></p>
-	</div>
-</body>
-<script>
-	const txt = document.getElementById('txt');
-
-	function fit() {
-		const W = document.body.clientWidth;
-		const H = document.body.clientHeight;
-		txt.style.width = W + 'px';
-		let lo = 1, hi = 300;
-		for (let i = 0; i < 20; i++) {
-			const mid = (lo + hi) / 2;
-			txt.style.fontSize = mid + 'px';
-			if (txt.offsetWidth <= W && txt.offsetHeight <= H) lo = mid;
-			else hi = mid;
-		}
-		txt.style.fontSize = lo + 'px';
-	}
-
-	new ResizeObserver(fit).observe(document.body);
-	fit();
 </script>
 </html>

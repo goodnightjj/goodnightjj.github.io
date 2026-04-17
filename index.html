@@ -1,26 +1,24 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<meta charset="utf-8" />
-	<title>Another studio</title>
-	<link rel="shortcut icon" href="https://anotherstudio.xyz/favicon.ico">
-	<style>
-		@font-face {font-family: "another-sans"; src: url("/fonts/another-sans.woff2") format("woff2"), url("/fonts/another-sans.woff") format("woff"); font-style: normal; font-weight: 500;}
-		* {margin: 0; box-sizing: border-box;}
-		html, body {width: 100%; height: 100%;}
-		body {overflow-y: scroll; scroll-snap-type: y mandatory;}
-		::-moz-selection {background: black; color: #001;}
-		::selection {background: black; color: #001;}
-		#txt, #footer {width: 100%; height: 100vh; scroll-snap-align: start; overflow: hidden;}
-		p {font-family: "another-sans", sans-serif; line-height: 1;}
-		#images {margin-top: 50vw;}
-		img {display: block; width: 100%; transform: scale(1); transform-origin: top center; margin: 0 0 -3% 0;}
-		#footer {margin-top: 50vw; margin-bottom: 0; padding-bottom: 0;}
-		@media (max-width: 768px) {
-			body {scroll-snap-type: none;}
-			#txt, #footer {scroll-snap-align: none;}
-		}
-	</style>
+<title>Another Studio</title>
+<style>
+	@font-face {font-family: "another-sans"; src: url("/fonts/another-sans.woff2") format("woff2"), url("/fonts/another-sans.woff") format("woff"); font-style: normal; font-weight: 500;}
+	* {margin: 0; box-sizing: border-box;}
+	html, body {width: 100%; height: 100%;}
+	body {overflow-y: scroll; scroll-snap-type: y mandatory;}
+	::-moz-selection {background: black; color: #001;}
+	::selection {background: black; color: #001;}
+	#txt, #footer {width: 100%; height: 100vh; scroll-snap-align: start; overflow: hidden;}
+	p {font-family: "another-sans", sans-serif; line-height: 1;}
+	#images {margin-top: 50vw;}
+	img {display: block; width: 100%; transform: scale(1); transform-origin: top center; margin: 0 0 -3% 0;}
+	#footer {margin-top: 50vw; margin-bottom: 0; padding-bottom: 0;}
+	@media (max-width: 768px) {
+		body {scroll-snap-type: none;}
+		#txt, #footer {scroll-snap-align: none;}
+	}
+</style>
 </head>
 <body>
 	<div id="txt">
@@ -73,9 +71,7 @@
 	const fp = footer.querySelector('p');
 	let vh = window.innerHeight;
 
-	function fitText(textEl, containerH) {
-		const W = document.body.clientWidth;
-		textEl.style.width = W + 'px';
+	function search(textEl, W, containerH) {
 		let lo = 1, hi = 300;
 		for (let i = 0; i < 20; i++) {
 			const mid = (lo + hi) / 2;
@@ -83,7 +79,19 @@
 			if (textEl.scrollWidth <= W && textEl.scrollHeight <= containerH) lo = mid;
 			else hi = mid;
 		}
-		textEl.style.fontSize = lo + 'px';
+		return lo;
+	}
+
+	function fitText(textEl, containerH) {
+		const W = document.body.clientWidth;
+		textEl.style.width = W + 'px';
+		textEl.style.lineHeight = '1';
+		let size = search(textEl, W, containerH);
+		if (size > 250) {
+			textEl.style.lineHeight = '0.85';
+			size = search(textEl, W, containerH);
+		}
+		textEl.style.fontSize = size + 'px';
 	}
 
 	function fit() {

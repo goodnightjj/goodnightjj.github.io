@@ -1,0 +1,2761 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Brand Sound — Vibes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,200;9..144,300;9..144,400;9..144,500;9..144,700&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<script>
+  // Suppress Tone.js version banner
+  const _origLog = console.log;
+  console.log = function(...args) {
+    if (typeof args[0] === 'string' && args[0].includes('Tone.js')) return;
+    _origLog.apply(console, args);
+  };
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+<style>
+  :root {
+    --bg: #f4f1ea;
+    --bg-warm: #ede7d8;
+    --ink: #1a1814;
+    --ink-soft: #5a554c;
+    --ink-faint: #b5ad9d;
+    --line: #d8d0bd;
+    --accent: #c0593f;        /* terracotta */
+    --accent-soft: #e8b8a8;
+    --picked: #1a1814;
+    --picked-ink: #f4f1ea;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--bg); color: var(--ink);
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 300;
+    min-height: 100vh; line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    background-image:
+      radial-gradient(ellipse at 15% 0%, rgba(192,89,63,0.06), transparent 55%),
+      radial-gradient(ellipse at 85% 100%, rgba(26,24,20,0.04), transparent 60%);
+    padding: 48px 32px 80px;
+  }
+  .frame { max-width: 1080px; margin: 0 auto; }
+  .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+
+  /* ---------- HEADER ---------- */
+  header { margin-bottom: 56px; }
+  .eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.22em;
+    color: var(--ink-soft); margin-bottom: 16px;
+  }
+  .eyebrow .dot { color: var(--accent); }
+  h1 {
+    font-family: 'Fraunces', serif; font-weight: 300;
+    font-size: clamp(40px, 6vw, 72px);
+    line-height: 1.0; letter-spacing: -0.025em;
+    max-width: 720px;
+  }
+  h1 em { font-style: italic; color: var(--accent); font-weight: 300; }
+  .lede {
+    font-family: 'Fraunces', serif; font-weight: 300; font-style: italic;
+    font-size: 17px; color: var(--ink-soft); margin-top: 20px; max-width: 580px;
+  }
+
+  /* ---------- LAYOUT ---------- */
+  .main {
+    display: grid; grid-template-columns: 1fr 320px; gap: 48px; align-items: start;
+  }
+  @media (max-width: 880px) {
+    .main { grid-template-columns: 1fr; }
+  }
+
+  /* ---------- SECTIONS ---------- */
+  section { margin-bottom: 48px; }
+  .section-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.22em;
+    color: var(--ink-faint); margin-bottom: 18px;
+    display: flex; align-items: baseline; gap: 12px;
+  }
+  .section-label::after {
+    content: ''; flex: 1; height: 1px;
+    background: linear-gradient(to right, var(--line), transparent);
+  }
+  .category-title {
+    font-family: 'Fraunces', serif; font-weight: 400;
+    font-size: 22px; letter-spacing: -0.015em; margin-bottom: 4px;
+  }
+  .category-desc {
+    font-family: 'Fraunces', serif; font-style: italic; font-weight: 300;
+    color: var(--ink-soft); font-size: 14px; margin-bottom: 16px;
+  }
+
+  /* ---------- TAGS ---------- */
+  .category { margin-bottom: 36px; }
+  .tag-group { margin-top: 18px; }
+  .tag-group:first-child { margin-top: 0; }
+  .tag-group-title {
+    font-family: 'Fraunces', serif; font-style: italic; font-weight: 300;
+    font-size: 13px; color: var(--ink-soft);
+    letter-spacing: -0.005em; margin-bottom: 10px;
+    padding-bottom: 6px; border-bottom: 1px dotted var(--line);
+  }
+  .tag-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 10px;
+  }
+  .tag-card {
+    display: flex; flex-direction: column; gap: 6px;
+    padding: 10px 12px 8px;
+    border: 1px solid var(--line); background: transparent;
+    cursor: pointer; transition: all 0.18s ease;
+    font-family: inherit; color: inherit; text-align: left;
+  }
+  .tag-card:hover { border-color: var(--ink-soft); transform: translateY(-1px); }
+  .tag-card.picked {
+    background: var(--picked); color: var(--picked-ink); border-color: var(--picked);
+  }
+  .tag-card.contradicts { opacity: 0.3; cursor: not-allowed; }
+  .tag-card.contradicts:hover { transform: none; border-color: var(--line); }
+  .tag-label {
+    font-family: 'Fraunces', serif; font-weight: 400;
+    font-size: 16px; letter-spacing: -0.005em; line-height: 1.1;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .tag-card.picked .tag-label::before {
+    content: '●'; color: var(--accent-soft); font-size: 9px;
+  }
+  .tag-mapping {
+    display: flex; flex-wrap: wrap; gap: 4px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+    letter-spacing: 0.04em; line-height: 1.6;
+  }
+  .tag-mapping .chip {
+    color: var(--ink-soft); white-space: nowrap;
+  }
+  .tag-mapping .chip.pos { color: var(--ink); }
+  .tag-mapping .chip.neg { color: var(--accent); }
+  .tag-mapping .chip.vote { color: var(--ink-soft); font-style: italic; }
+  .tag-card.picked .tag-mapping .chip { color: rgba(244,241,234,0.5); }
+  .tag-card.picked .tag-mapping .chip.pos { color: rgba(244,241,234,0.85); }
+  .tag-card.picked .tag-mapping .chip.neg { color: var(--accent-soft); }
+  .tag-card.picked .tag-mapping .chip.vote { color: rgba(244,241,234,0.65); font-style: italic; }
+
+  /* ---------- PLAYER ---------- */
+  .player-section { margin-bottom: 40px; }
+  .player {
+    background: var(--bg-warm);
+    padding: 28px; margin-top: 12px;
+    display: flex; gap: 24px; align-items: center;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    position: sticky; top: 0; z-index: 10;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  @media (max-width: 540px) {
+    .player { flex-direction: column; align-items: stretch; }
+  }
+  button.play {
+    background: var(--ink); color: var(--bg);
+    border: none; padding: 22px 40px; cursor: pointer;
+    font-family: 'Fraunces', serif; font-weight: 400; font-size: 17px;
+    letter-spacing: -0.01em; transition: all 0.18s;
+    border-radius: 999px; min-width: 200px;
+  }
+  button.play:hover { background: var(--accent); }
+  button.play:disabled { opacity: 0.5; cursor: not-allowed; }
+  .player-meta {
+    flex: 1; display: flex; flex-direction: column; gap: 4px;
+  }
+  .player-summary {
+    font-family: 'Fraunces', serif; font-style: italic; font-weight: 300;
+    font-size: 19px; color: var(--ink); letter-spacing: -0.01em;
+  }
+  .player-stats {
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+    color: var(--ink-soft); letter-spacing: 0.05em;
+  }
+  .secondary-actions {
+    display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap;
+  }
+  .secondary-actions button {
+    background: transparent; color: var(--ink-soft);
+    border: 1px solid var(--line); padding: 8px 14px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.14em;
+    cursor: pointer; transition: all 0.15s; border-radius: 999px;
+  }
+  .secondary-actions button:hover { color: var(--accent); border-color: var(--accent); }
+
+  /* Brief preset buttons — dedicated row below the secondary actions */
+  .brief-presets {
+    margin-top: 14px; padding-top: 14px;
+    border-top: 1px dashed var(--line);
+  }
+  .brief-presets-label {
+    font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.18em; color: var(--ink-faint);
+    display: block; margin-bottom: 10px;
+  }
+  .brief-presets-row {
+    display: flex; flex-wrap: wrap; gap: 6px;
+  }
+  .brief-preset-btn {
+    background: transparent; border: 1px solid var(--line);
+    padding: 9px 14px 7px; cursor: pointer; transition: all 0.15s;
+    font-family: inherit; color: var(--ink);
+    display: flex; flex-direction: column; gap: 2px; align-items: flex-start;
+    text-align: left;
+  }
+  .brief-preset-btn:hover { border-color: var(--accent); }
+  .brief-preset-btn .bp-label {
+    font-family: 'Fraunces', serif; font-weight: 500; font-size: 13px;
+    letter-spacing: -0.005em; line-height: 1.2;
+  }
+  .brief-preset-btn .bp-sub {
+    font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--ink-soft);
+  }
+  .brief-preset-btn:hover .bp-sub { color: var(--accent); }
+
+  /* Intensity inline slider */
+  .intensity-row {
+    display: flex; align-items: center; gap: 12px; margin: 14px 0 10px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.14em; color: var(--ink-soft);
+  }
+  .intensity-label { min-width: 70px; }
+  .intensity-row input[type="range"] {
+    flex: 1; -webkit-appearance: none; appearance: none;
+    height: 2px; background: var(--line); outline: none; cursor: pointer;
+  }
+  .intensity-row input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 14px; height: 14px; background: var(--accent); border-radius: 50%;
+    cursor: pointer; border: none;
+  }
+  .intensity-row input[type="range"]::-moz-range-thumb {
+    width: 14px; height: 14px; background: var(--accent); border-radius: 50%;
+    cursor: pointer; border: none;
+  }
+  .intensity-val {
+    color: var(--ink); font-variant-numeric: tabular-nums; min-width: 50px;
+    text-align: right;
+  }
+
+  /* Variations grid (appears below player when triggered) */
+  .variations-section {
+    margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--line);
+  }
+  .variations-section.hidden { display: none; }
+  .variations-header {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 10px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.14em; color: var(--ink-soft);
+  }
+  .variations-close {
+    background: none; border: none; cursor: pointer;
+    color: var(--ink-faint); font-family: inherit; font-size: 10px;
+    text-transform: none; letter-spacing: 0.04em;
+  }
+  .variations-close:hover { color: var(--accent); }
+  .variations-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
+  }
+  @media (max-width: 600px) { .variations-grid { grid-template-columns: repeat(2, 1fr); } }
+  .variation-card {
+    background: var(--bg); border: 1px solid var(--line); padding: 12px 10px;
+    cursor: pointer; transition: all 0.15s; text-align: center;
+    font-family: inherit; color: inherit;
+    display: flex; flex-direction: column; gap: 4px; align-items: center;
+  }
+  .variation-card:hover { border-color: var(--accent); }
+  .variation-card.playing { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .variation-card .var-label {
+    font-family: 'Fraunces', serif; font-style: italic; font-size: 13px;
+  }
+  .variation-card .var-params {
+    font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+    color: var(--ink-faint); letter-spacing: 0.04em; line-height: 1.4;
+  }
+  .variation-card.playing .var-params { color: rgba(244,241,234,0.55); }
+
+  /* ---------- WAVEFORM ---------- */
+  .waveform {
+    width: 100%; height: 64px; margin-top: 16px;
+    display: block;
+  }
+
+  /* ---------- SPEC SIDEBAR ---------- */
+  .spec {
+    background: transparent;
+    border-left: 1px solid var(--line); padding: 0 0 0 32px;
+    position: sticky; top: 48px;
+  }
+  @media (max-width: 880px) {
+    .spec { border-left: none; padding: 0; border-top: 1px solid var(--line); padding-top: 32px; }
+  }
+  .spec-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.22em;
+    color: var(--ink-faint); margin-bottom: 18px;
+  }
+  .spec-section { margin-bottom: 22px; }
+  .spec-section h3 {
+    font-family: 'Fraunces', serif; font-weight: 400;
+    font-size: 14px; color: var(--ink); margin-bottom: 8px; letter-spacing: -0.005em;
+  }
+  .spec-row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 4px 0; font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+    color: var(--ink-soft); border-bottom: 1px dotted var(--line);
+  }
+  .spec-row:last-child { border-bottom: none; }
+  .spec-row .v { color: var(--ink); font-weight: 500; }
+  .spec-row.changed .v { color: var(--accent); }
+
+  .spec-tags-summary {
+    font-family: 'Fraunces', serif; font-style: italic; font-weight: 300;
+    font-size: 13px; color: var(--ink-soft); margin-top: 4px; line-height: 1.5;
+  }
+
+  /* ---------- FOOTER ---------- */
+  footer {
+    margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--line);
+    font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+    color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.16em;
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+  }
+  footer a { color: var(--accent); text-decoration: none; border-bottom: 1px dotted var(--accent); }
+
+  .recording-status {
+    font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+    color: var(--ink-soft); letter-spacing: 0.1em; margin-top: 4px;
+  }
+  .recording-status.active { color: var(--accent); }
+
+  /* Source picker — distinct from vibe tags */
+  .source-section {
+    background: var(--bg-warm); padding: 24px;
+    border: 1px solid var(--line); margin-bottom: 40px;
+  }
+  .source-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 8px; margin-top: 14px;
+  }
+  .source-card {
+    background: var(--bg); border: 1px solid var(--line); padding: 12px 14px;
+    cursor: pointer; transition: all 0.15s; text-align: left;
+    font-family: inherit;
+  }
+  .source-card:hover { border-color: var(--ink-soft); }
+  .source-card.active {
+    background: var(--ink); color: var(--bg); border-color: var(--ink);
+  }
+  .source-card .label {
+    font-family: 'Fraunces', serif; font-weight: 500;
+    font-size: 14px; letter-spacing: -0.01em; display: block;
+  }
+  .source-card .desc {
+    font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--ink-soft); margin-top: 4px; display: block;
+    line-height: 1.4;
+  }
+  .source-card.active .desc { color: var(--accent-soft); }
+
+  /* Layer tabs — sits above the source grid */
+  .layer-tabs {
+    display: flex; gap: 4px; margin: 14px 0 12px;
+    background: var(--bg); border: 1px solid var(--line); padding: 3px;
+  }
+  .layer-tab {
+    flex: 1; background: transparent; border: none; padding: 10px 12px;
+    font-family: inherit; color: var(--ink-soft); cursor: pointer;
+    transition: all 0.15s; text-align: left;
+    display: flex; flex-direction: column; gap: 4px;
+    border-radius: 0;
+  }
+  .layer-tab.active { background: var(--ink); color: var(--bg); }
+  .layer-tab .lt-num {
+    font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+    text-transform: uppercase; letter-spacing: 0.2em; opacity: 0.6;
+  }
+  .layer-tab .lt-source {
+    font-family: 'Fraunces', serif; font-weight: 500; font-size: 13px;
+    letter-spacing: -0.005em;
+  }
+  .layer-tab.disabled .lt-source { font-style: italic; opacity: 0.55; }
+
+  .layer-controls {
+    display: flex; align-items: center; gap: 14px;
+    padding: 10px 0; margin-bottom: 4px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-soft);
+  }
+  .layer-controls .toggle {
+    background: none; border: 1px solid var(--line); padding: 5px 10px;
+    cursor: pointer; font-family: inherit; font-size: 10px;
+    letter-spacing: 0.12em; color: var(--ink-soft); transition: all 0.15s;
+  }
+  .layer-controls .toggle.on { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+  .layer-controls .toggle:not(.on):hover { border-color: var(--ink-soft); color: var(--ink); }
+  .layer-controls .level-slider-wrap {
+    flex: 1; display: flex; align-items: center; gap: 8px;
+  }
+  .layer-controls .level-slider-wrap input[type="range"] {
+    flex: 1; -webkit-appearance: none; appearance: none;
+    height: 2px; background: var(--line); outline: none; cursor: pointer;
+  }
+  .layer-controls .level-slider-wrap input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 12px; height: 12px; background: var(--ink); cursor: pointer; border: none;
+  }
+  .layer-controls .level-slider-wrap input[type="range"]::-moz-range-thumb {
+    width: 12px; height: 12px; background: var(--ink); cursor: pointer; border: none;
+  }
+  .layer-controls .level-val {
+    color: var(--ink); font-variant-numeric: tabular-nums; min-width: 36px; text-align: right;
+  }
+
+  /* ---------- MELODY SECTION ---------- */
+  .melody-section {
+    background: var(--bg-warm); padding: 24px;
+    border: 1px solid var(--line); margin-bottom: 40px;
+  }
+  .melody-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 14px;
+  }
+  @media (max-width: 680px) { .melody-grid { grid-template-columns: 1fr; gap: 24px; } }
+
+  .melody-subhead {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.18em;
+    color: var(--ink-faint); margin-bottom: 10px;
+    display: flex; justify-content: space-between; align-items: baseline;
+  }
+  .melody-subhead .reset-link {
+    background: none; border: none; cursor: pointer;
+    font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+    text-transform: none; letter-spacing: 0.04em;
+    color: var(--accent); text-decoration: underline;
+    text-decoration-color: rgba(192,89,63,0.3);
+    text-underline-offset: 2px;
+  }
+  .melody-subhead .reset-link:hover { text-decoration-color: var(--accent); }
+  .melody-subhead .reset-link.hidden { visibility: hidden; }
+
+  /* Note-count row */
+  .note-count-row { display: flex; gap: 4px; margin-bottom: 10px; }
+  .note-count-btn {
+    flex: 1; background: var(--bg); border: 1px solid var(--line);
+    padding: 8px 0; cursor: pointer; transition: all 0.15s;
+    font-family: 'Fraunces', serif; font-weight: 500; font-size: 14px;
+    color: var(--ink);
+  }
+  .note-count-btn:hover { border-color: var(--ink-soft); }
+  .note-count-btn.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .note-count-btn .nc-sub {
+    display: block; font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+    text-transform: uppercase; letter-spacing: 0.1em; margin-top: 2px; opacity: 0.6;
+  }
+
+  /* Step presets row */
+  .step-presets {
+    display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+    margin-bottom: 12px;
+  }
+  .step-presets-label {
+    font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+    text-transform: uppercase; letter-spacing: 0.14em; color: var(--ink-faint);
+    margin-right: 2px;
+  }
+  .step-preset-btn {
+    background: transparent; border: 1px solid var(--line);
+    padding: 5px 10px; cursor: pointer; transition: all 0.15s;
+    font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft);
+  }
+  .step-preset-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+  /* Step grid */
+  .step-grid {
+    display: flex; flex-direction: column; gap: 6px;
+    background: var(--bg); padding: 10px; border: 1px solid var(--line);
+  }
+  .step-grid.empty { display: none; }
+  .step-row {
+    display: grid;
+    grid-template-columns: 28px 1fr 1.4fr 30px;
+    gap: 8px; align-items: center;
+    padding: 6px 4px;
+    border-bottom: 1px dotted var(--line);
+  }
+  .step-row:last-child { border-bottom: none; }
+  .step-row.emphasized { background: rgba(192,89,63,0.05); }
+  .step-row .step-idx {
+    font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+    color: var(--ink-faint); text-align: center; letter-spacing: 0.1em;
+  }
+  .step-row.emphasized .step-idx { color: var(--accent); }
+  .step-row select {
+    width: 100%; background: var(--bg-warm); color: var(--ink); border: 1px solid var(--line);
+    padding: 4px 6px; font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+  }
+  .step-row .length-wrap {
+    display: flex; align-items: center; gap: 6px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+    color: var(--ink-soft); letter-spacing: 0.04em;
+  }
+  .step-row input[type="range"] {
+    flex: 1; -webkit-appearance: none; appearance: none;
+    height: 2px; background: var(--line); outline: none; cursor: pointer; margin: 0;
+  }
+  .step-row input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 10px; height: 10px; background: var(--ink); cursor: pointer; border: none;
+  }
+  .step-row input[type="range"]::-moz-range-thumb {
+    width: 10px; height: 10px; background: var(--ink); cursor: pointer; border: none;
+  }
+  .step-row .len-val {
+    color: var(--ink); font-variant-numeric: tabular-nums; min-width: 36px; text-align: right;
+  }
+  .step-row .emphasize-btn {
+    background: var(--bg-warm); border: 1px solid var(--line); padding: 0;
+    cursor: pointer; transition: all 0.15s;
+    width: 22px; height: 22px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: inherit; color: transparent;
+  }
+  .step-row .emphasize-btn:hover { border-color: var(--accent); }
+  .step-row.emphasized .emphasize-btn { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+  .step-row .emphasize-btn::before { content: '★'; font-size: 11px; color: inherit; }
+
+  /* Key/root selector */
+  .key-row {
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 10px;
+  }
+  .key-btn, .mode-btn {
+    background: var(--bg); border: 1px solid var(--line); padding: 10px 0;
+    cursor: pointer; transition: all 0.15s;
+    font-family: 'Fraunces', serif; font-weight: 500; font-size: 14px;
+    color: var(--ink);
+  }
+  .key-btn:hover, .mode-btn:hover { border-color: var(--ink-soft); }
+  .key-btn.active, .mode-btn.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+  .mode-row { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+  .mode-btn {
+    font-family: 'Fraunces', serif; font-style: italic; font-weight: 400;
+    font-size: 13px; padding: 8px 0;
+  }
+
+  /* Octave picker — compact segmented control */
+  .octave-label {
+    font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+    text-transform: uppercase; letter-spacing: 0.18em;
+    color: var(--ink-faint); margin-top: 12px; margin-bottom: 6px;
+  }
+  .octave-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; }
+  .octave-btn {
+    background: var(--bg); border: 1px solid var(--line); padding: 8px 0;
+    cursor: pointer; transition: all 0.15s;
+    font-family: 'IBM Plex Mono', monospace; font-weight: 500; font-size: 11px;
+    color: var(--ink-soft); font-variant-numeric: tabular-nums;
+  }
+  .octave-btn:hover { border-color: var(--ink-soft); color: var(--ink); }
+  .octave-btn.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .octave-btn.neutral.active { background: var(--ink-soft); border-color: var(--ink-soft); }
+
+  /* "Untouched" indicator — subtle accent hint when value is vibe-voted */
+  .auto-hint {
+    font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+    color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.14em;
+    margin-top: 8px; font-style: normal;
+  }
+  .auto-hint::before { content: '← '; }
+</style>
+</head>
+<body>
+<div class="frame">
+  <header>
+    <div class="eyebrow">Sonic identity studio <span class="dot">●</span> Prototype 002</div>
+    <h1>Pick your brand <em>attributes</em>.<br>Hear how it sounds.</h1>
+    <p class="lede">Tap any combination of brand traits below — the kind of language you'd find in an identity brief. Each attribute shifts the sound in a particular direction. Combine freely; the engine reconciles the tradeoffs and shows you what it changed.</p>
+  </header>
+
+  <div class="main">
+    <div>
+      <!-- PLAYER — moved to top for immediate access -->
+      <section class="player-section">
+        <div class="section-label">Audition</div>
+        <div class="player">
+          <button class="play" id="play">▸ Play</button>
+          <div class="player-meta">
+            <div class="player-summary" id="summary">A neutral, soft swell.</div>
+            <div class="player-stats" id="stats">no tags · 1.20s · F major</div>
+
+            <div class="intensity-row">
+              <label class="intensity-label">Intensity</label>
+              <input type="range" id="intensity" min="20" max="150" step="5" value="100" />
+              <span class="intensity-val" id="intensity-val">1.00×</span>
+            </div>
+
+            <canvas class="waveform" id="viz"></canvas>
+
+            <div class="secondary-actions">
+              <button id="variations">◈ 4 variations</button>
+              <button id="record">↓ Download .webm</button>
+              <button id="clear">Clear all</button>
+              <button id="random">Random brief</button>
+            </div>
+
+            <div class="brief-presets">
+              <span class="brief-presets-label">Deep tech VC briefs</span>
+              <div class="brief-presets-row" id="brief-presets-row"></div>
+            </div>
+
+            <div class="recording-status" id="rec-status"></div>
+
+            <div class="variations-section hidden" id="variations-section">
+              <div class="variations-header">
+                <span>Four variations — tap to audition</span>
+                <button class="variations-close" id="variations-close">clear</button>
+              </div>
+              <div class="variations-grid" id="variations-grid"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SOURCE / LAYERS -->
+      <section class="source-section">
+        <div class="section-label">00 — Sound layers</div>
+        <div class="category-desc">Stack up to three sources. Each layer picks an instrument and its mix level.</div>
+
+        <div class="layer-tabs" id="layer-tabs"></div>
+        <div class="source-grid" id="source-grid"></div>
+      </section>
+
+      <!-- MELODY SECTION -->
+      <section class="melody-section">
+        <div class="section-label">01 — Melody</div>
+        <div class="category-desc">How many notes, which to emphasize, and how long each lasts. Leave untouched to let attributes decide.</div>
+
+        <div class="melody-grid">
+          <div>
+            <div class="melody-subhead">
+              <span>Notes</span>
+              <button class="reset-link hidden" id="reset-melody">reset to auto</button>
+            </div>
+
+            <div class="note-count-row" id="note-count-row"></div>
+
+            <div class="step-presets" id="step-presets">
+              <span class="step-presets-label">Quick:</span>
+            </div>
+
+            <div class="step-grid" id="step-grid"></div>
+
+            <div class="auto-hint" id="melody-auto-hint">currently auto-derived from attributes</div>
+          </div>
+
+          <div>
+            <div class="melody-subhead">
+              <span>Key</span>
+              <button class="reset-link hidden" id="reset-key">reset to auto</button>
+            </div>
+            <div class="key-row" id="key-row"></div>
+            <div class="mode-row" id="mode-row">
+              <button class="mode-btn" data-mode="major">Major</button>
+              <button class="mode-btn" data-mode="minor">Minor</button>
+            </div>
+            <div class="octave-label">Octave</div>
+            <div class="octave-row" id="octave-row"></div>
+            <div class="auto-hint" id="key-auto-hint">currently F major (default)</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAG CATEGORIES -->
+      <section id="categories"></section>
+    </div>
+
+    <!-- SPEC SIDEBAR -->
+    <aside class="spec">
+      <div class="spec-title">Resolved parameters <span style="color:var(--ink-faint); font-family:Fraunces,serif; font-style:italic; font-size:11px; letter-spacing:0; text-transform:none;">after combining</span></div>
+      <div class="spec-section">
+        <h3>Active attributes</h3>
+        <div class="spec-tags-summary" id="active-tags">— none picked —</div>
+      </div>
+      <div class="spec-section">
+        <h3>Voicing</h3>
+        <div id="spec-voicing"></div>
+      </div>
+      <div class="spec-section">
+        <h3>Texture</h3>
+        <div id="spec-texture"></div>
+      </div>
+      <div class="spec-section">
+        <h3>Space</h3>
+        <div id="spec-space"></div>
+      </div>
+    </aside>
+  </div>
+
+  <footer>
+    <div>Each attribute is a parameter delta. Picks compose additively.</div>
+    <div>Built with Tone.js</div>
+  </footer>
+</div>
+
+<script>
+// ============================================================
+// VIBE TAG DEFINITIONS
+// ============================================================
+//
+// Each tag has a `delta` object. When picked, its deltas are summed
+// into the base parameters. Some tags also `set` discrete values
+// (chord type, scale, articulation) — these use last-write-wins
+// or are biased by tag pick order.
+//
+// Parameters:
+//   brightness   -1..+1   filter cutoff bias (low → dark, high → bright)
+//   warmth       -1..+1   saturation/chorus character
+//   weight       -1..+1   sub presence + body
+//   motion       -1..+1   chord rise + filter bloom + chorus rate
+//   space        -1..+1   reverb wet + size
+//   attack       -1..+1   onset hardness (-1 breath, +1 click)
+//   density      -1..+1   ensemble voices + harmony complexity
+//   energy       -1..+1   overall amplitude/excitement
+//   formality    -1..+1   restraint vs playfulness in chord choice
+//
+// Discrete biases (collected as votes; highest wins):
+//   chord:      sus2, maj9, maj, add6, quartal, min, min9
+//   scale:      ascending, single, descending
+//
+
+const VIBE_CATEGORIES = [
+  {
+    name: 'Brand personality',
+    desc: 'Trait words from the brand book — who is the brand?',
+    tags: [
+      { id: 'confident',     label: 'Confident',     delta: { weight: +0.3, energy: +0.3, formality: +0.2 } },
+      { id: 'approachable',  label: 'Approachable',  delta: { warmth: +0.4, formality: -0.3, attack: -0.2 } },
+      { id: 'sophisticated', label: 'Sophisticated', delta: { warmth: +0.2, formality: +0.4, density: +0.1, energy: -0.1 }, vote: { chord: 'maj9' } },
+      { id: 'playful',       label: 'Playful',       delta: { motion: +0.4, energy: +0.3, formality: -0.4 }, vote: { chord: 'add6' } },
+      { id: 'authoritative', label: 'Authoritative', delta: { weight: +0.4, formality: +0.3, energy: +0.2 }, vote: { chord: 'maj' } },
+      { id: 'caring',        label: 'Caring',        delta: { warmth: +0.4, attack: -0.3, motion: -0.1 } },
+      { id: 'pioneering',    label: 'Pioneering',    delta: { brightness: +0.3, motion: +0.3, density: +0.2 }, vote: { chord: 'sus2' } },
+      { id: 'established',   label: 'Established',   delta: { weight: +0.3, formality: +0.3, motion: -0.2 } },
+      { id: 'rebellious',    label: 'Rebellious',    delta: { warmth: -0.2, attack: +0.4, formality: -0.3, energy: +0.3 } },
+      { id: 'refined',       label: 'Refined',       delta: { density: -0.1, formality: +0.4, energy: -0.2, attack: -0.2 } },
+    ]
+  },
+  {
+    name: 'Brand attributes',
+    desc: 'What the brand stands for, how it should be perceived, and where the sound lives.',
+    groups: [
+      {
+        title: 'Promise — what the brand stands for',
+        tags: [
+          { id: 'trustworthy', label: 'Trustworthy', delta: { warmth: +0.3, formality: +0.2, energy: -0.1, attack: -0.2 } },
+          { id: 'innovative',  label: 'Innovative',  delta: { brightness: +0.3, density: +0.2, motion: +0.2 }, vote: { chord: 'sus2' } },
+          { id: 'premium',     label: 'Premium',     delta: { warmth: +0.3, space: +0.2, formality: +0.3, density: +0.1 } },
+          { id: 'inclusive',   label: 'Inclusive',   delta: { warmth: +0.3, space: +0.3, attack: -0.2 } },
+          { id: 'reliable',    label: 'Reliable',    delta: { weight: +0.2, formality: +0.2, motion: -0.2, energy: -0.1 } },
+          { id: 'disruptive',  label: 'Disruptive',  delta: { attack: +0.4, energy: +0.3, formality: -0.3, brightness: +0.2 }, vote: { scale: 'staccato' } },
+          { id: 'crafted',     label: 'Crafted',     delta: { warmth: +0.2, formality: +0.2, density: +0.1 } },
+          { id: 'honest',      label: 'Honest',      delta: { density: -0.3, warmth: +0.2, formality: +0.1 } },
+        ]
+      },
+      {
+        title: 'Perception — how the listener should receive it',
+        tags: [
+          { id: 'modern',       label: 'Modern',       delta: { brightness: +0.2, warmth: -0.1, density: +0.2 }, vote: { chord: 'quartal' } },
+          { id: 'timeless',     label: 'Timeless',     delta: { warmth: +0.3, formality: +0.2, motion: -0.1 }, vote: { chord: 'maj' } },
+          { id: 'aspirational', label: 'Aspirational', delta: { brightness: +0.3, motion: +0.3, space: +0.3 }, vote: { chord: 'maj9' } },
+          { id: 'accessible',   label: 'Accessible',   delta: { warmth: +0.3, formality: -0.2, density: -0.1 } },
+          { id: 'considered',   label: 'Considered',   delta: { density: -0.2, formality: +0.3, motion: -0.2, attack: -0.2 } },
+          { id: 'energetic',    label: 'Energetic',    delta: { energy: +0.4, motion: +0.4, attack: +0.2 } },
+          { id: 'calming',      label: 'Calming',      delta: { motion: -0.3, energy: -0.3, space: +0.2, attack: -0.3 }, vote: { chord: 'maj9' } },
+          { id: 'optimistic',   label: 'Optimistic',   delta: { brightness: +0.3, motion: +0.4, energy: +0.2 }, vote: { chord: 'sus2', scale: 'ascending' } },
+        ]
+      },
+      {
+        title: 'Strategy — where the sound lives',
+        tags: [
+          { id: 'distinctive', label: 'Distinctive', delta: { density: +0.2, energy: +0.2, attack: +0.2 } },
+          { id: 'restrained',  label: 'Restrained',  delta: { energy: -0.4, motion: -0.3, density: -0.2, attack: -0.2 } },
+          { id: 'iconic',      label: 'Iconic',      delta: { weight: +0.2, formality: +0.2, energy: +0.2, space: +0.2 } },
+          { id: 'functional',  label: 'Functional',  delta: { space: -0.3, attack: +0.3, motion: +0.1, density: -0.2 } },
+          { id: 'cinematic',   label: 'Cinematic',   delta: { space: +0.5, weight: +0.2, motion: +0.2, density: +0.1 } },
+          { id: 'ambient',     label: 'Ambient',     delta: { space: +0.4, energy: -0.2, motion: -0.2, attack: -0.3 } },
+        ]
+      },
+    ]
+  },
+];
+
+// Contradictions: brand attributes that are mutually exclusive within or across categories
+const CONTRADICTIONS = [
+  // Personality opposites
+  ['approachable', 'authoritative'],
+  ['refined', 'rebellious'],
+  ['playful', 'authoritative'],
+  ['established', 'pioneering'],
+  ['established', 'rebellious'],
+  // Promise opposites
+  ['reliable', 'disruptive'],
+  ['premium', 'accessible'],
+  // Perception opposites
+  ['modern', 'timeless'],
+  ['energetic', 'calming'],
+  ['energetic', 'considered'],
+  // Strategy opposites
+  ['distinctive', 'restrained'],
+  ['distinctive', 'ambient'],
+  ['cinematic', 'functional'],
+  ['iconic', 'ambient'],
+  // Cross-category contradictions
+  ['caring', 'rebellious'],
+  ['refined', 'disruptive'],
+];
+
+// ============================================================
+// STATE
+// ============================================================
+const state = {
+  picked: new Set(),
+  layers: [
+    { source: 'pad', level: 1.0, enabled: true },
+    { source: 'breath', level: 0.0, enabled: false },
+    { source: 'glass', level: 0.0, enabled: false },
+  ],
+  contour: null,
+  root: null,
+  mode: null,
+  octave: 0, // -2..+2, 0 = no transpose
+  intensity: 1.0,
+  melody: null,
+};
+
+// Legacy getter: some call sites still reference state.source. Give them the primary layer.
+Object.defineProperty(state, 'source', {
+  get() { return state.layers[0]?.source || 'pad'; },
+  set(v) { if (state.layers[0]) state.layers[0].source = v; },
+});
+
+const CONTOURS = [
+  { id: 'flat',    label: 'Flat',    desc: 'Single sustained note.',                     svg: 'M 2 10 L 22 10' },
+  { id: 'rising',  label: 'Rising',  desc: 'Notes climb upward.',                        svg: 'M 2 16 L 8 12 L 14 8 L 22 4' },
+  { id: 'falling', label: 'Falling', desc: 'Notes settle downward.',                     svg: 'M 2 4 L 8 8 L 14 12 L 22 16' },
+  { id: 'arch',    label: 'Arch',    desc: 'Up, then back down. A hill.',                svg: 'M 2 16 L 8 6 L 16 6 L 22 16' },
+  { id: 'valley',  label: 'Valley',  desc: 'Down, then back up. A dip.',                 svg: 'M 2 4 L 8 14 L 16 14 L 22 4' },
+  { id: 'tadum',   label: 'Ta-dum',  desc: 'Two notes, second emphasized. Netflix-like.', svg: 'M 2 6 L 10 6 M 14 14 L 22 14' },
+  { id: 'swell',   label: 'Swell',   desc: 'Sustained chord, internal voice rises.',     svg: 'M 2 12 Q 12 12 22 8' },
+];
+
+const ROOTS = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+const ROOT_FREQS_MAJOR = {
+  C: 261.63, D: 293.66, E: 329.63, F: 349.23, G: 392.00, A: 440.00, B: 493.88
+};
+const MINOR_CHORD_MAP = { maj: 'min', maj9: 'min9', add6: 'min', sus2: 'sus2', quartal: 'quartal' };
+
+// Degrees a step can be: numeric index into the chord's intervals array, or 'chord' for full chord hit
+// Labels for the dropdown
+const DEGREE_OPTIONS = [
+  { value: 'root',  label: 'root (1)' },
+  { value: '3rd',   label: '3rd' },
+  { value: '5th',   label: '5th' },
+  { value: '7th',   label: '7th' },
+  { value: 'chord', label: 'full chord' },
+];
+// Map a degree token to an offset index into chord intervals, or 'chord' to play all
+function degreeToInterval(degree, intervals) {
+  if (degree === 'chord') return null; // sentinel for full chord
+  if (degree === 'root') return intervals[0];
+  if (degree === '3rd')  return intervals[1] !== undefined ? intervals[1] : intervals[0];
+  if (degree === '5th')  return intervals[2] !== undefined ? intervals[2] : intervals[intervals.length - 1];
+  if (degree === '7th')  return intervals[3] !== undefined ? intervals[3] : intervals[intervals.length - 1];
+  return intervals[0];
+}
+
+// Melody presets — each populates state.melody.steps
+const MELODY_PRESETS = {
+  rising: {
+    label: 'Rising',
+    build: (n) => {
+      const degrees = ['root', '3rd', '5th', '7th'].slice(0, n);
+      while (degrees.length < n) degrees.push('chord');
+      return { steps: degrees.map(d => ({ degree: d, lengthMs: 180 })), emphasizedIdx: n - 1 };
+    }
+  },
+  falling: {
+    label: 'Falling',
+    build: (n) => {
+      const degrees = ['7th', '5th', '3rd', 'root'].slice(0, n);
+      while (degrees.length < n) degrees.push('root');
+      return { steps: degrees.map(d => ({ degree: d, lengthMs: 200 })), emphasizedIdx: n - 1 };
+    }
+  },
+  arch: {
+    label: 'Arch',
+    build: (n) => {
+      let degrees;
+      if (n === 3) degrees = ['root', '5th', 'root'];
+      else if (n === 4) degrees = ['root', '5th', '5th', 'root'];
+      else degrees = ['root', '3rd', '5th', '3rd', 'root'];
+      const peak = Math.floor(n / 2);
+      return { steps: degrees.map(d => ({ degree: d, lengthMs: 180 })), emphasizedIdx: peak };
+    }
+  },
+  tadum: {
+    label: 'Ta-dum',
+    build: (n) => {
+      // 2-note feel even when n > 2: cluster ending notes
+      let degrees;
+      if (n === 3) degrees = ['5th', 'root', 'root'];
+      else if (n === 4) degrees = ['5th', '5th', 'root', 'root'];
+      else degrees = ['5th', '5th', '5th', 'root', 'root'];
+      return { steps: degrees.map((d, i) => ({ degree: d, lengthMs: i === n - 2 ? 80 : 280 })), emphasizedIdx: n - 1 };
+    }
+  },
+  hammer: {
+    label: 'Hammer',
+    build: (n) => {
+      // All same note, like Intel
+      const degrees = new Array(n).fill('root');
+      return { steps: degrees.map(d => ({ degree: d, lengthMs: 160 })), emphasizedIdx: n - 1 };
+    }
+  },
+  chordswell: {
+    label: 'Chord swell',
+    build: (n) => {
+      // n full chord hits. Useful when n=1 it's a sustained chord.
+      const degrees = new Array(n).fill('chord');
+      return { steps: degrees.map((d, i) => ({ degree: d, lengthMs: i === n - 1 ? 380 : 220 })), emphasizedIdx: n - 1 };
+    }
+  },
+};
+
+const SOURCES = [
+  // Synthesized / electronic
+  { id: 'pad',      label: 'Soft pad',     desc: 'Detuned saws + sine. Warm, classic synth pad.' },
+  { id: 'fm',       label: 'FM bell',      desc: 'Clean digital chime, mallet-like.' },
+  { id: 'glass',    label: 'Glass',        desc: 'Crystalline, sparkly, high-frequency sines.' },
+  { id: 'vapor',    label: 'Vapor',        desc: 'Wavetable-style, modern, evolving.' },
+  { id: 'brass',    label: 'Brass',        desc: 'Warm, hornlike, with body.' },
+  { id: 'drone',    label: 'Analog drone', desc: 'Slow-drifting detuned oscillators. Foundational.' },
+  { id: 'noise',    label: 'Noise wash',   desc: 'Textural, atmospheric, barely tonal.' },
+  // Acoustic-emulating
+  { id: 'felt',     label: 'Felt piano',   desc: 'Muted hammered tone. Serious, considered.' },
+  { id: 'vibe',     label: 'Vibraphone',   desc: 'Tuned percussion with slow tremolo.' },
+  { id: 'bowed',    label: 'Bowed string', desc: 'Slow-attack strings with bow friction.' },
+  { id: 'bowls',    label: 'Singing bowls',desc: 'Inharmonic partials, slow beating.' },
+  { id: 'plucked',  label: 'Plucked',      desc: 'Karplus-strong string, struck and decaying.' },
+  { id: 'choir',    label: 'Choir',        desc: 'Formant-shaped, voice-like.' },
+  { id: 'breath',   label: 'Breath pad',   desc: 'Human breath layered into a tonal pad.' },
+];
+
+// Helper: get all tags in a category, whether flat (cat.tags) or grouped (cat.groups[].tags)
+function categoryAllTags(cat) {
+  if (cat.tags) return cat.tags;
+  if (cat.groups) return cat.groups.flatMap(g => g.tags);
+  return [];
+}
+
+const TAG_LOOKUP = {};
+VIBE_CATEGORIES.forEach(cat => categoryAllTags(cat).forEach(t => { TAG_LOOKUP[t.id] = t; }));
+
+function isContradicted(tagId) {
+  for (const [a, b] of CONTRADICTIONS) {
+    if (a === tagId && state.picked.has(b)) return true;
+    if (b === tagId && state.picked.has(a)) return true;
+  }
+  return false;
+}
+
+// ============================================================
+// PARAM RESOLUTION (vibes → numeric parameters)
+// ============================================================
+function resolveParams() {
+  // Start at neutral
+  const v = {
+    brightness: 0, warmth: 0, weight: 0, motion: 0, space: 0,
+    attack: 0, density: 0, energy: 0, formality: 0,
+  };
+  // Vote tallies for discrete choices
+  const votes = { chord: {}, scale: {} };
+
+  state.picked.forEach(id => {
+    const tag = TAG_LOOKUP[id];
+    if (!tag) return;
+    if (tag.delta) {
+      for (const k in tag.delta) v[k] = (v[k] || 0) + tag.delta[k] * state.intensity;
+    }
+    if (tag.vote) {
+      for (const k in tag.vote) {
+        const choice = tag.vote[k];
+        votes[k][choice] = (votes[k][choice] || 0) + 1;
+      }
+    }
+  });
+
+  // Clamp -1..+1
+  for (const k in v) v[k] = Math.max(-1, Math.min(1, v[k]));
+
+  // Resolve discrete votes — highest count wins, default when no votes
+  const winner = (obj, fallback) => {
+    let best = fallback, bestCount = 0;
+    for (const k in obj) {
+      if (obj[k] > bestCount) { best = k; bestCount = obj[k]; }
+    }
+    return best;
+  };
+  const chord = winner(votes.chord, 'maj9');
+  const scale = winner(votes.scale, 'single');
+
+  // ---- Apply melody overrides ----
+  const rootKey = state.root || 'F';
+  const rootHz = ROOT_FREQS_MAJOR[rootKey] * Math.pow(2, state.octave);
+  const effectiveChord = (state.mode === 'minor')
+    ? (MINOR_CHORD_MAP[chord] || chord)
+    : chord;
+  const effectiveContour = state.contour || (() => {
+    if (scale === 'ascending') return 'rising';
+    if (scale === 'descending') return 'falling';
+    if (scale === 'staccato') return 'tadum';
+    return 'flat';
+  })();
+
+  // Map vibes to actual audio engine values
+  return {
+    vibes: v,
+    chord: effectiveChord,
+    chordRaw: chord,
+    scale,
+    contour: effectiveContour,
+    root: rootKey,
+    mode: state.mode || 'major',
+    octave: state.octave,
+
+    // Derived audio params
+    rootHz,
+    filterCutoff: 1200 + (v.brightness + 1) * 2400,    // 1.2k–6k
+    bloomAmount: 0.2 + Math.max(0, v.motion) * 0.6,    // 0.2–0.8
+    riseCents: Math.max(0, v.motion) * 120,            // 0–120¢
+    subAmount: 0.3 + (v.weight + 1) * 0.25,            // 0.05–0.8
+    reverbWet: 0.25 + (v.space + 1) * 0.2,             // 0.05–0.65
+    reverbDecay: 1.2 + (v.space + 1) * 1.6,            // -0.4 → 4.4 sec
+    chorusDepth: 0.15 + (v.warmth + 1) * 0.2,          // 0.15–0.55
+    chorusRate: 0.8 + Math.max(0, v.motion) * 1.4,     // Hz
+    ensembleSize: v.density > 0.3 ? 5 : (v.density > 0 ? 3 : (v.density > -0.4 ? 2 : 1)),
+    detuneCents: 5 + Math.max(0, v.warmth) * 12,
+    drive: 0.05 + Math.max(0, v.warmth) * 0.35,
+    satType: v.warmth > 0.2 ? 'tape' : (v.warmth < -0.2 ? 'transistor' : 'tube'),
+    stereoWidth: 0.4 + (v.space + 1) * 0.25,
+    airAmount: 0.3 + (v.attack < 0 ? Math.abs(v.attack) * 0.5 : 0.1),
+    attackChar: v.attack > 0.3 ? (v.attack > 0.5 ? 'hard-click' : 'soft-click') : 'smooth',
+    sweepDir: v.motion > 0.2 ? 'up' : (v.motion < -0.2 ? 'down' : 'static'),
+    noiseType: v.warmth > 0 ? 'pink' : (v.warmth < -0.3 ? 'white' : 'pink'),
+    overallGain: 0.7 + Math.max(0, v.energy) * 0.3,
+    duration: 1.0 + (v.space + 1) * 0.4,    // 0.6–1.8s
+  };
+}
+
+// ============================================================
+// DESCRIPTION GENERATOR (params → english)
+// ============================================================
+function describeSound(p) {
+  const v = p.vibes;
+  const hasAnyMelodyOverride = state.contour || state.root || state.mode;
+  if (state.picked.size === 0 && !hasAnyMelodyOverride) return 'A neutral, soft swell.';
+
+  const adjs = [];
+  if (v.brightness > 0.3) adjs.push('bright');
+  else if (v.brightness < -0.3) adjs.push('dark');
+  if (v.warmth > 0.3) adjs.push('warm');
+  else if (v.warmth < -0.3) adjs.push('crisp');
+  if (v.weight > 0.3) adjs.push('weighty');
+  else if (v.weight < -0.3) adjs.push('airy');
+
+  // Noun: if user set an explicit contour, use that; otherwise infer from vibes
+  const noun = (() => {
+    if (state.contour) {
+      const map = {
+        flat: 'sustained tone',
+        rising: 'rising figure',
+        falling: 'falling figure',
+        arch: 'arching phrase',
+        valley: 'dipping phrase',
+        tadum: 'two-note cue',
+        swell: 'open swell',
+      };
+      return map[state.contour] || 'phrase';
+    }
+    if (v.motion > 0.3) return 'rising swell';
+    if (v.motion < -0.3) return 'settling tone';
+    if (v.space > 0.3) return 'expansive bloom';
+    if (v.attack > 0.3) return 'snap';
+    return 'pad';
+  })();
+
+  const tail = (() => {
+    const parts = [];
+    if (v.space > 0.4) parts.push('with a long, open tail');
+    else if (v.space < -0.2) parts.push('with little reverb');
+    else if (v.energy > 0.3) parts.push('with confident body');
+    if (state.root || state.mode) parts.push(`in ${p.root} ${p.mode}`);
+    return parts.join(' ');
+  })();
+
+  const aPart = adjs.length ? adjs.slice(0, 3).join(', ') + ' ' : '';
+  return ('A ' + aPart + noun + (tail ? ' ' + tail : '') + '.').replace(/\s+/g, ' ');
+}
+
+// ============================================================
+// AUDIO ENGINE (purpose-built for vibes)
+// ============================================================
+let initialized = false;
+let masterGain, reverb, reverbWet, chorus, sat, widener, padFilter, subFilter;
+let analyser, meter, recordingDest;
+
+const NOTE_INTERVALS = {
+  sus2:    [0, 2, 7, 12],
+  maj9:    [0, 4, 7, 11, 14],
+  maj:     [0, 4, 7],
+  add6:    [0, 4, 7, 9],
+  quartal: [0, 5, 10, 15],
+  min:     [0, 3, 7],
+  min9:    [0, 3, 7, 10, 14],
+};
+
+async function initAudio() {
+  if (initialized) return;
+  await Tone.start();
+  masterGain = new Tone.Gain(0.85);
+  reverb = new Tone.Reverb({ decay: 2.4, wet: 0.4, preDelay: 0.02 });
+  await reverb.generate();
+  chorus = new Tone.Chorus({ frequency: 1.5, delayTime: 3.5, depth: 0.3, wet: 0.4, spread: 180 }).start();
+  sat = new Tone.Distortion({ distortion: 0.1, oversample: '2x', wet: 1.0 });
+  widener = new Tone.StereoWidener(0.6);
+  padFilter = new Tone.Filter({ frequency: 3000, type: 'lowpass', Q: 0.7 });
+  subFilter = new Tone.Filter({ frequency: 200, type: 'lowpass' });
+
+  analyser = new Tone.Analyser('waveform', 1024);
+  meter = new Tone.Meter({ channels: 2 });
+  recordingDest = Tone.context.createMediaStreamDestination();
+
+  // Chain
+  padFilter.connect(chorus);
+  chorus.connect(sat);
+  subFilter.connect(sat);
+  sat.connect(widener);
+  widener.connect(masterGain);
+  masterGain.connect(reverb);
+  reverb.toDestination();
+  reverb.connect(analyser);
+  reverb.connect(meter);
+  reverb.connect(recordingDest);
+
+  initialized = true;
+}
+
+let reverbRegenTimer = null;
+async function regenerateReverbIfNeeded(targetDecay) {
+  if (Math.abs(reverb.decay - targetDecay) < 0.15) return;
+  clearTimeout(reverbRegenTimer);
+  reverbRegenTimer = setTimeout(async () => {
+    reverb.decay = targetDecay;
+    await reverb.generate();
+  }, 200);
+}
+
+function applyParams(p) {
+  reverb.wet.rampTo(p.reverbWet, 0.05);
+  regenerateReverbIfNeeded(p.reverbDecay);
+  chorus.depth = p.chorusDepth;
+  chorus.frequency.rampTo(p.chorusRate, 0.05);
+  chorus.wet.rampTo(p.chorusDepth > 0 ? 0.5 : 0, 0.05);
+  sat.distortion = p.drive;
+  sat.wet.rampTo(p.drive > 0.05 ? 1 : 0, 0.05);
+  widener.width.rampTo(p.stereoWidth, 0.05);
+  padFilter.frequency.rampTo(p.filterCutoff, 0.05);
+  masterGain.gain.rampTo(p.overallGain, 0.05);
+}
+
+// ---- Voice recipes — each takes (rootHz, startT, dur, peakAmp, p, isTop, applyRise) ----
+// Each returns { dispose() } so the caller can clean up uniformly.
+
+function voicePad(freq, startT, dur, peakAmp, p, isTop) {
+  const c = p.detuneCents;
+  const detunes = p.ensembleSize === 1 ? [0]
+    : p.ensembleSize === 2 ? [-c, +c]
+    : p.ensembleSize === 3 ? [-c, 0, +c]
+    : [-c, -c/2, 0, +c/2, +c];
+  const saws = detunes.map(d => new Tone.Oscillator(freq * Math.pow(2, d/1200), 'sawtooth').start(startT));
+  const sine = new Tone.Oscillator(freq, 'sine').start(startT);
+  const g = new Tone.Gain(0);
+  [...saws, sine].forEach(o => o.connect(g));
+  g.connect(padFilter);
+  const peak = peakAmp / Math.sqrt(saws.length);
+  envelope(g.gain, startT, dur, peak, p.attackChar === 'smooth' ? 0.25 : 0.05, 0.4);
+  if (isTop && p.riseCents > 0) applyTopRise([...saws, sine], startT, dur, p);
+  scheduleDispose([...saws, sine, g], startT + dur + 0.3);
+}
+
+function voiceFM(freq, startT, dur, peakAmp, p, isTop) {
+  // Carrier sine + modulator sine. Mod ratio 3.5 gives bell character.
+  const carrier = new Tone.Oscillator(freq, 'sine').start(startT);
+  const modulator = new Tone.Oscillator(freq * 3.5, 'sine').start(startT);
+  const modGain = new Tone.Gain(0);
+  modulator.connect(modGain);
+  modGain.connect(carrier.frequency); // FM
+  const g = new Tone.Gain(0);
+  carrier.connect(g);
+  g.connect(padFilter);
+  // Mod index env (rises fast, decays — this is the "chimk")
+  const modPeak = freq * 4.0;
+  modGain.gain.setValueAtTime(0, startT);
+  modGain.gain.linearRampToValueAtTime(modPeak, startT + 0.01);
+  modGain.gain.exponentialRampToValueAtTime(modPeak * 0.05, startT + Math.min(dur * 0.6, 0.6));
+  // Amp envelope — fast attack, slow decay (bell-like)
+  const peak = peakAmp * 1.3;
+  g.gain.setValueAtTime(0, startT);
+  g.gain.linearRampToValueAtTime(peak, startT + 0.005);
+  g.gain.exponentialRampToValueAtTime(peak * 0.4, startT + dur * 0.5);
+  g.gain.exponentialRampToValueAtTime(0.001, startT + dur);
+  if (isTop && p.riseCents > 0) applyTopRise([carrier], startT, dur, p);
+  scheduleDispose([carrier, modulator, modGain, g], startT + dur + 0.3);
+}
+
+function voiceGlass(freq, startT, dur, peakAmp, p, isTop) {
+  // Additive sines at harmonic partials with individual decay rates
+  const partials = [
+    { mult: 1,    amp: 1.0,  decay: 0.95 },
+    { mult: 2,    amp: 0.45, decay: 0.55 },
+    { mult: 3.01, amp: 0.30, decay: 0.40 }, // slight inharmonicity
+    { mult: 4.02, amp: 0.20, decay: 0.30 },
+    { mult: 5.99, amp: 0.12, decay: 0.22 },
+  ];
+  const oscs = [];
+  const gains = [];
+  partials.forEach(part => {
+    const osc = new Tone.Oscillator(freq * part.mult, 'sine').start(startT);
+    const pg = new Tone.Gain(0);
+    osc.connect(pg);
+    pg.connect(padFilter);
+    const partPeak = peakAmp * part.amp * 0.7;
+    pg.gain.setValueAtTime(0, startT);
+    pg.gain.linearRampToValueAtTime(partPeak, startT + 0.003);
+    pg.gain.exponentialRampToValueAtTime(0.0001, startT + dur * part.decay);
+    oscs.push(osc); gains.push(pg);
+  });
+  if (isTop && p.riseCents > 0) applyTopRise(oscs.slice(0, 1), startT, dur, p);
+  scheduleDispose([...oscs, ...gains], startT + dur + 0.3);
+}
+
+function voiceVapor(freq, startT, dur, peakAmp, p, isTop) {
+  // Two slightly detuned waves + slow LFO on a resonant filter for evolution
+  const oscA = new Tone.Oscillator(freq * Math.pow(2, -8/1200), 'sawtooth').start(startT);
+  const oscB = new Tone.Oscillator(freq * Math.pow(2, +8/1200), 'square').start(startT);
+  const oscB_gain = new Tone.Gain(0.4);
+  oscB.connect(oscB_gain);
+  // Per-voice resonant filter for "wavetable" character
+  const vf = new Tone.Filter({ frequency: freq * 4, type: 'lowpass', Q: 6 });
+  const lfo = new Tone.LFO({ frequency: 0.8, min: freq * 2.5, max: freq * 7, type: 'sine' }).start(startT);
+  lfo.connect(vf.frequency);
+  const g = new Tone.Gain(0);
+  oscA.connect(vf); oscB_gain.connect(vf);
+  vf.connect(g);
+  g.connect(padFilter);
+  envelope(g.gain, startT, dur, peakAmp * 0.8, 0.15, 0.35);
+  if (isTop && p.riseCents > 0) applyTopRise([oscA, oscB], startT, dur, p);
+  scheduleDispose([oscA, oscB, oscB_gain, vf, lfo, g], startT + dur + 0.3);
+}
+
+function voiceBrass(freq, startT, dur, peakAmp, p, isTop) {
+  // Sawtooth through a resonant filter that opens with the envelope (classic brass)
+  const osc = new Tone.Oscillator(freq, 'sawtooth').start(startT);
+  const oscDetune = new Tone.Oscillator(freq * Math.pow(2, 5/1200), 'sawtooth').start(startT);
+  const bf = new Tone.Filter({ frequency: freq * 1.5, type: 'lowpass', Q: 3.5 });
+  // Filter envelope: open up to ~5x then settle to ~3x
+  bf.frequency.setValueAtTime(freq * 1.2, startT);
+  bf.frequency.linearRampToValueAtTime(freq * 5.5, startT + 0.08);
+  bf.frequency.exponentialRampToValueAtTime(freq * 3.0, startT + Math.min(dur, 0.5));
+  const g = new Tone.Gain(0);
+  osc.connect(bf); oscDetune.connect(bf);
+  bf.connect(g); g.connect(padFilter);
+  envelope(g.gain, startT, dur, peakAmp * 0.85, 0.04, 0.25);
+  if (isTop && p.riseCents > 0) applyTopRise([osc, oscDetune], startT, dur, p);
+  scheduleDispose([osc, oscDetune, bf, g], startT + dur + 0.3);
+}
+
+function voicePlucked(freq, startT, dur, peakAmp, p, isTop) {
+  // Tone.PluckSynth uses Karplus-Strong. Each note needs its own instance.
+  const pluck = new Tone.PluckSynth({
+    attackNoise: 0.7,
+    dampening: 4000,
+    resonance: 0.92,
+  });
+  const g = new Tone.Gain(peakAmp * 1.4);
+  pluck.connect(g);
+  g.connect(padFilter);
+  pluck.triggerAttack(freq, startT);
+  // PluckSynth decays naturally; isn't really sustainable. The dur param controls cleanup only.
+  scheduleDispose([pluck, g], startT + Math.max(dur, 1.2) + 0.3);
+  // Plucked doesn't really pitch-bend on the fly; rise is ignored for this voice.
+}
+
+function voiceChoir(freq, startT, dur, peakAmp, p, isTop) {
+  // Sawtooth through stacked bandpass formant filters (rough vowel "ah")
+  const FORMANTS = [
+    { freq: 730, q: 12, gain: 1.0 },  // F1 ah
+    { freq: 1090, q: 15, gain: 0.5 }, // F2 ah
+    { freq: 2440, q: 20, gain: 0.25 } // F3 ah
+  ];
+  const oscA = new Tone.Oscillator(freq * Math.pow(2, -6/1200), 'sawtooth').start(startT);
+  const oscB = new Tone.Oscillator(freq * Math.pow(2, +6/1200), 'sawtooth').start(startT);
+  const sourceGain = new Tone.Gain(0.5);
+  oscA.connect(sourceGain); oscB.connect(sourceGain);
+  const sumGain = new Tone.Gain(0);
+  const filters = FORMANTS.map(f => {
+    const filt = new Tone.Filter({ frequency: f.freq, type: 'bandpass', Q: f.q });
+    const fg = new Tone.Gain(f.gain);
+    sourceGain.connect(filt);
+    filt.connect(fg);
+    fg.connect(sumGain);
+    return [filt, fg];
+  });
+  sumGain.connect(padFilter);
+  envelope(sumGain.gain, startT, dur, peakAmp * 1.2, 0.2, 0.4);
+  if (isTop && p.riseCents > 0) applyTopRise([oscA, oscB], startT, dur, p);
+  const all = [oscA, oscB, sourceGain, sumGain, ...filters.flat()];
+  scheduleDispose(all, startT + dur + 0.3);
+}
+
+function voiceNoise(freq, startT, dur, peakAmp, p, isTop) {
+  // Pitched noise — bandpass at the note freq with high Q creates a tonal hiss
+  const noise = new Tone.Noise('white').start(startT);
+  const bp = new Tone.Filter({ frequency: freq, type: 'bandpass', Q: 20 });
+  const bp2 = new Tone.Filter({ frequency: freq * 2, type: 'bandpass', Q: 18 });
+  const mixA = new Tone.Gain(0.7);
+  const mixB = new Tone.Gain(0.3);
+  noise.connect(bp); bp.connect(mixA);
+  noise.connect(bp2); bp2.connect(mixB);
+  const g = new Tone.Gain(0);
+  mixA.connect(g); mixB.connect(g);
+  g.connect(padFilter);
+  envelope(g.gain, startT, dur, peakAmp * 1.6, 0.2, 0.5);
+  if (isTop && p.riseCents > 0) {
+    bp.frequency.setValueAtTime(freq, startT);
+    bp.frequency.exponentialRampToValueAtTime(freq * Math.pow(2, p.riseCents/1200), startT + dur - 0.4);
+    bp2.frequency.setValueAtTime(freq * 2, startT);
+    bp2.frequency.exponentialRampToValueAtTime(freq * 2 * Math.pow(2, p.riseCents/1200), startT + dur - 0.4);
+  }
+  noise.stop(startT + dur + 0.2);
+  scheduleDispose([noise, bp, bp2, mixA, mixB, g], startT + dur + 0.3);
+}
+
+function voiceFelt(freq, startT, dur, peakAmp, p, isTop) {
+  // Hybrid: karplus-strong for the body + fast-decaying FM for the initial "thunk"
+  const pluck = new Tone.PluckSynth({
+    attackNoise: 1.2,
+    dampening: 1800,  // lower than default = more muted/felt
+    resonance: 0.85,
+  });
+  const pluckGain = new Tone.Gain(peakAmp * 1.1);
+  pluck.connect(pluckGain);
+  pluckGain.connect(padFilter);
+  pluck.triggerAttack(freq, startT);
+
+  // FM thunk: low-ratio modulator for warmth, very short envelope
+  const carrier = new Tone.Oscillator(freq, 'sine').start(startT);
+  const modulator = new Tone.Oscillator(freq * 1.0, 'sine').start(startT);
+  const modGain = new Tone.Gain(freq * 0.6);
+  modulator.connect(modGain);
+  modGain.connect(carrier.frequency);
+  const thunkGain = new Tone.Gain(0);
+  carrier.connect(thunkGain);
+  thunkGain.connect(padFilter);
+  const thunkPeak = peakAmp * 0.5;
+  thunkGain.gain.setValueAtTime(0, startT);
+  thunkGain.gain.linearRampToValueAtTime(thunkPeak, startT + 0.003);
+  thunkGain.gain.exponentialRampToValueAtTime(0.001, startT + 0.25);
+
+  scheduleDispose([pluck, pluckGain, carrier, modulator, modGain, thunkGain], startT + Math.max(dur, 1.2) + 0.3);
+}
+
+function voiceVibe(freq, startT, dur, peakAmp, p, isTop) {
+  // FM with low mod ratio (2.0) for that metallic/woody vibraphone character
+  const carrier = new Tone.Oscillator(freq, 'sine').start(startT);
+  const modulator = new Tone.Oscillator(freq * 2.0, 'sine').start(startT);
+  const modGain = new Tone.Gain(0);
+  modulator.connect(modGain);
+  modGain.connect(carrier.frequency);
+
+  // Tremolo: slow LFO (6Hz) on amplitude — signature vibraphone feature
+  const tremolo = new Tone.LFO({ frequency: 5.5, min: 0.6, max: 1.0, type: 'sine' }).start(startT);
+  const tremGain = new Tone.Gain(1);
+  tremolo.connect(tremGain.gain);
+
+  const g = new Tone.Gain(0);
+  carrier.connect(g);
+  g.connect(tremGain);
+  tremGain.connect(padFilter);
+
+  // Mod env: quick attack, fast decay = mallet strike
+  const modPeak = freq * 2.5;
+  modGain.gain.setValueAtTime(0, startT);
+  modGain.gain.linearRampToValueAtTime(modPeak, startT + 0.008);
+  modGain.gain.exponentialRampToValueAtTime(modPeak * 0.08, startT + 0.3);
+
+  // Amp env: fast attack, medium-long decay (vibraphone sustains longer than bell)
+  const peak = peakAmp * 1.2;
+  g.gain.setValueAtTime(0, startT);
+  g.gain.linearRampToValueAtTime(peak, startT + 0.006);
+  g.gain.exponentialRampToValueAtTime(peak * 0.3, startT + dur * 0.4);
+  g.gain.exponentialRampToValueAtTime(0.001, startT + dur);
+
+  if (isTop && p.riseCents > 0) applyTopRise([carrier], startT, dur, p);
+  scheduleDispose([carrier, modulator, modGain, tremolo, tremGain, g], startT + dur + 0.3);
+}
+
+function voiceBowed(freq, startT, dur, peakAmp, p, isTop) {
+  // Sawtooth + triangle blend for the body; through resonant filter with slow LFO for bow wobble
+  const saw = new Tone.Oscillator(freq * Math.pow(2, -5/1200), 'sawtooth').start(startT);
+  const tri = new Tone.Oscillator(freq * Math.pow(2, +5/1200), 'triangle').start(startT);
+  const triGain = new Tone.Gain(0.5);
+  tri.connect(triGain);
+
+  // Resonant filter with LFO for bow pressure variation
+  const bf = new Tone.Filter({ frequency: freq * 4, type: 'lowpass', Q: 2.5 });
+  const bowLfo = new Tone.LFO({ frequency: 3.2, min: freq * 3.2, max: freq * 5, type: 'sine' }).start(startT);
+  bowLfo.connect(bf.frequency);
+
+  // Bow friction: very low-level noise mixed in
+  const friction = new Tone.Noise('pink').start(startT);
+  const fricFilt = new Tone.Filter({ frequency: freq * 6, type: 'highpass' });
+  const fricGain = new Tone.Gain(0.03);
+  friction.connect(fricFilt); fricFilt.connect(fricGain); fricGain.connect(bf);
+
+  saw.connect(bf); triGain.connect(bf);
+  const g = new Tone.Gain(0);
+  bf.connect(g);
+  g.connect(padFilter);
+
+  // Slow bowed attack (no click)
+  envelope(g.gain, startT, dur, peakAmp * 0.9, 0.35, 0.5);
+
+  if (isTop && p.riseCents > 0) applyTopRise([saw, tri], startT, dur, p);
+  friction.stop(startT + dur + 0.2);
+  scheduleDispose([saw, tri, triGain, bf, bowLfo, friction, fricFilt, fricGain, g], startT + dur + 0.3);
+}
+
+function voiceBowls(freq, startT, dur, peakAmp, p, isTop) {
+  // Inharmonic partials based on real singing bowl spectra + slow beating near-unisons
+  const partials = [
+    { mult: 1.00,  amp: 1.0,  decayScale: 1.0 },
+    { mult: 1.002, amp: 0.85, decayScale: 0.95 }, // near-unison for slow beating
+    { mult: 2.76,  amp: 0.55, decayScale: 0.85 },
+    { mult: 2.765, amp: 0.45, decayScale: 0.80 }, // near-unison pair
+    { mult: 5.40,  amp: 0.30, decayScale: 0.55 },
+    { mult: 8.93,  amp: 0.18, decayScale: 0.35 },
+  ];
+  const nodes = [];
+  partials.forEach(part => {
+    const osc = new Tone.Oscillator(freq * part.mult, 'sine').start(startT);
+    const pg = new Tone.Gain(0);
+    osc.connect(pg);
+    pg.connect(padFilter);
+    const partPeak = peakAmp * part.amp * 0.55;
+    // Slow attack — bowl is struck softly or bowed
+    pg.gain.setValueAtTime(0, startT);
+    pg.gain.linearRampToValueAtTime(partPeak, startT + 0.05);
+    pg.gain.exponentialRampToValueAtTime(0.0001, startT + dur * part.decayScale);
+    nodes.push(osc, pg);
+  });
+  if (isTop && p.riseCents > 0) applyTopRise([nodes[0]], startT, dur, p);
+  scheduleDispose(nodes, startT + dur + 0.3);
+}
+
+function voiceDrone(freq, startT, dur, peakAmp, p, isTop) {
+  // 4 detuned oscillators (2 sine, 2 saw) with individually randomized slow pitch drift
+  const detuneCents = [-7, -3, +4, +9];
+  const waves = ['sine', 'sine', 'sawtooth', 'sawtooth'];
+  const g = new Tone.Gain(0);
+  g.connect(padFilter);
+  const oscs = [];
+
+  detuneCents.forEach((c, i) => {
+    const osc = new Tone.Oscillator(freq * Math.pow(2, c/1200), waves[i]).start(startT);
+    const oscGain = new Tone.Gain(waves[i] === 'sawtooth' ? 0.3 : 0.5);
+    osc.connect(oscGain);
+    oscGain.connect(g);
+
+    // Slow drift: LFO at random freq between 0.08 and 0.25 Hz
+    const driftRate = 0.08 + Math.random() * 0.17;
+    const driftDepth = 3 + Math.random() * 4; // cents
+    const lfo = new Tone.LFO({
+      frequency: driftRate,
+      min: freq * Math.pow(2, (c - driftDepth)/1200),
+      max: freq * Math.pow(2, (c + driftDepth)/1200),
+      type: 'sine',
+    }).start(startT);
+    lfo.connect(osc.frequency);
+    oscs.push(osc, oscGain, lfo);
+  });
+
+  // Very slow fade-in (no discrete attack) and slow fade-out
+  const peak = peakAmp * 0.85;
+  const attack = Math.min(0.45, dur * 0.35);
+  const release = Math.min(0.6, dur * 0.45);
+  g.gain.setValueAtTime(0, startT);
+  g.gain.linearRampToValueAtTime(peak, startT + attack);
+  g.gain.linearRampToValueAtTime(peak * 0.9, startT + dur - release);
+  g.gain.exponentialRampToValueAtTime(0.001, startT + dur);
+
+  if (isTop && p.riseCents > 0) applyTopRise(oscs.filter(n => n.frequency), startT, dur, p);
+  scheduleDispose([...oscs, g], startT + dur + 0.3);
+}
+
+function voiceBreath(freq, startT, dur, peakAmp, p, isTop) {
+  // High-passed pink noise + resonant bandpass tuned to note for tonal center,
+  // with a subtle sine underneath so there's actual pitch
+  const noise = new Tone.Noise('pink').start(startT);
+  const hp = new Tone.Filter({ frequency: 300, type: 'highpass' });
+  // Formants for breath character (rough "hhh")
+  const f1 = new Tone.Filter({ frequency: 500, type: 'bandpass', Q: 4 });
+  const f2 = new Tone.Filter({ frequency: 1500, type: 'bandpass', Q: 5 });
+  // Note-tuned bandpass to get tonal pitch out of the noise
+  const noteFilt = new Tone.Filter({ frequency: freq, type: 'bandpass', Q: 30 });
+  const noteGain = new Tone.Gain(0.7);
+  // Subtle sine layer for solid pitch
+  const sine = new Tone.Oscillator(freq, 'sine').start(startT);
+  const sineGain = new Tone.Gain(0.15);
+  sine.connect(sineGain);
+
+  const f1Gain = new Tone.Gain(0.4);
+  const f2Gain = new Tone.Gain(0.25);
+  noise.connect(hp);
+  hp.connect(f1); f1.connect(f1Gain);
+  hp.connect(f2); f2.connect(f2Gain);
+  hp.connect(noteFilt); noteFilt.connect(noteGain);
+
+  const g = new Tone.Gain(0);
+  f1Gain.connect(g); f2Gain.connect(g); noteGain.connect(g); sineGain.connect(g);
+  g.connect(padFilter);
+
+  // Slow "breathing" attack
+  envelope(g.gain, startT, dur, peakAmp * 1.5, 0.3, 0.4);
+
+  if (isTop && p.riseCents > 0) {
+    applyTopRise([sine], startT, dur, p);
+    noteFilt.frequency.setValueAtTime(freq, startT);
+    noteFilt.frequency.exponentialRampToValueAtTime(freq * Math.pow(2, p.riseCents/1200), startT + dur - 0.4);
+  }
+
+  noise.stop(startT + dur + 0.2);
+  scheduleDispose([noise, hp, f1, f2, f1Gain, f2Gain, noteFilt, noteGain, sine, sineGain, g], startT + dur + 0.3);
+}
+
+const VOICE_RECIPES = {
+  pad: voicePad, fm: voiceFM, glass: voiceGlass, vapor: voiceVapor,
+  brass: voiceBrass, drone: voiceDrone, noise: voiceNoise,
+  felt: voiceFelt, vibe: voiceVibe, bowed: voiceBowed, bowls: voiceBowls,
+  plucked: voicePlucked, choir: voiceChoir, breath: voiceBreath,
+};
+
+// ---- Shared utilities for voice recipes ----
+function envelope(audioParam, startT, dur, peak, attack, release) {
+  const sustainEnd = startT + dur - release;
+  audioParam.setValueAtTime(0, startT);
+  audioParam.linearRampToValueAtTime(peak, startT + attack);
+  audioParam.linearRampToValueAtTime(peak * 0.85, Math.max(startT + attack + 0.01, sustainEnd));
+  audioParam.exponentialRampToValueAtTime(0.001, startT + dur);
+}
+function applyTopRise(oscs, startT, dur, p) {
+  const ratio = Math.pow(2, p.riseCents/1200);
+  oscs.forEach(osc => {
+    if (!osc.frequency) return;
+    const start = osc.frequency.value;
+    osc.frequency.setValueAtTime(start, startT + 0.1);
+    osc.frequency.exponentialRampToValueAtTime(start * ratio, startT + dur - 0.4);
+  });
+}
+// Track in-flight synth nodes so we can cap them and clean up aggressively
+let inFlightNodes = 0;
+const MAX_IN_FLIGHT = 220; // rough ceiling to prevent audio context overload
+
+function scheduleDispose(nodes, atT) {
+  inFlightNodes += nodes.length;
+  const ms = (atT - Tone.now()) * 1000;
+  setTimeout(() => {
+    nodes.forEach(n => {
+      if (!n) return;
+      // Try release methods in order of specificity
+      try { if (typeof n.triggerRelease === 'function') n.triggerRelease(); } catch(e) {}
+      try { if (typeof n.stop === 'function') n.stop(); } catch(e) {}
+    });
+    // Small delay before dispose so any ongoing ramps complete cleanly
+    setTimeout(() => {
+      nodes.forEach(n => {
+        if (!n) return;
+        try { n.disconnect(); } catch(e) {}
+        try { n.dispose(); } catch(e) {}
+      });
+      inFlightNodes -= nodes.length;
+      if (inFlightNodes < 0) inFlightNodes = 0;
+    }, 50);
+  }, Math.max(50, ms));
+}
+
+function triggerVoice(rootHz, intervals, startT, dur, peakAmp, p) {
+  // Play each enabled layer
+  const activeLayers = state.layers.filter(L => L.enabled && L.level > 0.01);
+  // If no layers enabled (edge case), fall back to primary layer regardless of enabled
+  const layersToPlay = activeLayers.length > 0 ? activeLayers : [state.layers[0]];
+
+  layersToPlay.forEach(layer => {
+    const recipe = VOICE_RECIPES[layer.source] || voicePad;
+    const layerPeak = peakAmp * layer.level;
+    intervals.forEach((semi, i) => {
+      const isTop = i === intervals.length - 1;
+      const freq = rootHz * Math.pow(2, semi/12);
+      const perVoicePeak = layerPeak / Math.sqrt(intervals.length);
+      recipe(freq, startT, dur, perVoicePeak, p, isTop);
+    });
+  });
+
+  // Sub layer — shared across all layers, not per-layer
+  if (p.subAmount > 0.1) {
+    const subOsc = new Tone.Oscillator(rootHz / 2, 'sine').start(startT);
+    const sg = new Tone.Gain(0);
+    subOsc.connect(sg); sg.connect(subFilter);
+    const subPeak = p.subAmount * 0.22;
+    sg.gain.setValueAtTime(0, startT);
+    sg.gain.linearRampToValueAtTime(subPeak, startT + 0.1);
+    sg.gain.linearRampToValueAtTime(subPeak * 0.6, startT + dur * 0.7);
+    sg.gain.exponentialRampToValueAtTime(0.001, startT + dur);
+    scheduleDispose([subOsc, sg], startT + dur + 0.2);
+  }
+}
+
+function triggerOnset(now, p) {
+  if (p.attackChar !== 'smooth') {
+    const clickOsc = new Tone.Oscillator(p.attackChar === 'hard-click' ? 1200 : 600, 'sine').start(now);
+    const cg = new Tone.Gain(0);
+    clickOsc.connect(cg); cg.connect(masterGain);
+    const amp = (p.attackChar === 'hard-click' ? 0.16 : 0.08) * Math.max(0.3, p.airAmount);
+    const dur = p.attackChar === 'hard-click' ? 0.012 : 0.025;
+    cg.gain.setValueAtTime(0, now);
+    cg.gain.linearRampToValueAtTime(amp, now + 0.001);
+    cg.gain.exponentialRampToValueAtTime(0.001, now + dur);
+    scheduleDispose([clickOsc, cg], now + dur + 0.05);
+  }
+
+  const noise = new Tone.Noise(p.noiseType).start(now);
+  const nf = new Tone.Filter({ frequency: 400, type: 'bandpass', Q: 1.5 });
+  const ng = new Tone.Gain(0);
+  noise.connect(nf); nf.connect(ng); ng.connect(masterGain);
+  if (p.sweepDir === 'up') {
+    nf.frequency.setValueAtTime(400, now);
+    nf.frequency.exponentialRampToValueAtTime(4500, now + 0.3);
+  } else if (p.sweepDir === 'down') {
+    nf.frequency.setValueAtTime(4500, now);
+    nf.frequency.exponentialRampToValueAtTime(400, now + 0.3);
+  } else {
+    nf.frequency.setValueAtTime(1800, now);
+  }
+  const amp = p.airAmount * 0.18;
+  ng.gain.setValueAtTime(0, now);
+  ng.gain.linearRampToValueAtTime(amp, now + 0.06);
+  ng.gain.exponentialRampToValueAtTime(0.001, now + 0.34);
+  scheduleDispose([noise, nf, ng], now + 0.4);
+}
+
+async function playCue(overrideParams = null) {
+  await initAudio();
+
+  // Guard against resource exhaustion — drop the play if too many nodes are still in-flight
+  if (inFlightNodes > MAX_IN_FLIGHT) {
+    console.warn('Audio context busy — skipping play. In-flight nodes:', inFlightNodes);
+    return;
+  }
+
+  // If audio context is suspended or closed, try to resume
+  if (Tone.context.state === 'suspended') {
+    try { await Tone.context.resume(); } catch(e) { console.warn('resume failed', e); }
+  }
+
+  const p = overrideParams || resolveParams();
+  applyParams(p);
+  const now = Tone.now();
+  triggerOnset(now, p);
+
+  const intervals = NOTE_INTERVALS[p.chord] || NOTE_INTERVALS.maj9;
+  if (state.melody) {
+    playSteps(state.melody, intervals, now, p);
+  } else {
+    playContour(p.contour, intervals, now, p);
+  }
+
+  // Bloom — filter opens slightly at the tail
+  const bloomTarget = p.filterCutoff * (1 + p.bloomAmount * 0.6);
+  padFilter.frequency.setValueAtTime(p.filterCutoff, now + p.duration * 0.7);
+  padFilter.frequency.linearRampToValueAtTime(bloomTarget, now + p.duration + 0.15);
+}
+
+// ---- Generate 4 variations by jittering non-identity params ----
+// Identity params (preserved across variations): chord, contour, root, mode, source, vibes.
+// Jittered params: small perturbations on detune, chorus rate, reverb predelay/size,
+// filter cutoff, bloom, stereo width, rootHz octave offset, duration.
+function generateVariations(baseP, count = 4) {
+  const variations = [];
+  const jitter = (center, range) => center + (Math.random() - 0.5) * 2 * range;
+  const clampRange = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
+  for (let i = 0; i < count; i++) {
+    // i=0 is the canonical (no jitter), so designers can compare against original
+    if (i === 0) {
+      variations.push({ ...baseP, _label: 'original', _recipe: 'baseline' });
+      continue;
+    }
+    const p = { ...baseP };
+    p.detuneCents = clampRange(jitter(baseP.detuneCents, 6), 0, 25);
+    p.chorusRate = clampRange(jitter(baseP.chorusRate, 0.6), 0.3, 3.5);
+    p.filterCutoff = clampRange(jitter(baseP.filterCutoff, 700), 800, 8000);
+    p.bloomAmount = clampRange(jitter(baseP.bloomAmount, 0.15), 0, 0.9);
+    p.stereoWidth = clampRange(jitter(baseP.stereoWidth, 0.12), 0.2, 1.0);
+    p.duration = clampRange(jitter(baseP.duration, 0.12), 0.6, 2.2);
+    p.reverbWet = clampRange(jitter(baseP.reverbWet, 0.08), 0.05, 0.75);
+    p.riseCents = clampRange(jitter(baseP.riseCents, 25), 0, 200);
+    // Tiny rootHz wobble — maybe ±30 cents, so it's a different "take" not a different note
+    p.rootHz = baseP.rootHz * Math.pow(2, (Math.random() - 0.5) * 60 / 1200);
+    // Label describes what's different
+    const labels = ['', 'brighter', 'darker', 'wider', 'tighter', 'slower', 'snappier'];
+    p._label = labels[i] || 'alt ' + i;
+    variations.push(p);
+  }
+  return variations;
+}
+
+// ---- Play an explicit step sequence (state.melody) ----
+// melody = { steps: [{ degree, lengthMs }], emphasizedIdx }
+// Each step triggers a single note (root/3rd/5th/7th of chord) or the full chord.
+// The emphasized step gets a velocity boost and receives the top-voice rise.
+function playSteps(melody, intervals, now, p) {
+  const seqStart = now + 0.12;
+  let t = seqStart;
+
+  melody.steps.forEach((step, i) => {
+    const isEmphasized = i === melody.emphasizedIdx;
+    const stepDurSec = step.lengthMs / 1000;
+    // Give a little overlap for legato feel on non-final notes, and a tail on the last note
+    const isLast = i === melody.steps.length - 1;
+    const playDur = isLast ? stepDurSec + 0.4 : stepDurSec + 0.12;
+
+    // Determine what to play
+    const degreeInterval = degreeToInterval(step.degree, intervals);
+    const playIntervals = (step.degree === 'chord') ? intervals : [degreeInterval];
+
+    // Velocity: emphasized steps get a boost
+    const baseAmp = 0.12;
+    const amp = isEmphasized ? baseAmp * 1.4 : baseAmp * 0.95;
+
+    // Only the emphasized step receives the top-voice rise; others use 0
+    const stepParams = isEmphasized ? p : { ...p, riseCents: 0 };
+
+    triggerVoice(p.rootHz, playIntervals, t, playDur, amp, stepParams);
+
+    t += stepDurSec;
+  });
+}
+
+function playContour(contour, intervals, now, p) {
+  const seqStart = now + 0.12;
+
+  if (contour === 'flat' || contour === 'swell') {
+    // Single sustained chord. Swell enables top-voice rise (already handled by riseCents when motion > 0).
+    triggerVoice(p.rootHz, intervals, seqStart, p.duration, 0.12, p);
+    return;
+  }
+
+  if (contour === 'rising') {
+    const stepLen = p.duration / intervals.length * 0.8;
+    intervals.forEach((semi, i) => {
+      const t = seqStart + i * stepLen * 0.6;
+      const isLast = i === intervals.length - 1;
+      const dur = isLast ? stepLen + 0.5 : stepLen + 0.2;
+      triggerVoice(p.rootHz, [semi], t, dur, 0.13, p);
+    });
+    return;
+  }
+
+  if (contour === 'falling') {
+    const reversed = [...intervals].reverse();
+    const stepLen = p.duration / reversed.length * 0.8;
+    reversed.forEach((semi, i) => {
+      const t = seqStart + i * stepLen * 0.6;
+      triggerVoice(p.rootHz, [semi], t, stepLen + 0.3, 0.13, p);
+    });
+    return;
+  }
+
+  if (contour === 'arch') {
+    // Up then down — use intervals ascending then descending
+    const up = [...intervals];
+    const down = [...intervals].reverse().slice(1); // skip peak duplicate
+    const path = [...up, ...down];
+    const stepLen = p.duration / path.length * 0.7;
+    path.forEach((semi, i) => {
+      const t = seqStart + i * stepLen * 0.75;
+      const isLast = i === path.length - 1;
+      const dur = isLast ? stepLen + 0.45 : stepLen + 0.15;
+      triggerVoice(p.rootHz, [semi], t, dur, 0.12, p);
+    });
+    return;
+  }
+
+  if (contour === 'valley') {
+    // Down then up
+    const down = [...intervals].reverse();
+    const up = [...intervals].slice(1);
+    const path = [...down, ...up];
+    const stepLen = p.duration / path.length * 0.7;
+    path.forEach((semi, i) => {
+      const t = seqStart + i * stepLen * 0.75;
+      const isLast = i === path.length - 1;
+      const dur = isLast ? stepLen + 0.45 : stepLen + 0.15;
+      triggerVoice(p.rootHz, [semi], t, dur, 0.12, p);
+    });
+    return;
+  }
+
+  if (contour === 'tadum') {
+    // Two notes: higher then lower, with the lower note stronger/longer
+    // Use the 5th (or second-from-top) then the root
+    const hi = intervals[Math.min(intervals.length - 2, 2)] ?? intervals[1] ?? 7;
+    const lo = intervals[0];
+    const gap = p.duration * 0.35;
+    triggerVoice(p.rootHz, [hi], seqStart, p.duration * 0.3, 0.11, p);
+    triggerVoice(p.rootHz, [lo], seqStart + gap, p.duration * 0.7 + 0.3, 0.16, p);
+    return;
+  }
+
+  // Fallback — sustained chord
+  triggerVoice(p.rootHz, intervals, seqStart, p.duration, 0.12, p);
+}
+
+// ============================================================
+// UI RENDERING
+// ============================================================
+const NOTE_COUNTS = [
+  { n: 1, label: '1', sub: 'single' },
+  { n: 3, label: '3', sub: 'short phrase' },
+  { n: 4, label: '4', sub: 'classic' },
+  { n: 5, label: '5', sub: 'extended' },
+];
+
+function renderMelody() {
+  // ---- Note-count row ----
+  const countRow = document.getElementById('note-count-row');
+  countRow.innerHTML = '';
+  const activeCount = state.melody ? state.melody.steps.length : null;
+  NOTE_COUNTS.forEach(nc => {
+    const btn = document.createElement('button');
+    btn.className = 'note-count-btn' + (activeCount === nc.n ? ' active' : '');
+    btn.dataset.count = nc.n;
+    btn.innerHTML = `${nc.label}<span class="nc-sub">${nc.sub}</span>`;
+    btn.addEventListener('click', () => {
+      // Apply a default "rising" preset for this count
+      state.melody = MELODY_PRESETS.rising.build(nc.n);
+      renderMelody();
+      refreshUI();
+    });
+    countRow.appendChild(btn);
+  });
+
+  // ---- Presets row ----
+  const presetsRow = document.getElementById('step-presets');
+  // Remove existing preset buttons (keep the label)
+  presetsRow.querySelectorAll('.step-preset-btn').forEach(el => el.remove());
+  Object.entries(MELODY_PRESETS).forEach(([id, preset]) => {
+    const btn = document.createElement('button');
+    btn.className = 'step-preset-btn';
+    btn.textContent = preset.label;
+    btn.addEventListener('click', () => {
+      // Use current step count if set, else default to 4
+      const n = state.melody ? state.melody.steps.length : 4;
+      state.melody = preset.build(n);
+      renderMelody();
+      refreshUI();
+    });
+    presetsRow.appendChild(btn);
+  });
+
+  // ---- Step grid ----
+  const stepGrid = document.getElementById('step-grid');
+  stepGrid.innerHTML = '';
+  if (!state.melody || state.melody.steps.length === 0) {
+    stepGrid.classList.add('empty');
+  } else {
+    stepGrid.classList.remove('empty');
+    state.melody.steps.forEach((step, i) => {
+      const row = document.createElement('div');
+      row.className = 'step-row' + (state.melody.emphasizedIdx === i ? ' emphasized' : '');
+
+      const degreeOpts = DEGREE_OPTIONS
+        .map(o => `<option value="${o.value}" ${o.value === step.degree ? 'selected' : ''}>${o.label}</option>`)
+        .join('');
+
+      row.innerHTML = `
+        <span class="step-idx">${String(i + 1).padStart(2, '0')}</span>
+        <select data-field="degree">${degreeOpts}</select>
+        <div class="length-wrap">
+          <input type="range" data-field="length" min="60" max="500" step="10" value="${step.lengthMs}" />
+          <span class="len-val">${step.lengthMs}ms</span>
+        </div>
+        <button class="emphasize-btn" title="Emphasize this step"></button>
+      `;
+
+      row.querySelector('[data-field="degree"]').addEventListener('change', (e) => {
+        state.melody.steps[i].degree = e.target.value;
+        refreshUI();
+      });
+      row.querySelector('[data-field="length"]').addEventListener('input', (e) => {
+        const v = parseInt(e.target.value, 10);
+        state.melody.steps[i].lengthMs = v;
+        row.querySelector('.len-val').textContent = v + 'ms';
+        refreshUI();
+      });
+      row.querySelector('.emphasize-btn').addEventListener('click', () => {
+        state.melody.emphasizedIdx = i;
+        renderMelody();
+        refreshUI();
+      });
+
+      stepGrid.appendChild(row);
+    });
+  }
+
+  // ---- Key row ----
+  const keyRow = document.getElementById('key-row');
+  keyRow.innerHTML = '';
+  ROOTS.forEach(note => {
+    const btn = document.createElement('button');
+    btn.className = 'key-btn' + (state.root === note ? ' active' : '');
+    btn.dataset.key = note;
+    btn.textContent = note;
+    btn.addEventListener('click', () => {
+      state.root = note;
+      if (!state.mode) state.mode = 'major';
+      refreshMelodyUI();
+      refreshUI();
+    });
+    keyRow.appendChild(btn);
+  });
+
+  // ---- Octave row ----
+  const octRow = document.getElementById('octave-row');
+  octRow.innerHTML = '';
+  [-2, -1, 0, 1, 2].forEach(oct => {
+    const btn = document.createElement('button');
+    const isNeutral = oct === 0;
+    btn.className = 'octave-btn' + (isNeutral ? ' neutral' : '') + (state.octave === oct ? ' active' : '');
+    btn.dataset.octave = oct;
+    btn.textContent = oct === 0 ? '0' : (oct > 0 ? '+' + oct : String(oct));
+    btn.addEventListener('click', () => {
+      state.octave = oct;
+      refreshMelodyUI();
+      refreshUI();
+    });
+    octRow.appendChild(btn);
+  });
+
+  // Mode buttons — wire every time since the section can re-render
+  document.querySelectorAll('.mode-btn').forEach(btn => {
+    // Clear previous handler by cloning
+    const fresh = btn.cloneNode(true);
+    btn.parentNode.replaceChild(fresh, btn);
+    fresh.addEventListener('click', () => {
+      state.mode = fresh.dataset.mode;
+      if (!state.root) state.root = 'F';
+      refreshMelodyUI();
+      refreshUI();
+    });
+  });
+
+  // Reset links
+  document.getElementById('reset-melody').addEventListener('click', () => {
+    state.melody = null;
+    renderMelody();
+    refreshUI();
+  });
+  document.getElementById('reset-key').addEventListener('click', () => {
+    state.root = null;
+    state.mode = null;
+    state.octave = 0;
+    refreshMelodyUI();
+    refreshUI();
+  });
+
+  refreshMelodyUI();
+}
+
+function refreshMelodyUI() {
+  // Key buttons
+  document.querySelectorAll('.key-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.key === state.root);
+  });
+  // Mode buttons
+  document.querySelectorAll('.mode-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.mode === state.mode);
+  });
+  // Octave buttons
+  document.querySelectorAll('.octave-btn').forEach(btn => {
+    btn.classList.toggle('active', parseInt(btn.dataset.octave, 10) === state.octave);
+  });
+  // Reset link visibility
+  const melodyReset = document.getElementById('reset-melody');
+  if (melodyReset) melodyReset.classList.toggle('hidden', state.melody === null);
+  const keyReset = document.getElementById('reset-key');
+  const keyTouched = state.root !== null || state.mode !== null || state.octave !== 0;
+  if (keyReset) keyReset.classList.toggle('hidden', !keyTouched);
+  // Auto-hints
+  const p = resolveParams();
+  const melodyHint = state.melody
+    ? `user-edited — ${state.melody.steps.length} step${state.melody.steps.length > 1 ? 's' : ''}, emphasis on step ${state.melody.emphasizedIdx + 1}`
+    : `currently auto-derived: ${p.contour}`;
+  const hintEl = document.getElementById('melody-auto-hint');
+  if (hintEl) hintEl.textContent = melodyHint;
+  const octSuffix = state.octave === 0 ? '' : ` (${state.octave > 0 ? '+' : ''}${state.octave} oct)`;
+  const keyHint = keyTouched
+    ? `user override: ${p.root} ${p.mode}${octSuffix}`
+    : `currently ${p.root} ${p.mode} (default)`;
+  const kh = document.getElementById('key-auto-hint');
+  if (kh) kh.textContent = keyHint;
+}
+
+let activeLayerIdx = 0;
+
+function renderLayerTabs() {
+  const container = document.getElementById('layer-tabs');
+  container.innerHTML = '';
+  state.layers.forEach((layer, i) => {
+    const src = SOURCES.find(s => s.id === layer.source);
+    const btn = document.createElement('button');
+    btn.className = 'layer-tab' + (i === activeLayerIdx ? ' active' : '') + (!layer.enabled ? ' disabled' : '');
+    btn.innerHTML = `
+      <span class="lt-num">Layer ${i + 1}${!layer.enabled ? ' — off' : ''}</span>
+      <span class="lt-source">${src ? src.label : layer.source}</span>
+    `;
+    btn.addEventListener('click', () => {
+      activeLayerIdx = i;
+      renderLayerTabs();
+      renderLayerControls();
+      renderSources();
+    });
+    container.appendChild(btn);
+  });
+}
+
+function renderLayerControls() {
+  // Insert (or replace) the layer controls row above the source grid
+  let controls = document.getElementById('layer-controls');
+  if (!controls) {
+    controls = document.createElement('div');
+    controls.id = 'layer-controls';
+    controls.className = 'layer-controls';
+    const grid = document.getElementById('source-grid');
+    grid.parentNode.insertBefore(controls, grid);
+  }
+  const layer = state.layers[activeLayerIdx];
+  controls.innerHTML = `
+    <button class="toggle ${layer.enabled ? 'on' : ''}" id="layer-toggle">
+      ${layer.enabled ? 'Enabled' : 'Enable'}
+    </button>
+    <div class="level-slider-wrap">
+      <span>Level</span>
+      <input type="range" id="layer-level" min="0" max="100" step="5" value="${Math.round(layer.level * 100)}" />
+      <span class="level-val" id="layer-level-val">${Math.round(layer.level * 100)}%</span>
+    </div>
+  `;
+  document.getElementById('layer-toggle').addEventListener('click', () => {
+    layer.enabled = !layer.enabled;
+    // If enabling and level is 0, bump to default
+    if (layer.enabled && layer.level < 0.05) layer.level = activeLayerIdx === 0 ? 1.0 : 0.5;
+    renderLayerTabs();
+    renderLayerControls();
+    refreshUI();
+  });
+  document.getElementById('layer-level').addEventListener('input', (e) => {
+    layer.level = parseInt(e.target.value, 10) / 100;
+    document.getElementById('layer-level-val').textContent = Math.round(layer.level * 100) + '%';
+    // Auto-enable if user drags level up from 0
+    if (layer.level > 0.05 && !layer.enabled) {
+      layer.enabled = true;
+      renderLayerTabs();
+      renderLayerControls();
+    }
+    refreshUI();
+  });
+}
+
+function renderSources() {
+  const grid = document.getElementById('source-grid');
+  grid.innerHTML = '';
+  const activeSource = state.layers[activeLayerIdx]?.source;
+  SOURCES.forEach(src => {
+    const btn = document.createElement('button');
+    btn.className = 'source-card' + (activeSource === src.id ? ' active' : '');
+    btn.dataset.source = src.id;
+    btn.innerHTML = `
+      <span class="label">${src.label}</span>
+      <span class="desc">${src.desc}</span>
+    `;
+    btn.addEventListener('click', () => {
+      state.layers[activeLayerIdx].source = src.id;
+      renderLayerTabs();
+      renderSources();
+      refreshUI();
+    });
+    grid.appendChild(btn);
+  });
+}
+
+// Map internal parameter names to short human-readable labels shown inline
+const MAPPING_LABELS = {
+  brightness: 'bright',
+  warmth: 'warm',
+  weight: 'weight',
+  motion: 'motion',
+  space: 'space',
+  attack: 'attack',
+  density: 'density',
+  energy: 'energy',
+  formality: 'formal',
+};
+
+// Convert a numeric delta into a sign + magnitude indicator chip
+function formatDelta(key, value) {
+  const label = MAPPING_LABELS[key] || key;
+  const abs = Math.abs(value);
+  // One symbol for mild (<0.3), two for strong
+  const strength = abs >= 0.35 ? 2 : 1;
+  if (value > 0) {
+    return { cls: 'pos', text: '+'.repeat(strength) + label };
+  } else {
+    return { cls: 'neg', text: '−'.repeat(strength) + label };
+  }
+}
+
+function formatTagMapping(tag) {
+  const chips = [];
+  if (tag.delta) {
+    // Sort by magnitude, largest first
+    const sorted = Object.entries(tag.delta).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]));
+    sorted.forEach(([k, v]) => chips.push(formatDelta(k, v)));
+  }
+  if (tag.vote) {
+    for (const [k, v] of Object.entries(tag.vote)) {
+      chips.push({ cls: 'vote', text: '→' + v });
+    }
+  }
+  return chips;
+}
+
+function renderCategories() {
+  const container = document.getElementById('categories');
+  container.innerHTML = '';
+
+  function buildTagBtn(tag) {
+    const btn = document.createElement('button');
+    btn.className = 'tag-card';
+    btn.dataset.tag = tag.id;
+    const chips = formatTagMapping(tag);
+    const chipHtml = chips.map(c => `<span class="chip ${c.cls}">${c.text}</span>`).join('');
+    btn.innerHTML = `
+      <span class="tag-label">${tag.label}</span>
+      <span class="tag-mapping">${chipHtml}</span>
+    `;
+    btn.addEventListener('click', () => toggleTag(tag.id));
+    return btn;
+  }
+
+  VIBE_CATEGORIES.forEach((cat, idx) => {
+    const block = document.createElement('div');
+    block.className = 'category';
+    block.innerHTML = `
+      <div class="section-label">${String(idx + 2).padStart(2, '0')} — ${cat.name}</div>
+      <div class="category-desc">${cat.desc}</div>
+    `;
+
+    if (cat.tags) {
+      // Flat category — one tag-row
+      const row = document.createElement('div');
+      row.className = 'tag-row';
+      row.dataset.cat = cat.name;
+      cat.tags.forEach(tag => row.appendChild(buildTagBtn(tag)));
+      block.appendChild(row);
+    } else if (cat.groups) {
+      // Grouped category — render each subgroup with a quiet header
+      cat.groups.forEach(group => {
+        const groupWrap = document.createElement('div');
+        groupWrap.className = 'tag-group';
+        groupWrap.innerHTML = `<div class="tag-group-title">${group.title}</div>`;
+        const row = document.createElement('div');
+        row.className = 'tag-row';
+        group.tags.forEach(tag => row.appendChild(buildTagBtn(tag)));
+        groupWrap.appendChild(row);
+        block.appendChild(groupWrap);
+      });
+    }
+
+    container.appendChild(block);
+  });
+}
+
+function toggleTag(id) {
+  if (state.picked.has(id)) {
+    state.picked.delete(id);
+  } else {
+    if (isContradicted(id)) return;
+    state.picked.add(id);
+  }
+  refreshUI();
+}
+
+function refreshUI() {
+  // Hide variations since base params may have changed
+  if (typeof currentVariations !== 'undefined' && currentVariations.length > 0) {
+    hideVariations();
+  }
+  // Update tag visual states
+  document.querySelectorAll('.tag-card').forEach(btn => {
+    const id = btn.dataset.tag;
+    btn.classList.toggle('picked', state.picked.has(id));
+    btn.classList.toggle('contradicts', !state.picked.has(id) && isContradicted(id));
+  });
+
+  // Update player + spec
+  const p = resolveParams();
+  document.getElementById('summary').textContent = describeSound(p);
+  const tagCount = state.picked.size;
+  document.getElementById('stats').textContent =
+    `${tagCount === 0 ? 'no attributes' : tagCount + ' attribute' + (tagCount > 1 ? 's' : '')} · ` +
+    `${p.duration.toFixed(2)}s · ${p.root} ${p.mode} · ${p.chord} · ${p.contour}`;
+
+  // Refresh melody auto-hints (they depend on resolved params)
+  if (document.getElementById('contour-auto-hint')) refreshMelodyUI();
+
+  const tagsSummary = state.picked.size === 0 ? '— none picked —' :
+    [...state.picked].map(id => TAG_LOOKUP[id].label.toLowerCase()).join(' · ');
+  document.getElementById('active-tags').textContent = tagsSummary;
+
+  const fmt = (n, d=2) => Number(n).toFixed(d);
+  const chordTouched = state.mode === 'minor';
+  const keyTouched = state.root !== null || state.mode !== null || state.octave !== 0;
+  const keyDisplay = p.root + ' ' + p.mode + (state.octave !== 0 ? ` (${state.octave > 0 ? '+' : ''}${state.octave})` : '');
+  const melodyTouched = state.melody !== null;
+  const v = (cls, text) => `<span class="v${cls ? ' ' + cls : ''}">${text}</span>`;
+  const melodyDisplay = state.melody
+    ? `${state.melody.steps.length} steps · emphasis step ${state.melody.emphasizedIdx + 1}`
+    : `auto: ${p.contour}`;
+  const activeLayers = state.layers.filter(L => L.enabled && L.level > 0.01);
+  const layerSummary = activeLayers.length === 0
+    ? (SOURCES.find(s => s.id === state.layers[0].source)?.label || state.layers[0].source)
+    : activeLayers
+        .map(L => {
+          const s = SOURCES.find(x => x.id === L.source);
+          return (s ? s.label : L.source) + ' ' + Math.round(L.level * 100) + '%';
+        })
+        .join(' + ');
+  document.getElementById('spec-voicing').innerHTML = `
+    <div class="spec-row"><span>layers</span>${v('', layerSummary)}</div>
+    <div class="spec-row${keyTouched ? ' changed' : ''}"><span>key</span>${v(keyTouched ? 'changed' : '', keyDisplay)}</div>
+    <div class="spec-row${chordTouched ? ' changed' : ''}"><span>chord</span>${v(chordTouched ? 'changed' : '', p.chord)}</div>
+    <div class="spec-row${melodyTouched ? ' changed' : ''}"><span>melody</span>${v(melodyTouched ? 'changed' : '', melodyDisplay)}</div>
+    <div class="spec-row"><span>intensity</span>${v('', state.intensity.toFixed(2) + '×')}</div>
+    <div class="spec-row"><span>top-rise</span>${v('', Math.round(p.riseCents) + '¢')}</div>
+    <div class="spec-row"><span>sub</span>${v('', Math.round(p.subAmount * 100) + '%')}</div>
+    <div class="spec-row"><span>ensemble</span>${v('', p.ensembleSize + '× / ' + Math.round(p.detuneCents) + '¢')}</div>
+  `;
+  document.getElementById('spec-texture').innerHTML = `
+    <div class="spec-row"><span>filter</span><span class="v">${(p.filterCutoff/1000).toFixed(1)}k</span></div>
+    <div class="spec-row"><span>bloom</span><span class="v">${Math.round(p.bloomAmount * 100)}%</span></div>
+    <div class="spec-row"><span>chorus</span><span class="v">${Math.round(p.chorusDepth * 100)}% / ${fmt(p.chorusRate, 1)}Hz</span></div>
+    <div class="spec-row"><span>saturation</span><span class="v">${p.satType} ${Math.round(p.drive * 100)}%</span></div>
+    <div class="spec-row"><span>onset</span><span class="v">${p.attackChar} / ${p.sweepDir}</span></div>
+  `;
+  document.getElementById('spec-space').innerHTML = `
+    <div class="spec-row"><span>reverb</span><span class="v">${Math.round(p.reverbWet * 100)}% / ${fmt(p.reverbDecay, 1)}s</span></div>
+    <div class="spec-row"><span>width</span><span class="v">${Math.round(p.stereoWidth * 100)}%</span></div>
+    <div class="spec-row"><span>duration</span><span class="v">${fmt(p.duration, 2)}s</span></div>
+  `;
+}
+
+// ============================================================
+// PLAYER WIRING
+// ============================================================
+document.getElementById('play').addEventListener('click', async () => {
+  const btn = document.getElementById('play');
+  if (btn.disabled) return;
+  btn.disabled = true;
+  btn.textContent = '▸ playing…';
+  const p = resolveParams();
+  const waitMs = p.duration * 1000 + 700;
+  try {
+    await playCue();
+  } catch (err) {
+    console.error('playCue failed:', err);
+  }
+  setTimeout(() => { btn.disabled = false; btn.textContent = '▸ Play'; }, waitMs);
+});
+
+document.getElementById('clear').addEventListener('click', () => {
+  state.picked.clear();
+  state.contour = null;
+  state.root = null;
+  state.mode = null;
+  state.octave = 0;
+  state.intensity = 1.0;
+  state.layers = [
+    { source: 'pad', level: 1.0, enabled: true },
+    { source: 'breath', level: 0.0, enabled: false },
+    { source: 'glass', level: 0.0, enabled: false },
+  ];
+  state.melody = null;
+  activeLayerIdx = 0;
+  document.getElementById('intensity').value = 100;
+  document.getElementById('intensity-val').textContent = '1.00×';
+  hideVariations();
+  renderLayerTabs();
+  renderLayerControls();
+  renderSources();
+  refreshMelodyUI();
+  refreshUI();
+});
+
+// Intensity slider
+document.getElementById('intensity').addEventListener('input', (e) => {
+  state.intensity = parseInt(e.target.value, 10) / 100;
+  document.getElementById('intensity-val').textContent = state.intensity.toFixed(2) + '×';
+  refreshUI();
+});
+
+// Variations
+let currentVariations = [];
+function hideVariations() {
+  document.getElementById('variations-section').classList.add('hidden');
+  currentVariations = [];
+}
+function renderVariations() {
+  const grid = document.getElementById('variations-grid');
+  grid.innerHTML = '';
+  currentVariations.forEach((v, i) => {
+    const card = document.createElement('button');
+    card.className = 'variation-card';
+    card.dataset.idx = i;
+    const paramSummary =
+      `filter ${(v.filterCutoff/1000).toFixed(1)}k · ` +
+      `dur ${v.duration.toFixed(2)}s`;
+    card.innerHTML = `
+      <span class="var-label">${v._label || ('take ' + (i+1))}</span>
+      <span class="var-params">${paramSummary}</span>
+    `;
+    card.addEventListener('click', async () => {
+      document.querySelectorAll('.variation-card').forEach(c => c.classList.remove('playing'));
+      card.classList.add('playing');
+      await playCue(v);
+      setTimeout(() => card.classList.remove('playing'), v.duration * 1000 + 500);
+    });
+    grid.appendChild(card);
+  });
+  document.getElementById('variations-section').classList.remove('hidden');
+}
+
+document.getElementById('variations').addEventListener('click', () => {
+  const baseP = resolveParams();
+  currentVariations = generateVariations(baseP, 4);
+  renderVariations();
+});
+
+document.getElementById('variations-close').addEventListener('click', hideVariations);
+
+document.getElementById('random').addEventListener('click', () => {
+  state.picked.clear();
+  // Random layer composition: 1-3 layers, each with a different source
+  const shuffledSources = [...SOURCES].sort(() => Math.random() - 0.5);
+  const layerCount = 1 + Math.floor(Math.random() * 3); // 1, 2, or 3
+  state.layers = [
+    { source: shuffledSources[0].id, level: 1.0, enabled: true },
+    { source: shuffledSources[1].id, level: layerCount > 1 ? 0.3 + Math.random() * 0.4 : 0.0, enabled: layerCount > 1 },
+    { source: shuffledSources[2].id, level: layerCount > 2 ? 0.2 + Math.random() * 0.3 : 0.0, enabled: layerCount > 2 },
+  ];
+  activeLayerIdx = 0;
+  // Random melody — 70% chance of each override
+  state.contour = Math.random() < 0.7 ? CONTOURS[Math.floor(Math.random() * CONTOURS.length)].id : null;
+  state.root = Math.random() < 0.7 ? ROOTS[Math.floor(Math.random() * ROOTS.length)] : null;
+  state.mode = state.root ? (Math.random() < 0.5 ? 'major' : 'minor') : null;
+  // Octave: 35% chance to transpose, mostly staying close to 0
+  state.octave = Math.random() < 0.35 ? [-1, -1, 0, 1, 1, 2, -2][Math.floor(Math.random() * 7)] : 0;
+  state.melody = null;
+  // For each category, pick a few tags that don't contradict
+  VIBE_CATEGORIES.forEach(cat => {
+    const allTags = categoryAllTags(cat);
+    const shuffled = [...allTags].sort(() => Math.random() - 0.5);
+    // For grouped categories (more tags), pick more
+    const target = cat.groups ? 2 + Math.floor(Math.random() * 3) : 1 + Math.floor(Math.random() * 2);
+    let added = 0;
+    for (const tag of shuffled) {
+      if (added >= target) break;
+      if (isContradicted(tag.id)) continue;
+      state.picked.add(tag.id);
+      added++;
+    }
+  });
+  renderLayerTabs();
+  renderLayerControls();
+  renderSources();
+  refreshMelodyUI();
+  refreshUI();
+});
+
+// ============================================================
+// BRIEF PRESETS — Deep tech VC briefs
+// ============================================================
+// Each preset is a full state snapshot. Applying one overwrites every
+// relevant part of state so you can hear a curated combination instantly.
+// Attribute picks bypass the contradiction check because presets are
+// curated (the contradiction system exists as a UI affordance, not a rule).
+
+const BRIEF_PRESETS = [
+  {
+    id: 'institutional',
+    label: 'Institutional Signature',
+    sub: 'Sequoia-caliber',
+    apply: () => ({
+      layers: [
+        { source: 'felt',   level: 1.0, enabled: true },
+        { source: 'breath', level: 0.3, enabled: true },
+        { source: 'glass',  level: 0.0, enabled: false },
+      ],
+      root: 'C', mode: 'major', octave: 0, intensity: 0.7,
+      melody: MELODY_PRESETS.chordswell.build(1),
+      attributes: ['sophisticated','pioneering','established','considered','iconic','crafted','timeless'],
+    }),
+  },
+  {
+    id: 'research',
+    label: 'Research Fund',
+    sub: 'Lux / DCVC',
+    apply: () => {
+      const melody = MELODY_PRESETS.chordswell.build(3);
+      melody.emphasizedIdx = 1;
+      return {
+        layers: [
+          { source: 'bowls', level: 0.85, enabled: true },
+          { source: 'glass', level: 0.4, enabled: true },
+          { source: 'breath', level: 0.0, enabled: false },
+        ],
+        root: 'F', mode: 'major', octave: 0, intensity: 0.8,
+        melody,
+        attributes: ['pioneering','innovative','sophisticated','considered','crafted','timeless'],
+      };
+    },
+  },
+  {
+    id: 'challenger',
+    label: 'Challenger Fund',
+    sub: 'Founders Fund / 1517',
+    apply: () => {
+      const melody = MELODY_PRESETS.hammer.build(4);
+      melody.emphasizedIdx = 3;
+      return {
+        layers: [
+          { source: 'fm',    level: 1.0, enabled: true },
+          { source: 'brass', level: 0.35, enabled: true },
+          { source: 'pad',   level: 0.0, enabled: false },
+        ],
+        root: 'D', mode: 'major', octave: 0, intensity: 1.1,
+        melody,
+        attributes: ['pioneering','confident','rebellious','disruptive','distinctive','innovative'],
+      };
+    },
+  },
+  {
+    id: 'vertical',
+    label: 'Vertical Specialist',
+    sub: 'bio / chem / materials',
+    apply: () => {
+      const melody = MELODY_PRESETS.arch.build(4);
+      melody.emphasizedIdx = 1;
+      return {
+        layers: [
+          { source: 'bowed', level: 0.9, enabled: true },
+          { source: 'vibe',  level: 0.4, enabled: true },
+          { source: 'breath',level: 0.2, enabled: true },
+        ],
+        root: 'G', mode: 'major', octave: 0, intensity: 0.75,
+        melody,
+        attributes: ['crafted','pioneering','considered','timeless','trustworthy','sophisticated'],
+      };
+    },
+  },
+  {
+    id: 'solo',
+    label: 'Solo GP',
+    sub: 'conviction fund',
+    apply: () => {
+      // Custom 3-step melody: 5th / root / root, emphasize last
+      const melody = {
+        steps: [
+          { degree: '5th', lengthMs: 200 },
+          { degree: 'root', lengthMs: 140 },
+          { degree: 'root', lengthMs: 320 },
+        ],
+        emphasizedIdx: 2,
+      };
+      return {
+        layers: [
+          { source: 'felt', level: 1.0, enabled: true },
+          { source: 'breath', level: 0.0, enabled: false },
+          { source: 'glass', level: 0.0, enabled: false },
+        ],
+        root: 'A', mode: 'minor', octave: 0, intensity: 0.6,
+        melody,
+        attributes: ['confident','refined','considered','restrained','iconic'],
+      };
+    },
+  },
+  {
+    id: 'frontier',
+    label: 'Frontier Fund',
+    sub: 'AGI / quantum / space',
+    apply: () => {
+      const melody = MELODY_PRESETS.chordswell.build(1);
+      return {
+        layers: [
+          { source: 'drone', level: 0.8, enabled: true },
+          { source: 'glass', level: 0.55, enabled: true },
+          { source: 'pad', level: 0.0, enabled: false },
+        ],
+        root: 'D', mode: 'major', octave: 0, intensity: 0.9,
+        melody,
+        attributes: ['pioneering','innovative','aspirational','modern','cinematic','iconic'],
+      };
+    },
+  },
+];
+
+function applyBriefPreset(preset) {
+  const spec = preset.apply();
+  // Replace state
+  state.layers = spec.layers.map(L => ({ ...L }));
+  state.root = spec.root;
+  state.mode = spec.mode;
+  state.octave = spec.octave;
+  state.intensity = spec.intensity;
+  state.melody = spec.melody;
+  state.contour = null;
+  state.picked = new Set(spec.attributes);
+  activeLayerIdx = 0;
+
+  // Sync UI
+  document.getElementById('intensity').value = Math.round(spec.intensity * 100);
+  document.getElementById('intensity-val').textContent = spec.intensity.toFixed(2) + '×';
+  hideVariations();
+  renderLayerTabs();
+  renderLayerControls();
+  renderSources();
+  renderMelody();
+  refreshUI();
+}
+
+function renderBriefPresets() {
+  const row = document.getElementById('brief-presets-row');
+  row.innerHTML = '';
+  BRIEF_PRESETS.forEach(preset => {
+    const btn = document.createElement('button');
+    btn.className = 'brief-preset-btn';
+    btn.innerHTML = `
+      <span class="bp-label">${preset.label}</span>
+      <span class="bp-sub">${preset.sub}</span>
+    `;
+    btn.addEventListener('click', () => applyBriefPreset(preset));
+    row.appendChild(btn);
+  });
+}
+
+// Recorder
+let mediaRecorder, recordedChunks = [];
+document.getElementById('record').addEventListener('click', async () => {
+  await initAudio();
+  const btn = document.getElementById('record');
+  const status = document.getElementById('rec-status');
+  if (btn.disabled) return;
+  btn.disabled = true;
+  recordedChunks = [];
+
+  if (!recordingDest || !recordingDest.stream) {
+    console.error('recordingDest not initialized');
+    status.textContent = 'Error — audio not ready';
+    btn.disabled = false;
+    btn.textContent = '↓ Download .webm';
+    return;
+  }
+
+  const stream = recordingDest.stream;
+  // Some browsers only support specific mimeType variants
+  let mimeType = 'audio/webm';
+  if (!MediaRecorder.isTypeSupported(mimeType)) {
+    if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+      mimeType = 'audio/webm;codecs=opus';
+    } else if (MediaRecorder.isTypeSupported('audio/ogg;codecs=opus')) {
+      mimeType = 'audio/ogg;codecs=opus';
+    } else {
+      console.error('No supported audio mimeType found');
+      status.textContent = 'Error — browser unsupported';
+      btn.disabled = false;
+      btn.textContent = '↓ Download .webm';
+      return;
+    }
+  }
+
+  try {
+    mediaRecorder = new MediaRecorder(stream, { mimeType });
+  } catch (err) {
+    console.error('MediaRecorder creation failed:', err);
+    status.textContent = 'Error — ' + err.message;
+    btn.disabled = false;
+    btn.textContent = '↓ Download .webm';
+    return;
+  }
+
+  mediaRecorder.ondataavailable = (e) => {
+    if (e.data && e.data.size > 0) recordedChunks.push(e.data);
+  };
+  mediaRecorder.onerror = (e) => {
+    console.error('MediaRecorder error:', e);
+  };
+  mediaRecorder.onstop = () => {
+    if (recordedChunks.length === 0) {
+      console.error('No audio data captured. inFlightNodes:', inFlightNodes, 'context state:', Tone.context.state);
+      status.textContent = 'No audio captured — try again';
+      btn.disabled = false;
+      btn.textContent = '↓ Download .webm';
+      setTimeout(() => { status.textContent = ''; status.classList.remove('active'); }, 3000);
+      return;
+    }
+    const ext = mimeType.includes('ogg') ? 'ogg' : 'webm';
+    const blob = new Blob(recordedChunks, { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const primary = SOURCES.find(s => s.id === state.layers[0].source);
+    const primaryName = primary ? primary.label.toLowerCase().replace(/\s+/g, '-') : 'sound';
+    a.download = `brand-${primaryName}-${Date.now()}.${ext}`;
+    // Must append to DOM for Firefox
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    status.textContent = 'Downloaded';
+    status.classList.remove('active');
+    btn.textContent = '↓ Download .webm';
+    btn.disabled = false;
+    setTimeout(() => { if (status.textContent === 'Downloaded') status.textContent = ''; }, 2500);
+  };
+
+  const p = resolveParams();
+  const recMs = Math.ceil(p.duration * 1000) + 800;
+  try {
+    mediaRecorder.start();
+  } catch (err) {
+    console.error('MediaRecorder.start() failed:', err);
+    status.textContent = 'Error — ' + err.message;
+    btn.disabled = false;
+    btn.textContent = '↓ Download .webm';
+    return;
+  }
+  status.textContent = `Generating ${(recMs/1000).toFixed(1)}s …`;
+  status.classList.add('active');
+  btn.textContent = '… generating';
+
+  // Force-play the cue: bypass the overload guard so we always get audio
+  // into the recorder. If the context is truly overloaded, the audio will
+  // still attempt to render; we accept the risk to keep the download reliable.
+  const savedInFlight = inFlightNodes;
+  inFlightNodes = 0; // temporarily bypass guard
+  try {
+    await playCue();
+  } catch (err) {
+    console.error('playCue during download failed:', err);
+  }
+  // Restore (additive since triggerings will have bumped the count)
+  inFlightNodes = Math.max(inFlightNodes, savedInFlight);
+
+  setTimeout(() => {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+      try { mediaRecorder.stop(); } catch(e) { console.error(e); }
+    }
+  }, recMs);
+});
+
+// Visualizer
+const canvas = document.getElementById('viz');
+const ctx = canvas.getContext('2d');
+function resizeCanvas() {
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = canvas.clientWidth * dpr;
+  canvas.height = canvas.clientHeight * dpr;
+  ctx.scale(dpr, dpr);
+}
+window.addEventListener('resize', resizeCanvas);
+setTimeout(resizeCanvas, 50);
+
+function drawLoop() {
+  requestAnimationFrame(drawLoop);
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  ctx.fillStyle = '#ede7d8';
+  ctx.fillRect(0, 0, w, h);
+  ctx.strokeStyle = '#d8d0bd';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0, h/2); ctx.lineTo(w, h/2); ctx.stroke();
+  if (analyser) {
+    const data = analyser.getValue();
+    ctx.strokeStyle = '#c0593f';
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    for (let i = 0; i < data.length; i++) {
+      const x = (i / data.length) * w;
+      const y = h/2 + data[i] * (h/2) * 0.85;
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+}
+drawLoop();
+
+// Init
+renderLayerTabs();
+renderLayerControls();
+renderSources();
+renderMelody();
+renderCategories();
+renderBriefPresets();
+refreshUI();
+</script>
+</body>
+</html>

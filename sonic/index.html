@@ -329,9 +329,9 @@
     padding: 5px var(--s-2);
     font-family: var(--sans);
     font-size: var(--size-sm);
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
     width: 100%;
     outline: none;
     cursor: pointer;
@@ -1106,23 +1106,45 @@ const SCALES = {
 };
 
 const CHARACTERS = [
-  'vibes',
+  'texture', 'pad', 'sub', 'choir',
+  'engine', 'reactor', 'space', 'data', 'quantum', 'pulse', 'gravity', 'bio', 'light', 'time',
+  'vibes', 'kalimba',
   'pink-noise', 'white-noise', 'brown-noise', 'breath-noise',
   'glass', 'bell', 'drip', 'wood', 'metal', 'pluck', 'zap',
 ];
+// Hidden from the dropdown — triggers remain registered so existing steps still sound correct.
+const HIDDEN_CHARACTERS = new Set([
+  'pad', 'sub', 'choir', 'kalimba', 'glass', 'bell',
+  'wood', 'metal', 'pluck', 'zap', 'breath-noise', 'pink-noise',
+]);
 const CHARACTER_LABELS = {
-  vibes:          'VIBES',
-  'pink-noise':   'PINK',
-  'white-noise':  'WHITE',
-  'brown-noise':  'BROWN',
-  'breath-noise': 'BREATH',
-  glass:          'GLASS',
-  bell:           'BELL',
-  drip:           'DRIP',
-  wood:           'WOOD',
-  metal:          'METAL',
-  pluck:          'PLUCK',
-  zap:            'ZAP',
+  texture:        'Texture',
+  pad:            'Pad',
+  sub:            'Sub',
+  choir:          'Choir',
+  engine:         'Engine',
+  reactor:        'Reactor',
+  space:          'Space',
+  data:           'Data',
+  quantum:        'Quantum',
+  pulse:          'Pulse',
+  gravity:        'Gravity',
+  bio:            'Bio',
+  light:          'Light',
+  time:           'Time',
+  vibes:          'Vibes',
+  kalimba:        'Kalimba',
+  'pink-noise':   'Pink',
+  'white-noise':  'White',
+  'brown-noise':  'Brown',
+  'breath-noise': 'Breath',
+  glass:          'Glass',
+  bell:           'Bell',
+  drip:           'Drip',
+  wood:           'Wood',
+  metal:          'Metal',
+  pluck:          'Pluck',
+  zap:            'Zap',
 };
 
 const VIBES = {
@@ -1243,7 +1265,7 @@ function initSteps() {
       enabled: i < 4,
       note: NOTES[semi],
       octave: 4,
-      character: 'bell',
+      character: 'vibes',
       dur: defaultDur,
     });
   }
@@ -1341,6 +1363,8 @@ function renderSeq() {
     // character select
     const charSel = document.createElement('select');
     CHARACTERS.forEach(c => {
+      // skip hidden unless the current step happens to already use it
+      if (HIDDEN_CHARACTERS.has(c) && c !== step.character) return;
       const o = document.createElement('option');
       o.value = c;
       o.textContent = CHARACTER_LABELS[c];
@@ -1983,7 +2007,7 @@ function triggerStep(chain, stepIdx, p, stepDur, time) {
   const bus = chain.bus;
   const midi = noteToMidi(step.note, step.octave);
 
-  const fn = CHARACTER_TRIGGERS[step.character] || triggerBellCharNote;
+  const fn = CHARACTER_TRIGGERS[step.character] || triggerVibraphoneNote;
   fn(bus, midi, p, stepDur, time);
 }
 
@@ -2575,9 +2599,594 @@ function triggerZapCharNote(bus, rootMidi, p, stepDur, time) {
   }, 2000);
 }
 
+// Pad — long-sustained polyphonic fatsaw pad with gentle lowpass, plays note + octave
+function triggerPadCharNote(bus, rootMidi, p, stepDur, time) {
+  const holdTime = Math.max(1.0, stepDur * 0.95);
+  const freq = midiToFreq(rootMidi);
+  const synth = new Tone.PolySynth(Tone.Synth, {
+    oscillator: { type: 'fatsawtooth', count: 3, spread: 22 },
+    envelope: { attack: 0.55, decay: 0.5, sustain: 0.75, release: 2.0 },
+  });
+  const filt = new Tone.Filter({ type: 'lowpass', frequency: 2400, Q: 0.4 });
+  const gain = new Tone.Gain(0.17).connect(bus);
+  synth.connect(filt); filt.connect(gain);
+  synth.triggerAttackRelease([freq, midiToFreq(rootMidi + 12)], holdTime, time);
+  setTimeout(() => {
+    try { synth.dispose(); filt.dispose(); gain.dispose(); } catch(e){}
+  }, (holdTime + 3.5) * 1000);
+}
+
+// Sub — deep pure sine 2 octaves below the note for low-end weight
+function triggerSubCharNote(bus, rootMidi, p, stepDur, time) {
+  const holdTime = Math.max(0.7, stepDur * 0.95);
+  // clamp to a sensible sub range; drop 2 oct but never below MIDI 24 (~C1 ≈ 33Hz)
+  const subMidi = Math.max(24, rootMidi - 24);
+  const freq = midiToFreq(subMidi);
+  const osc = new Tone.Oscillator(freq, 'sine').start(time);
+  const env = new Tone.AmplitudeEnvelope({ attack: 0.04, decay: 0.3, sustain: 0.88, release: 0.7 });
+  const gain = new Tone.Gain(0.55).connect(bus);
+  osc.connect(env); env.connect(gain);
+  env.triggerAttackRelease(holdTime, time);
+  setTimeout(() => {
+    try { osc.stop(); osc.dispose(); env.dispose(); gain.dispose(); } catch(e){}
+  }, (holdTime + 2.5) * 1000);
+}
+
+// Choir — fatsaw through dual formant peaking filters for "ahh" vowel, with vibrato
+function triggerChoirCharNote(bus, rootMidi, p, stepDur, time) {
+  const holdTime = Math.max(0.9, stepDur * 0.95);
+  const freq = midiToFreq(rootMidi);
+  const synth = new Tone.MonoSynth({
+    oscillator: { type: 'fatsawtooth', count: 3, spread: 16 },
+    envelope: { attack: 0.35, decay: 0.3, sustain: 0.7, release: 1.2 },
+    filter: { Q: 1 },
+    filterEnvelope: { attack: 0.25, decay: 0.3, sustain: 0.8, release: 1.0, baseFrequency: 380, octaves: 2 },
+  });
+  const vibrato = new Tone.Vibrato({ frequency: 5, depth: 0.028 });
+  // "ahh" vowel formants: F1 ≈ 800Hz, F2 ≈ 1200Hz
+  const f1 = new Tone.Filter({ type: 'peaking', frequency: 800, Q: 4, gain: 14 });
+  const f2 = new Tone.Filter({ type: 'peaking', frequency: 1200, Q: 4, gain: 10 });
+  const highCut = new Tone.Filter({ type: 'lowpass', frequency: 3200, Q: 0.5 });
+  const gain = new Tone.Gain(0.22).connect(bus);
+  synth.connect(vibrato); vibrato.connect(f1); f1.connect(f2); f2.connect(highCut); highCut.connect(gain);
+  synth.triggerAttackRelease(freq, holdTime, time);
+  setTimeout(() => {
+    try { synth.dispose(); vibrato.dispose(); f1.dispose(); f2.dispose(); highCut.dispose(); gain.dispose(); } catch(e){}
+  }, (holdTime + 3) * 1000);
+}
+
+// Kalimba — thumb piano. Inharmonic partials [1, 2.3, 4.1, 6.2] with short decays,
+// sharp click at strike. Brighter and more percussive than vibes, warmer than metal.
+function triggerKalimbaCharNote(bus, rootMidi, p, stepDur, time) {
+  const freq = midiToFreq(rootMidi);
+  const gain = new Tone.Gain(0.3).connect(bus);
+
+  // thumb-strike click
+  const click = new Tone.Noise('white').start(time);
+  const clickFilt = new Tone.Filter({ type: 'highpass', frequency: freq * 5 });
+  const clickEnv = new Tone.AmplitudeEnvelope({ attack: 0.0005, decay: 0.009, sustain: 0, release: 0.005 });
+  const clickGain = new Tone.Gain(0.14);
+  click.connect(clickFilt); clickFilt.connect(clickEnv); clickEnv.connect(clickGain); clickGain.connect(gain);
+  clickEnv.triggerAttackRelease(0.012, time);
+
+  // inharmonic tine partials
+  const partials = [1, 2.3, 4.1, 6.2];
+  const amps     = [1.0, 0.4, 0.18, 0.08];
+  const decays   = [0.9, 0.55, 0.3, 0.18];
+  const oscs = [], envs = [], partGains = [];
+  partials.forEach((ratio, i) => {
+    const o = new Tone.Oscillator(freq * ratio, 'sine');
+    const e = new Tone.AmplitudeEnvelope({ attack: 0.002, decay: decays[i], sustain: 0, release: 0.12 });
+    const g = new Tone.Gain(amps[i] * 0.4);
+    o.connect(e); e.connect(g); g.connect(gain);
+    o.start(time); o.stop(time + decays[i] + 0.3);
+    e.triggerAttackRelease(0.04, time);
+    oscs.push(o); envs.push(e); partGains.push(g);
+  });
+
+  setTimeout(() => {
+    try {
+      click.stop(); click.dispose(); clickFilt.dispose(); clickEnv.dispose(); clickGain.dispose();
+      oscs.forEach(o => o.dispose()); envs.forEach(e => e.dispose()); partGains.forEach(g => g.dispose());
+      gain.dispose();
+    } catch(e){}
+  }, 2000);
+}
+
+// Engine — detuned saws 1 octave below the note + distortion + square-wave LFO chop
+// for the "chug" of a firing engine. Mid-low range, mechanical grit.
+function triggerEngineCharNote(bus, rootMidi, p, stepDur, time) {
+  const holdTime = Math.max(0.7, stepDur * 0.95);
+  // drop one octave for proper engine range, clamp so it doesn't vanish
+  const engMidi = Math.max(28, rootMidi - 12);
+  const freq = midiToFreq(engMidi);
+  const gain = new Tone.Gain(0.22).connect(bus);
+
+  // detuned saw duo
+  const osc1 = new Tone.Oscillator(freq, 'sawtooth').start(time);
+  const osc2 = new Tone.Oscillator(freq * 1.007, 'sawtooth').start(time);
+  const oscMix = new Tone.Gain(0.5);
+  osc1.connect(oscMix); osc2.connect(oscMix);
+
+  // distortion + lowpass for mechanical body
+  const dist = new Tone.Distortion(0.38);
+  const filt = new Tone.Filter({ type: 'lowpass', frequency: 1100, Q: 1.8 });
+
+  // firing-rhythm chop (square LFO, ~11Hz)
+  const chop = new Tone.Gain(0);
+  const chopLfo = new Tone.LFO({ frequency: 11, min: 0.35, max: 1.0, type: 'square' }).start(time);
+  chopLfo.connect(chop.gain);
+
+  // main amp envelope
+  const env = new Tone.AmplitudeEnvelope({ attack: 0.06, decay: 0.2, sustain: 0.9, release: 0.3 });
+
+  oscMix.connect(dist); dist.connect(filt); filt.connect(chop); chop.connect(env); env.connect(gain);
+  env.triggerAttackRelease(holdTime, time);
+
+  // mechanical clatter — filtered pink noise synced to the chop
+  const noise = new Tone.Noise('pink').start(time);
+  const nFilt = new Tone.Filter({ type: 'bandpass', frequency: 900, Q: 2 });
+  const nChop = new Tone.Gain(0);
+  const nChopLfo = new Tone.LFO({ frequency: 11, min: 0, max: 0.28, type: 'square' }).start(time);
+  nChopLfo.connect(nChop.gain);
+  const nEnv = new Tone.AmplitudeEnvelope({ attack: 0.08, decay: 0.2, sustain: 0.9, release: 0.3 });
+  const nGain = new Tone.Gain(0.6);
+  noise.connect(nFilt); nFilt.connect(nChop); nChop.connect(nEnv); nEnv.connect(nGain); nGain.connect(gain);
+  nEnv.triggerAttackRelease(holdTime, time);
+
+  setTimeout(() => {
+    try {
+      osc1.stop(); osc1.dispose(); osc2.stop(); osc2.dispose(); oscMix.dispose();
+      dist.dispose(); filt.dispose(); chop.dispose(); chopLfo.dispose(); env.dispose();
+      noise.stop(); noise.dispose(); nFilt.dispose(); nChop.dispose(); nChopLfo.dispose(); nEnv.dispose(); nGain.dispose();
+      gain.dispose();
+    } catch(e){}
+  }, (holdTime + 2.5) * 1000);
+}
+
+// Reactor — nuclear power plant: deep sub hum + turbine whine + cooling-fan whirr + steam hiss
+function triggerReactorCharNote(bus, rootMidi, p, stepDur, time) {
+  const holdTime = Math.max(1.2, stepDur * 0.95);
+  const freq = midiToFreq(rootMidi);
+  const gain = new Tone.Gain(0.2).connect(bus);
+
+  // deep reactor hum, 2 octaves below the note
+  const subMidi = Math.max(24, rootMidi - 24);
+  const subFreq = midiToFreq(subMidi);
+  const hum1 = new Tone.Oscillator(subFreq, 'sawtooth').start(time);
+  const hum2 = new Tone.Oscillator(subFreq * 1.004, 'sawtooth').start(time);
+  const humMix = new Tone.Gain(0.35);
+  hum1.connect(humMix); hum2.connect(humMix);
+  const humFilt = new Tone.Filter({ type: 'lowpass', frequency: 420, Q: 2 });
+  const humEnv = new Tone.AmplitudeEnvelope({ attack: 0.6, decay: 0.3, sustain: 0.92, release: 1.0 });
+  humMix.connect(humFilt); humFilt.connect(humEnv); humEnv.connect(gain);
+  humEnv.triggerAttackRelease(holdTime, time);
+
+  // turbine whine — beating saws at note
+  const whine1 = new Tone.Oscillator(freq, 'sawtooth').start(time);
+  const whine2 = new Tone.Oscillator(freq * 1.009, 'sawtooth').start(time);
+  const whineMix = new Tone.Gain(0.12);
+  whine1.connect(whineMix); whine2.connect(whineMix);
+  const whineFilt = new Tone.Filter({ type: 'bandpass', frequency: freq * 2.2, Q: 4 });
+  const whineEnv = new Tone.AmplitudeEnvelope({ attack: 0.8, decay: 0.3, sustain: 0.75, release: 1.2 });
+  whineMix.connect(whineFilt); whineFilt.connect(whineEnv); whineEnv.connect(gain);
+  whineEnv.triggerAttackRelease(holdTime, time);
+
+  // cooling-fan whirr — triangle at note+12, LFO on pitch for fan rotation wobble
+  const fan = new Tone.Oscillator(freq * 2, 'triangle').start(time);
+  const fanLfo = new Tone.LFO({ frequency: 2.5, min: freq * 1.96, max: freq * 2.04 }).start(time);
+  fanLfo.connect(fan.frequency);
+  const fanEnv = new Tone.AmplitudeEnvelope({ attack: 1.0, decay: 0.3, sustain: 0.4, release: 1.0 });
+  const fanGain = new Tone.Gain(0.07);
+  fan.connect(fanEnv); fanEnv.connect(fanGain); fanGain.connect(gain);
+  fanEnv.triggerAttackRelease(holdTime, time);
+
+  // steam hiss
+  const steam = new Tone.Noise('pink').start(time);
+  const steamFilt = new Tone.Filter({ type: 'bandpass', frequency: 1800, Q: 1.3 });
+  const steamEnv = new Tone.AmplitudeEnvelope({ attack: 0.5, decay: 0.3, sustain: 0.35, release: 0.8 });
+  const steamGain = new Tone.Gain(0.1);
+  steam.connect(steamFilt); steamFilt.connect(steamEnv); steamEnv.connect(steamGain); steamGain.connect(gain);
+  steamEnv.triggerAttackRelease(holdTime, time);
+
+  setTimeout(() => {
+    try {
+      hum1.stop(); hum1.dispose(); hum2.stop(); hum2.dispose(); humMix.dispose(); humFilt.dispose(); humEnv.dispose();
+      whine1.stop(); whine1.dispose(); whine2.stop(); whine2.dispose(); whineMix.dispose(); whineFilt.dispose(); whineEnv.dispose();
+      fan.stop(); fan.dispose(); fanLfo.dispose(); fanEnv.dispose(); fanGain.dispose();
+      steam.stop(); steam.dispose(); steamFilt.dispose(); steamEnv.dispose(); steamGain.dispose();
+      gain.dispose();
+    } catch(e){}
+  }, (holdTime + 3) * 1000);
+}
+
+// Space — deep, ethereal: sine drones at note + octave with slow wide vibrato,
+// ring-modulated 5th for alien character, cosmic-wind noise with sweeping filter
+function triggerSpaceCharNote(bus, rootMidi, p, stepDur, time) {
+  const holdTime = Math.max(1.5, stepDur * 0.95);
+  const freq = midiToFreq(rootMidi);
+  const gain = new Tone.Gain(0.2).connect(bus);
+
+  // base sine at note with slow wide vibrato
+  const base = new Tone.Oscillator(freq, 'sine').start(time);
+  const baseLfo = new Tone.LFO({ frequency: 0.3, min: freq * 0.982, max: freq * 1.018 }).start(time);
+  baseLfo.connect(base.frequency);
+  const baseEnv = new Tone.AmplitudeEnvelope({ attack: 1.0, decay: 0.5, sustain: 0.7, release: 2.0 });
+  const baseGain = new Tone.Gain(0.5);
+  base.connect(baseEnv); baseEnv.connect(baseGain); baseGain.connect(gain);
+  baseEnv.triggerAttackRelease(holdTime, time);
+
+  // octave up — different slow vibrato rate for drifting phase
+  const oct = new Tone.Oscillator(freq * 2, 'sine').start(time);
+  const octLfo = new Tone.LFO({ frequency: 0.22, min: freq * 1.97, max: freq * 2.03 }).start(time);
+  octLfo.connect(oct.frequency);
+  const octEnv = new Tone.AmplitudeEnvelope({ attack: 1.4, decay: 0.5, sustain: 0.5, release: 2.0 });
+  const octGain = new Tone.Gain(0.28);
+  oct.connect(octEnv); octEnv.connect(octGain); octGain.connect(gain);
+  octEnv.triggerAttackRelease(holdTime, time);
+
+  // 5th ring-modulated by a subharmonic for alien metallic shimmer
+  const fifth = new Tone.Oscillator(freq * 1.5, 'sine').start(time);
+  const ringCarrier = new Tone.Oscillator(freq * 0.5, 'sine').start(time);
+  const ringVCA = new Tone.Gain(0);
+  ringCarrier.connect(ringVCA.gain);
+  const fifthEnv = new Tone.AmplitudeEnvelope({ attack: 1.2, decay: 0.5, sustain: 0.4, release: 2.0 });
+  const fifthGain = new Tone.Gain(0.18);
+  fifth.connect(ringVCA); ringVCA.connect(fifthEnv); fifthEnv.connect(fifthGain); fifthGain.connect(gain);
+  fifthEnv.triggerAttackRelease(holdTime, time);
+
+  // cosmic wind — filtered noise with very slow filter sweep
+  const wind = new Tone.Noise('pink').start(time);
+  const windFilt = new Tone.Filter({ type: 'bandpass', frequency: freq * 4, Q: 2 });
+  const windLfo = new Tone.LFO({ frequency: 0.12, min: freq * 2, max: freq * 8 }).start(time);
+  windLfo.connect(windFilt.frequency);
+  const windEnv = new Tone.AmplitudeEnvelope({ attack: 1.5, decay: 0.5, sustain: 0.3, release: 2.0 });
+  const windGain = new Tone.Gain(0.1);
+  wind.connect(windFilt); windFilt.connect(windEnv); windEnv.connect(windGain); windGain.connect(gain);
+  windEnv.triggerAttackRelease(holdTime, time);
+
+  setTimeout(() => {
+    try {
+      base.stop(); base.dispose(); baseLfo.dispose(); baseEnv.dispose(); baseGain.dispose();
+      oct.stop(); oct.dispose(); octLfo.dispose(); octEnv.dispose(); octGain.dispose();
+      fifth.stop(); fifth.dispose(); ringCarrier.stop(); ringCarrier.dispose(); ringVCA.dispose(); fifthEnv.dispose(); fifthGain.dispose();
+      wind.stop(); wind.dispose(); windFilt.dispose(); windLfo.dispose(); windEnv.dispose(); windGain.dispose();
+      gain.dispose();
+    } catch(e){}
+  }, (holdTime + 3.5) * 1000);
+}
+
+// Data — server room: beating fan drones + sporadic high-freq ticks (data access) + airflow hiss
+function triggerDataCharNote(bus, rootMidi, p, stepDur, time) {
+  const holdTime = Math.max(1.0, stepDur * 0.95);
+  const freq = midiToFreq(rootMidi);
+  const gain = new Tone.Gain(0.2).connect(bus);
+
+  // three detuned triangle drones (fans at slightly different speeds)
+  const fan1 = new Tone.Oscillator(freq, 'triangle').start(time);
+  const fan2 = new Tone.Oscillator(freq * 1.012, 'triangle').start(time);
+  const fan3 = new Tone.Oscillator(freq * 0.503, 'triangle').start(time);
+  const fanMix = new Tone.Gain(0.3);
+  fan1.connect(fanMix); fan2.connect(fanMix); fan3.connect(fanMix);
+  const fanFilt = new Tone.Filter({ type: 'lowpass', frequency: 2000, Q: 0.8 });
+  const fanEnv = new Tone.AmplitudeEnvelope({ attack: 0.5, decay: 0.3, sustain: 0.85, release: 0.8 });
+  fanMix.connect(fanFilt); fanFilt.connect(fanEnv); fanEnv.connect(gain);
+  fanEnv.triggerAttackRelease(holdTime, time);
+
+  // sporadic data ticks
+  const tickCount = Math.max(4, Math.floor(holdTime * 5));
+  const tickNodes = [];
+  for (let i = 0; i < tickCount; i++) {
+    const tickTime = time + 0.1 + (i / tickCount) * holdTime + (Math.random() - 0.5) * 0.08;
+    const tick = new Tone.Noise('white');
+    const tickFilt = new Tone.Filter({ type: 'highpass', frequency: 5000 + Math.random() * 3500 });
+    const tickEnv = new Tone.AmplitudeEnvelope({ attack: 0.0005, decay: 0.01, sustain: 0, release: 0.005 });
+    const tickGain = new Tone.Gain(0.12);
+    tick.connect(tickFilt); tickFilt.connect(tickEnv); tickEnv.connect(tickGain); tickGain.connect(gain);
+    tick.start(tickTime); tick.stop(tickTime + 0.04);
+    tickEnv.triggerAttackRelease(0.01, tickTime);
+    tickNodes.push(tick, tickFilt, tickEnv, tickGain);
+  }
+
+  // airflow hiss
+  const hiss = new Tone.Noise('pink').start(time);
+  const hissFilt = new Tone.Filter({ type: 'highpass', frequency: 3500 });
+  const hissEnv = new Tone.AmplitudeEnvelope({ attack: 0.6, decay: 0.3, sustain: 0.4, release: 0.8 });
+  const hissGain = new Tone.Gain(0.08);
+  hiss.connect(hissFilt); hissFilt.connect(hissEnv); hissEnv.connect(hissGain); hissGain.connect(gain);
+  hissEnv.triggerAttackRelease(holdTime, time);
+
+  setTimeout(() => {
+    try {
+      fan1.stop(); fan1.dispose(); fan2.stop(); fan2.dispose(); fan3.stop(); fan3.dispose();
+      fanMix.dispose(); fanFilt.dispose(); fanEnv.dispose();
+      tickNodes.forEach(n => { try { if (n.stop) n.stop(); n.dispose(); } catch(e){} });
+      hiss.stop(); hiss.dispose(); hissFilt.dispose(); hissEnv.dispose(); hissGain.dispose();
+      gain.dispose();
+    } catch(e){}
+  }, (holdTime + 2.5) * 1000);
+}
+
+// Quantum — sine stack at 1/2/3/5/7 harmonics; each partial has its OWN random slow
+// pitch wobble (the "uncertainty"), plus a high crystalline shimmer.
+function triggerQuantumCharNote(bus, rootMidi, p, stepDur, time) {
+  const holdTime = Math.max(1.0, stepDur * 0.95);
+  const freq = midiToFreq(rootMidi);
+  const gain = new Tone.Gain(0.2).connect(bus);
+
+  const partials = [1, 2, 3, 5, 7];
+  const amps     = [1.0, 0.45, 0.28, 0.18, 0.12];
+  const oscs = [], lfos = [], envs = [], partGains = [];
+  partials.forEach((ratio, i) => {
+    const o = new Tone.Oscillator(freq * ratio, 'sine').start(time);
+    const lfoRate = 1.5 + Math.random() * 3;
+    const wobble = 0.004 + Math.random() * 0.008;
+    const lfo = new Tone.LFO({ frequency: lfoRate, min: freq * ratio * (1 - wobble), max: freq * ratio * (1 + wobble) }).start(time);
+    lfo.connect(o.frequency);
+    const e = new Tone.AmplitudeEnvelope({ attack: 0.4 + i * 0.1, decay: 0.3, sustain: 0.6 - i * 0.05, release: 1.5 });
+    const g = new Tone.Gain(amps[i] * 0.3);
+    o.connect(e); e.connect(g); g.connect(gain);
+    e.triggerAttackRelease(holdTime, time);
+    oscs.push(o); lfos.push(lfo); envs.push(e); partGains.push(g);
+  });
+
+  // crystalline shimmer — 8× the note with rapid wobble
+  const shim = new Tone.Oscillator(freq * 8, 'sine').start(time);
+  const shimLfo = new Tone.LFO({ frequency: 7, min: freq * 7.8, max: freq * 8.2 }).start(time);
+  shimLfo.connect(shim.frequency);
+  const shimEnv = new Tone.AmplitudeEnvelope({ attack: 0.8, decay: 0.3, sustain: 0.3, release: 1.0 });
+  const shimGain = new Tone.Gain(0.05);
+  shim.connect(shimEnv); shimEnv.connect(shimGain); shimGain.connect(gain);
+  shimEnv.triggerAttackRelease(holdTime, time);
+
+  setTimeout(() => {
+    try {
+      oscs.forEach(o => { o.stop(); o.dispose(); });
+      lfos.forEach(l => l.dispose());
+      envs.forEach(e => e.dispose());
+      partGains.forEach(g => g.dispose());
+      shim.stop(); shim.dispose(); shimLfo.dispose(); shimEnv.dispose(); shimGain.dispose();
+      gain.dispose();
+    } catch(e){}
+  }, (holdTime + 3) * 1000);
+}
+
+// Pulse — radar/sonar ping: subharmonic rumble + repeating sine pings at 2× the note
+// with subtle Doppler pitch drop on each ping.
+function triggerPulseCharNote(bus, rootMidi, p, stepDur, time) {
+  const holdTime = Math.max(0.6, stepDur * 0.95);
+  const freq = midiToFreq(rootMidi);
+  const gain = new Tone.Gain(0.28).connect(bus);
+
+  // low rumble bed
+  const rumble = new Tone.Oscillator(freq * 0.25, 'sine').start(time);
+  const rumbleEnv = new Tone.AmplitudeEnvelope({ attack: 0.1, decay: 0.3, sustain: 0.5, release: 0.3 });
+  const rumbleGain = new Tone.Gain(0.3);
+  rumble.connect(rumbleEnv); rumbleEnv.connect(rumbleGain); rumbleGain.connect(gain);
+  rumbleEnv.triggerAttackRelease(holdTime, time);
+
+  // repeating pings
+  const pingCount = Math.max(1, Math.floor(holdTime * 2));
+  const pingNodes = [];
+  for (let i = 0; i < pingCount; i++) {
+    const pingTime = time + (i / pingCount) * holdTime + 0.02;
+    const ping = new Tone.Oscillator(freq * 2, 'sine');
+    const pingEnv = new Tone.AmplitudeEnvelope({ attack: 0.005, decay: 0.4, sustain: 0, release: 0.1 });
+    const pingGain = new Tone.Gain(0.38);
+    ping.connect(pingEnv); pingEnv.connect(pingGain); pingGain.connect(gain);
+    ping.frequency.setValueAtTime(freq * 2.02, pingTime);
+    ping.frequency.exponentialRampToValueAtTime(freq * 1.98, pingTime + 0.3);
+    ping.start(pingTime); ping.stop(pingTime + 0.5);
+    pingEnv.triggerAttackRelease(0.35, pingTime);
+    pingNodes.push(ping, pingEnv, pingGain);
+  }
+
+  setTimeout(() => {
+    try {
+      rumble.stop(); rumble.dispose(); rumbleEnv.dispose(); rumbleGain.dispose();
+      pingNodes.forEach(n => { try { if (n.stop) n.stop(); n.dispose(); } catch(e){} });
+      gain.dispose();
+    } catch(e){}
+  }, (holdTime + 2) * 1000);
+}
+
+// Gravity — massive sub-bass: sine 2 octaves down with slow pitch drift + slow amplitude
+// pulsing + brown-noise rumble underneath. The "weight" voice.
+function triggerGravityCharNote(bus, rootMidi, p, stepDur, time) {
+  const holdTime = Math.max(1.5, stepDur * 0.95);
+  const subMidi = Math.max(24, rootMidi - 24);
+  const freq = midiToFreq(subMidi);
+  const gain = new Tone.Gain(0.3).connect(bus);
+
+  const osc = new Tone.Oscillator(freq, 'sine').start(time);
+  const pitchLfo = new Tone.LFO({ frequency: 0.08, min: freq * 0.97, max: freq * 1.03 }).start(time);
+  pitchLfo.connect(osc.frequency);
+  const env = new Tone.AmplitudeEnvelope({ attack: 0.8, decay: 0.5, sustain: 0.9, release: 1.5 });
+  const ampLfo = new Tone.LFO({ frequency: 0.15, min: 0.5, max: 1.0 }).start(time);
+  const ampVCA = new Tone.Gain(0);
+  ampLfo.connect(ampVCA.gain);
+  const oscGain = new Tone.Gain(0.8);
+  osc.connect(env); env.connect(ampVCA); ampVCA.connect(oscGain); oscGain.connect(gain);
+  env.triggerAttackRelease(holdTime, time);
+
+  // octave up for definition
+  const harm = new Tone.Oscillator(freq * 2, 'sine').start(time);
+  const harmLfo = new Tone.LFO({ frequency: 0.11, min: freq * 1.97, max: freq * 2.03 }).start(time);
+  harmLfo.connect(harm.frequency);
+  const harmEnv = new Tone.AmplitudeEnvelope({ attack: 1.2, decay: 0.5, sustain: 0.5, release: 1.5 });
+  const harmGain = new Tone.Gain(0.25);
+  harm.connect(harmEnv); harmEnv.connect(harmGain); harmGain.connect(gain);
+  harmEnv.triggerAttackRelease(holdTime, time);
+
+  // brown-noise rumble
+  const rumble = new Tone.Noise('brown').start(time);
+  const rumbleFilt = new Tone.Filter({ type: 'lowpass', frequency: freq * 3, Q: 3 });
+  const rumbleEnv = new Tone.AmplitudeEnvelope({ attack: 1.0, decay: 0.5, sustain: 0.3, release: 1.0 });
+  const rumbleGain = new Tone.Gain(0.18);
+  rumble.connect(rumbleFilt); rumbleFilt.connect(rumbleEnv); rumbleEnv.connect(rumbleGain); rumbleGain.connect(gain);
+  rumbleEnv.triggerAttackRelease(holdTime, time);
+
+  setTimeout(() => {
+    try {
+      osc.stop(); osc.dispose(); pitchLfo.dispose(); env.dispose();
+      ampLfo.dispose(); ampVCA.dispose(); oscGain.dispose();
+      harm.stop(); harm.dispose(); harmLfo.dispose(); harmEnv.dispose(); harmGain.dispose();
+      rumble.stop(); rumble.dispose(); rumbleFilt.dispose(); rumbleEnv.dispose(); rumbleGain.dispose();
+      gain.dispose();
+    } catch(e){}
+  }, (holdTime + 2.5) * 1000);
+}
+
+// Bio — warm organic body + heartbeat-like double thumps (lub-dub) at ~78bpm,
+// with a slow breath-rhythm amplitude modulation on the sustained tone.
+function triggerBioCharNote(bus, rootMidi, p, stepDur, time) {
+  const holdTime = Math.max(1.0, stepDur * 0.95);
+  const freq = midiToFreq(rootMidi);
+  const gain = new Tone.Gain(0.22).connect(bus);
+
+  // warm triangle body
+  const osc = new Tone.Oscillator(freq, 'triangle').start(time);
+  const breatheLfo = new Tone.LFO({ frequency: 0.25, min: 0.5, max: 1 }).start(time);
+  const breatheVCA = new Tone.Gain(0);
+  breatheLfo.connect(breatheVCA.gain);
+  const env = new Tone.AmplitudeEnvelope({ attack: 0.4, decay: 0.3, sustain: 0.7, release: 1.0 });
+  const oscGain = new Tone.Gain(0.5);
+  osc.connect(env); env.connect(breatheVCA); breatheVCA.connect(oscGain); oscGain.connect(gain);
+  env.triggerAttackRelease(holdTime, time);
+
+  // heartbeats (lub-dub)
+  const beatRate = 1.3;
+  const beatCount = Math.floor(holdTime * beatRate);
+  const beatNodes = [];
+  for (let i = 0; i < beatCount; i++) {
+    const beatTime = time + i / beatRate + 0.1;
+    [0, 0.15].forEach((offset, idx) => {
+      const thump = new Tone.MembraneSynth({
+        pitchDecay: 0.05,
+        octaves: 3,
+        envelope: { attack: 0.001, decay: 0.15, sustain: 0, release: 0.1 },
+      });
+      const thumpGain = new Tone.Gain(idx === 0 ? 0.18 : 0.12);
+      thump.connect(thumpGain); thumpGain.connect(gain);
+      thump.triggerAttackRelease(freq * 0.25, 0.1, beatTime + offset);
+      beatNodes.push(thump, thumpGain);
+    });
+  }
+
+  setTimeout(() => {
+    try {
+      osc.stop(); osc.dispose(); breatheLfo.dispose(); breatheVCA.dispose(); env.dispose(); oscGain.dispose();
+      beatNodes.forEach(n => { try { n.dispose(); } catch(e){} });
+      gain.dispose();
+    } catch(e){}
+  }, (holdTime + 2) * 1000);
+}
+
+// Light — bright sine stack on odd harmonics (1/3/5/7/9/12) + a brief high sparkle at onset.
+function triggerLightCharNote(bus, rootMidi, p, stepDur, time) {
+  const holdTime = Math.max(0.8, stepDur * 0.95);
+  const freq = midiToFreq(rootMidi);
+  const gain = new Tone.Gain(0.18).connect(bus);
+
+  const env = new Tone.AmplitudeEnvelope({ attack: 0.25, decay: 0.3, sustain: 0.7, release: 0.8 });
+  env.connect(gain);
+
+  const partials = [1, 3, 5, 7, 9, 12];
+  const amps     = [0.5, 0.32, 0.22, 0.14, 0.09, 0.06];
+  const oscs = [], partGains = [];
+  partials.forEach((ratio, i) => {
+    const o = new Tone.Oscillator(freq * ratio, 'sine').start(time);
+    const g = new Tone.Gain(amps[i] * 0.4);
+    o.connect(g); g.connect(env);
+    oscs.push(o); partGains.push(g);
+  });
+
+  // bright sparkle at onset
+  const sparkle = new Tone.Oscillator(freq * 16, 'sine').start(time);
+  const sparkleEnv = new Tone.AmplitudeEnvelope({ attack: 0.002, decay: 0.08, sustain: 0, release: 0.05 });
+  const sparkleGain = new Tone.Gain(0.1);
+  sparkle.connect(sparkleEnv); sparkleEnv.connect(sparkleGain); sparkleGain.connect(gain);
+  sparkleEnv.triggerAttackRelease(0.1, time);
+
+  env.triggerAttackRelease(holdTime, time);
+
+  setTimeout(() => {
+    try {
+      oscs.forEach(o => { o.stop(); o.dispose(); });
+      partGains.forEach(g => g.dispose());
+      sparkle.stop(); sparkle.dispose(); sparkleEnv.dispose(); sparkleGain.dispose();
+      env.dispose(); gain.dispose();
+    } catch(e){}
+  }, (holdTime + 2) * 1000);
+}
+
+// Time — clock: alternating tick-tock (triangle bodies + high-freq clicks) at 1Hz,
+// plus a subtle sustained pendulum tone.
+function triggerTimeCharNote(bus, rootMidi, p, stepDur, time) {
+  const holdTime = Math.max(1.0, stepDur * 0.95);
+  const freq = midiToFreq(rootMidi);
+  const gain = new Tone.Gain(0.22).connect(bus);
+
+  const tickRate = 1.0;
+  const tickCount = Math.max(1, Math.floor(holdTime * tickRate) + 1);
+  const nodes = [];
+  for (let i = 0; i < tickCount; i++) {
+    const tickTime = time + i / tickRate;
+    const isTick = i % 2 === 0;
+    const tickFreq = freq * (isTick ? 1 : 0.75);
+    // wooden body
+    const body = new Tone.Oscillator(tickFreq * 4, 'triangle');
+    const bodyEnv = new Tone.AmplitudeEnvelope({ attack: 0.002, decay: 0.08, sustain: 0, release: 0.05 });
+    const bodyGain = new Tone.Gain(0.28);
+    body.connect(bodyEnv); bodyEnv.connect(bodyGain); bodyGain.connect(gain);
+    body.start(tickTime); body.stop(tickTime + 0.15);
+    bodyEnv.triggerAttackRelease(0.08, tickTime);
+    nodes.push(body, bodyEnv, bodyGain);
+    // sharp click
+    const click = new Tone.Noise('white');
+    const clickFilt = new Tone.Filter({ type: 'highpass', frequency: 4000 });
+    const clickEnv = new Tone.AmplitudeEnvelope({ attack: 0.0005, decay: 0.006, sustain: 0, release: 0.003 });
+    const clickGain = new Tone.Gain(0.11);
+    click.connect(clickFilt); clickFilt.connect(clickEnv); clickEnv.connect(clickGain); clickGain.connect(gain);
+    click.start(tickTime); click.stop(tickTime + 0.03);
+    clickEnv.triggerAttackRelease(0.008, tickTime);
+    nodes.push(click, clickFilt, clickEnv, clickGain);
+  }
+
+  // pendulum undertone
+  const pendulum = new Tone.Oscillator(freq, 'sine').start(time);
+  const pendulumEnv = new Tone.AmplitudeEnvelope({ attack: 0.5, decay: 0.3, sustain: 0.15, release: 0.5 });
+  const pendulumGain = new Tone.Gain(0.1);
+  pendulum.connect(pendulumEnv); pendulumEnv.connect(pendulumGain); pendulumGain.connect(gain);
+  pendulumEnv.triggerAttackRelease(holdTime, time);
+
+  setTimeout(() => {
+    try {
+      nodes.forEach(n => { try { if (n.stop) n.stop(); n.dispose(); } catch(e){} });
+      pendulum.stop(); pendulum.dispose(); pendulumEnv.dispose(); pendulumGain.dispose();
+      gain.dispose();
+    } catch(e){}
+  }, (holdTime + 2) * 1000);
+}
+
 // Character dispatch — step.character → trigger function
 const CHARACTER_TRIGGERS = {
+  'texture':      triggerTextureNote,
+  'pad':          triggerPadCharNote,
+  'sub':          triggerSubCharNote,
+  'choir':        triggerChoirCharNote,
+  'engine':       triggerEngineCharNote,
+  'reactor':      triggerReactorCharNote,
+  'space':        triggerSpaceCharNote,
+  'data':         triggerDataCharNote,
+  'quantum':      triggerQuantumCharNote,
+  'pulse':        triggerPulseCharNote,
+  'gravity':      triggerGravityCharNote,
+  'bio':          triggerBioCharNote,
+  'light':        triggerLightCharNote,
+  'time':         triggerTimeCharNote,
   'vibes':        triggerVibraphoneNote,
+  'kalimba':      triggerKalimbaCharNote,
   'pink-noise':   triggerPinkCharNote,
   'white-noise':  triggerWhiteCharNote,
   'brown-noise':  triggerBrownCharNote,

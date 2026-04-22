@@ -2309,7 +2309,7 @@ function triggerVibraphoneNote(bus, rootMidi, p, stepDur, time) {
   cEnv.triggerAttackRelease(0.012, time);
 
   // tremolo (vibraphone motor) — both partials route through it
-  const tremolo = new Tone.Tremolo({ frequency: 5.5, depth: 0.55 }).start(time);
+  const tremolo = new Tone.Tremolo({ frequency: 6, depth: 0.4 }).start(time);
   const postTrem = new Tone.Gain(1).connect(bus);
   tremolo.connect(postTrem);
 
@@ -2339,46 +2339,39 @@ function triggerVibraphoneNote(bus, rootMidi, p, stepDur, time) {
 
 // ---- Former onset sources, promoted to pitched characters ----
 
+// Pitched noise — peaking filter adds a resonant peak at the note but lets the
+// rest of the noise spectrum through, so pink / white / brown stay distinguishable.
 function triggerPitchedNoiseCharNote(bus, rootMidi, noiseType, stepDur, time) {
   const freq = midiToFreq(rootMidi);
   const holdTime = Math.max(0.4, stepDur * 0.9);
   const n = new Tone.Noise(noiseType).start(time);
-  // narrower resonance at fundamental + looser overtone bandpass for breathy character
-  const resFilt = new Tone.Filter({ type: 'bandpass', frequency: freq, Q: 14 });
-  const airFilt = new Tone.Filter({ type: 'bandpass', frequency: freq * 3, Q: 2 });
-  const resGain = new Tone.Gain(0.6);
-  const airGain = new Tone.Gain(0.25);
+  const peak = new Tone.Filter({ type: 'peaking', frequency: freq, Q: 9, gain: 22 });
   const env = new Tone.AmplitudeEnvelope({ attack: 0.06, decay: 0.25, sustain: 0.55, release: 0.6 });
-  const gain = new Tone.Gain(0.5).connect(bus);
-  n.connect(resFilt); resFilt.connect(resGain); resGain.connect(env);
-  n.connect(airFilt); airFilt.connect(airGain); airGain.connect(env);
-  env.connect(gain);
+  const gain = new Tone.Gain(0.32).connect(bus);
+  n.connect(peak); peak.connect(env); env.connect(gain);
   env.triggerAttackRelease(holdTime, time);
   setTimeout(() => {
-    try { n.stop(); n.dispose(); resFilt.dispose(); airFilt.dispose(); resGain.dispose(); airGain.dispose(); env.dispose(); gain.dispose(); } catch(e){}
+    try { n.stop(); n.dispose(); peak.dispose(); env.dispose(); gain.dispose(); } catch(e){}
   }, (holdTime + 3) * 1000);
 }
 function triggerPinkCharNote(bus, rootMidi, p, stepDur, time)  { triggerPitchedNoiseCharNote(bus, rootMidi, 'pink',  stepDur, time); }
 function triggerWhiteCharNote(bus, rootMidi, p, stepDur, time) { triggerPitchedNoiseCharNote(bus, rootMidi, 'white', stepDur, time); }
 function triggerBrownCharNote(bus, rootMidi, p, stepDur, time) { triggerPitchedNoiseCharNote(bus, rootMidi, 'brown', stepDur, time); }
 
+// Breath — white noise with a peaking resonance at the note (preserves airy
+// character) plus a gentle low-cut so it doesn't rumble.
 function triggerBreathCharNote(bus, rootMidi, p, stepDur, time) {
   const freq = midiToFreq(rootMidi);
   const holdTime = Math.max(0.5, stepDur * 0.9);
   const n = new Tone.Noise('white').start(time);
-  // two parallel band-passes: body near note + airy upper content
-  const bodyFilt = new Tone.Filter({ type: 'bandpass', frequency: freq, Q: 8 });
-  const airFilt = new Tone.Filter({ type: 'highpass', frequency: freq * 2.5 });
-  const bodyGain = new Tone.Gain(0.7);
-  const airGain = new Tone.Gain(0.35);
+  const lowcut = new Tone.Filter({ type: 'highpass', frequency: freq * 0.6 });
+  const peak = new Tone.Filter({ type: 'peaking', frequency: freq, Q: 6, gain: 18 });
   const env = new Tone.AmplitudeEnvelope({ attack: 0.18, decay: 0.35, sustain: 0.55, release: 0.8 });
-  const gain = new Tone.Gain(0.4).connect(bus);
-  n.connect(bodyFilt); bodyFilt.connect(bodyGain); bodyGain.connect(env);
-  n.connect(airFilt); airFilt.connect(airGain); airGain.connect(env);
-  env.connect(gain);
+  const gain = new Tone.Gain(0.32).connect(bus);
+  n.connect(lowcut); lowcut.connect(peak); peak.connect(env); env.connect(gain);
   env.triggerAttackRelease(holdTime, time);
   setTimeout(() => {
-    try { n.stop(); n.dispose(); bodyFilt.dispose(); airFilt.dispose(); bodyGain.dispose(); airGain.dispose(); env.dispose(); gain.dispose(); } catch(e){}
+    try { n.stop(); n.dispose(); lowcut.dispose(); peak.dispose(); env.dispose(); gain.dispose(); } catch(e){}
   }, (holdTime + 3) * 1000);
 }
 
@@ -2455,34 +2448,36 @@ function triggerBellCharNote(bus, rootMidi, p, stepDur, time) {
   setTimeout(() => { try { synth.dispose(); gain.dispose(); } catch(e){} }, 4500);
 }
 
+// Water drip — cavity acoustics: brief noise plop, then a sine that RISES in pitch
+// (as the underwater air cavity shrinks after impact). The signature "bloop" contour.
 function triggerDripCharNote(bus, rootMidi, p, stepDur, time) {
   const freq = midiToFreq(rootMidi);
-  const gain = new Tone.Gain(0.35).connect(bus);
+  const gain = new Tone.Gain(0.4).connect(bus);
 
-  // "plop" transient — brief noise burst
+  // Tight splash at onset
   const plop = new Tone.Noise('pink').start(time);
-  const plopFilt = new Tone.Filter({ type: 'bandpass', frequency: freq * 2, Q: 3 });
-  const plopEnv = new Tone.AmplitudeEnvelope({ attack: 0.001, decay: 0.025, sustain: 0, release: 0.02 });
-  const plopGain = new Tone.Gain(0.25);
+  const plopFilt = new Tone.Filter({ type: 'bandpass', frequency: freq * 3, Q: 2.5 });
+  const plopEnv = new Tone.AmplitudeEnvelope({ attack: 0.0005, decay: 0.014, sustain: 0, release: 0.008 });
+  const plopGain = new Tone.Gain(0.3);
   plop.connect(plopFilt); plopFilt.connect(plopEnv); plopEnv.connect(plopGain); plopGain.connect(gain);
-  plopEnv.triggerAttackRelease(0.02, time);
+  plopEnv.triggerAttackRelease(0.012, time);
 
-  // pitched descent — dramatic drop through and past the note
-  const osc = new Tone.Oscillator(freq * 4, 'sine');
-  const env = new Tone.AmplitudeEnvelope({ attack: 0.002, decay: 0.28, sustain: 0, release: 0.12 });
-  const oGain = new Tone.Gain(0.7);
+  // Cavity tone — rises below → above the note (the signature water-drop "bloop")
+  const osc = new Tone.Oscillator(freq * 0.6, 'sine');
+  const env = new Tone.AmplitudeEnvelope({ attack: 0.004, decay: 0.14, sustain: 0, release: 0.05 });
+  const oGain = new Tone.Gain(0.85);
   osc.connect(env); env.connect(oGain); oGain.connect(gain);
-  osc.frequency.setValueAtTime(freq * 4, time);
-  osc.frequency.exponentialRampToValueAtTime(freq * 0.8, time + 0.12);
-  osc.start(time); osc.stop(time + 0.6);
-  env.triggerAttackRelease(0.22, time);
+  osc.frequency.setValueAtTime(freq * 0.6, time);
+  osc.frequency.exponentialRampToValueAtTime(freq * 1.5, time + 0.08);
+  osc.start(time); osc.stop(time + 0.35);
+  env.triggerAttackRelease(0.12, time);
 
   setTimeout(() => {
     try {
       plop.stop(); plop.dispose(); plopFilt.dispose(); plopEnv.dispose(); plopGain.dispose();
       osc.dispose(); env.dispose(); oGain.dispose(); gain.dispose();
     } catch(e){}
-  }, 2000);
+  }, 1500);
 }
 
 function triggerWoodCharNote(bus, rootMidi, p, stepDur, time) {
@@ -2546,21 +2541,37 @@ function triggerPluckCharNote(bus, rootMidi, p, stepDur, time) {
   setTimeout(() => { try { pluck.dispose(); gain.dispose(); } catch(e){} }, 3500);
 }
 
+// Zap — distorted saw with fast pitch drop + crackling noise burst for electrical sizzle
 function triggerZapCharNote(bus, rootMidi, p, stepDur, time) {
   const freq = midiToFreq(rootMidi);
+  const gain = new Tone.Gain(0.18).connect(bus);
+
+  // pitched saw with downward glide + distortion
   const osc = new Tone.Oscillator(freq * 4, 'sawtooth');
-  const env = new Tone.AmplitudeEnvelope({ attack: 0.008, decay: 0.18, sustain: 0, release: 0.06 });
-  const dist = new Tone.Distortion(0.45);
-  const filt = new Tone.Filter({ type: 'lowpass', frequency: 6000, Q: 0.8 });
-  const gain = new Tone.Gain(0.16);
-  osc.connect(dist); dist.connect(filt); filt.connect(env); env.connect(gain);
-  gain.connect(bus);
+  const env = new Tone.AmplitudeEnvelope({ attack: 0.004, decay: 0.18, sustain: 0, release: 0.06 });
+  const dist = new Tone.Distortion(0.5);
+  const filt = new Tone.Filter({ type: 'lowpass', frequency: 6500, Q: 0.8 });
+  const oGain = new Tone.Gain(0.85);
+  osc.connect(dist); dist.connect(filt); filt.connect(env); env.connect(oGain); oGain.connect(gain);
   osc.frequency.setValueAtTime(freq * 4, time);
-  osc.frequency.exponentialRampToValueAtTime(freq, time + 0.11);
+  osc.frequency.exponentialRampToValueAtTime(freq, time + 0.10);
   osc.start(time); osc.stop(time + 0.3);
   env.triggerAttackRelease(0.15, time);
+
+  // electrical sizzle — brief bandpassed white noise at high freq
+  const sizzle = new Tone.Noise('white').start(time);
+  const sizFilt = new Tone.Filter({ type: 'bandpass', frequency: freq * 6, Q: 1.8 });
+  const sizEnv = new Tone.AmplitudeEnvelope({ attack: 0.001, decay: 0.09, sustain: 0, release: 0.04 });
+  const sizGain = new Tone.Gain(0.28);
+  sizzle.connect(sizFilt); sizFilt.connect(sizEnv); sizEnv.connect(sizGain); sizGain.connect(gain);
+  sizEnv.triggerAttackRelease(0.08, time);
+
   setTimeout(() => {
-    try { osc.dispose(); dist.dispose(); filt.dispose(); env.dispose(); gain.dispose(); } catch(e){}
+    try {
+      osc.dispose(); dist.dispose(); filt.dispose(); env.dispose(); oGain.dispose();
+      sizzle.stop(); sizzle.dispose(); sizFilt.dispose(); sizEnv.dispose(); sizGain.dispose();
+      gain.dispose();
+    } catch(e){}
   }, 2000);
 }
 

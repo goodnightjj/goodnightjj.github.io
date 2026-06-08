@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>175,000,000,000 — A field guide to parameters</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,700;1,9..144,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink:        #f3ede1;
+    --ink-dim:    #a89f8e;
+    --ink-faint:  #5e574a;
+    --paper:      #0e0d0b;
+    --paper-2:    #16140f;
+    --rule:       #2a261e;
+    --accent:     #d97757;     /* warm terracotta */
+    --accent-2:   #6b8e7f;     /* sage */
+    --accent-3:   #c9a96e;     /* brass */
+    --hot:        #ff6b3d;
+    --cold:       #4d7a8c;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body::before {
+    content: "";
+    position: fixed; inset: 0;
+    background-image:
+      radial-gradient(ellipse at 20% 10%, rgba(217,119,87,0.06), transparent 50%),
+      radial-gradient(ellipse at 80% 90%, rgba(107,142,127,0.05), transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Subtle grain */
+  body::after {
+    content: "";
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/><feColorMatrix values='0 0 0 0 0.95  0 0 0 0 0.93  0 0 0 0 0.88  0 0 0 0.04 0'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>");
+    pointer-events: none;
+    z-index: 100;
+    opacity: 0.5;
+  }
+
+  .frame {
+    position: relative;
+    z-index: 1;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 48px 56px 80px;
+  }
+
+  /* MASTHEAD ----------------------------------------------------------- */
+  .masthead {
+    border-top: 1px solid var(--ink);
+    border-bottom: 1px solid var(--rule);
+    padding: 18px 0 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+  }
+  .masthead .vol { color: var(--ink); }
+
+  /* TITLE -------------------------------------------------------------- */
+  .title-block {
+    padding: 80px 0 56px;
+    border-bottom: 1px solid var(--rule);
+    position: relative;
+  }
+  .eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 28px;
+  }
+  .title {
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    font-size: clamp(64px, 11vw, 168px);
+    line-height: 0.88;
+    letter-spacing: -0.04em;
+    font-variation-settings: "opsz" 144;
+  }
+  .title em {
+    font-style: italic;
+    font-weight: 400;
+    color: var(--accent);
+  }
+  .title .digit {
+    font-feature-settings: "tnum";
+  }
+  .deck {
+    margin-top: 36px;
+    max-width: 580px;
+    font-size: 19px;
+    line-height: 1.55;
+    color: var(--ink-dim);
+    font-style: italic;
+  }
+  .deck b {
+    color: var(--ink);
+    font-style: normal;
+    font-weight: 500;
+  }
+
+  /* COUNTER (live) */
+  .counter-line {
+    margin-top: 56px;
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-faint);
+    letter-spacing: 0.1em;
+  }
+  .counter {
+    color: var(--accent);
+    font-size: 13px;
+    min-width: 200px;
+  }
+
+  /* SECTION HEADER ----------------------------------------------------- */
+  .section {
+    padding: 80px 0 40px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .section-head {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: 32px;
+    margin-bottom: 48px;
+  }
+  .section-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--accent);
+    padding-top: 14px;
+  }
+  .section-title {
+    font-family: 'Fraunces', serif;
+    font-weight: 400;
+    font-size: 44px;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+  }
+  .section-title em { font-style: italic; color: var(--accent); }
+  .section-sub {
+    margin-top: 16px;
+    color: var(--ink-dim);
+    font-size: 16px;
+    line-height: 1.5;
+    max-width: 640px;
+    font-style: italic;
+  }
+
+  /* PANEL 1 — SCALE ---------------------------------------------------- */
+  .scale-stage {
+    position: relative;
+    height: 520px;
+    background: var(--paper-2);
+    border: 1px solid var(--rule);
+    overflow: hidden;
+  }
+  #dotfield {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  .scale-overlay {
+    position: absolute;
+    top: 24px; left: 24px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-dim);
+    letter-spacing: 0.1em;
+    pointer-events: none;
+  }
+  .scale-overlay .num {
+    color: var(--accent);
+    font-size: 14px;
+    display: block;
+    margin-top: 4px;
+  }
+  .scale-overlay-r {
+    position: absolute;
+    bottom: 24px; right: 24px;
+    text-align: right;
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    color: var(--ink);
+    font-size: 17px;
+    max-width: 320px;
+    line-height: 1.4;
+    pointer-events: none;
+  }
+  .scale-legend {
+    margin-top: 24px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-dim);
+    letter-spacing: 0.05em;
+  }
+  .scale-legend > div {
+    border-top: 1px solid var(--rule);
+    padding-top: 12px;
+  }
+  .scale-legend strong {
+    display: block;
+    color: var(--ink);
+    font-size: 22px;
+    font-family: 'Fraunces', serif;
+    font-weight: 400;
+    margin-bottom: 4px;
+    letter-spacing: -0.01em;
+  }
+
+  /* PANEL 2 — MECHANISM ------------------------------------------------ */
+  .mech-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 56px;
+    align-items: start;
+  }
+  .matrix-stage {
+    background: var(--paper-2);
+    border: 1px solid var(--rule);
+    aspect-ratio: 1.1 / 1;
+    position: relative;
+    overflow: hidden;
+  }
+  #matrix-canvas { display: block; width: 100%; height: 100%; }
+  .matrix-tag {
+    position: absolute;
+    top: 16px; left: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.15em;
+  }
+  .mech-prose p {
+    font-size: 17px;
+    line-height: 1.65;
+    color: var(--ink);
+    margin-bottom: 18px;
+  }
+  .mech-prose .lede::first-letter {
+    font-family: 'Fraunces', serif;
+    font-weight: 400;
+    font-size: 64px;
+    line-height: 0.8;
+    float: left;
+    padding: 6px 12px 0 0;
+    color: var(--accent);
+    font-style: italic;
+  }
+  .mech-prose .pull {
+    border-left: 2px solid var(--accent);
+    padding-left: 20px;
+    margin: 28px 0;
+    font-style: italic;
+    font-size: 19px;
+    color: var(--ink-dim);
+    line-height: 1.5;
+  }
+  .vec {
+    display: inline-flex;
+    gap: 4px;
+    align-items: center;
+    margin: 0 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-dim);
+    background: var(--paper-2);
+    padding: 2px 8px;
+    border: 1px solid var(--rule);
+    vertical-align: middle;
+  }
+
+  /* PANEL 3 — FLOW ----------------------------------------------------- */
+  .flow-stage {
+    position: relative;
+    background: var(--paper-2);
+    border: 1px solid var(--rule);
+    height: 580px;
+    overflow: hidden;
+  }
+  #flow-canvas { display: block; width: 100%; height: 100%; }
+  .flow-stage .stage-labels {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+  }
+  .stage-tick {
+    position: absolute;
+    top: 24px;
+    transform: translateX(-50%);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-faint);
+    letter-spacing: 0.15em;
+    text-align: center;
+    transition: color 0.5s;
+  }
+  .stage-tick.active { color: var(--accent); }
+  .stage-tick .lbl {
+    display: block;
+    margin-bottom: 6px;
+  }
+  .stage-tick .nm {
+    color: var(--ink);
+    font-size: 14px;
+    font-family: 'Fraunces', serif;
+    font-weight: 400;
+    letter-spacing: 0;
+    text-transform: none;
+    font-style: italic;
+  }
+  .stage-tick.active .nm { color: var(--accent); }
+  .flow-readout {
+    position: absolute;
+    bottom: 24px; left: 24px; right: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-dim);
+    letter-spacing: 0.08em;
+    pointer-events: none;
+  }
+  .flow-readout .now {
+    color: var(--ink);
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 18px;
+    letter-spacing: 0;
+  }
+
+  /* INTERACTIVE TOKENS */
+  .token-strip {
+    margin-top: 28px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-faint);
+  }
+  .token-strip .lbl { margin-right: 8px; letter-spacing: 0.15em; }
+  .tok {
+    background: var(--paper-2);
+    border: 1px solid var(--rule);
+    color: var(--ink-dim);
+    padding: 6px 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 12px;
+  }
+  .tok:hover, .tok.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(217,119,87,0.08);
+  }
+
+  /* MARGINALIA --------------------------------------------------------- */
+  .marginalia {
+    margin-top: 32px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+  }
+  .marg {
+    background: var(--paper);
+    padding: 24px 20px;
+  }
+  .marg .k {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .marg .v {
+    font-family: 'Fraunces', serif;
+    font-size: 28px;
+    color: var(--ink);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+  }
+  .marg .v em { color: var(--accent); font-style: italic; font-weight: 400; }
+  .marg .d {
+    font-size: 12px;
+    color: var(--ink-dim);
+    line-height: 1.4;
+    font-style: italic;
+  }
+
+  /* COLOPHON ----------------------------------------------------------- */
+  .colophon {
+    margin-top: 80px;
+    padding-top: 32px;
+    border-top: 1px solid var(--rule);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-faint);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+  .colophon .end {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 14px;
+    color: var(--ink-dim);
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  /* TOOLTIP ------------------------------------------------------------ */
+  .tip {
+    position: fixed;
+    pointer-events: none;
+    background: var(--ink);
+    color: var(--paper);
+    padding: 8px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    z-index: 50;
+    opacity: 0;
+    transition: opacity 0.15s;
+    max-width: 240px;
+    line-height: 1.4;
+  }
+  .tip.show { opacity: 1; }
+  .tip strong { color: var(--accent); }
+
+  @media (max-width: 880px) {
+    .frame { padding: 32px 24px 64px; }
+    .mech-grid { grid-template-columns: 1fr; gap: 32px; }
+    .marginalia { grid-template-columns: repeat(2, 1fr); }
+    .section-head { grid-template-columns: 1fr; gap: 8px; }
+    .scale-stage { height: 380px; }
+    .flow-stage { height: 480px; }
+    .scale-overlay-r { font-size: 14px; max-width: 200px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="frame">
+
+  <!-- MASTHEAD -->
+  <div class="masthead">
+    <div>The Parameter Quarterly</div>
+    <div class="vol">Vol. 1 — A field guide</div>
+    <div>№ 001</div>
+  </div>
+
+  <!-- TITLE -->
+  <div class="title-block">
+    <div class="eyebrow">An ambient visualization · hover for detail</div>
+    <h1 class="title">
+      <span class="digit">175,000,000,000</span><br>
+      <em>weights, listening.</em>
+    </h1>
+    <p class="deck">
+      Every modern language model is, underneath, a very large pile of numbers.
+      <b>This is what those numbers do.</b> Three views — the pile itself, the
+      arithmetic that turns it into language, and the journey a single sentence
+      takes through the stack.
+    </p>
+    <div class="counter-line">
+      <span class="counter" id="counter">0 weights rendered</span>
+      <span>—— ambient · auto-animating · 3 panels below</span>
+    </div>
+  </div>
+
+  <!-- ============================================================= -->
+  <!-- PANEL 1: SCALE                                                  -->
+  <!-- ============================================================= -->
+  <section class="section">
+    <div class="section-head">
+      <div class="section-num">I.<br>SCALE</div>
+      <div>
+        <h2 class="section-title">A pixel for every <em>thousand</em> weights.</h2>
+        <p class="section-sub">
+          You cannot show 175 billion of anything. So instead — each glowing
+          mote below stands for one thousand parameters. Hover the field to
+          measure what you're looking at.
+        </p>
+      </div>
+    </div>
+
+    <div class="scale-stage">
+      <canvas id="dotfield"></canvas>
+      <div class="scale-overlay">
+        DENSITY
+        <span class="num">175M motes</span>
+        each = 1,000 weights
+      </div>
+      <div class="scale-overlay-r">
+        If every mote were a person, this field would be <em style="color:var(--accent);font-style:italic">21× the population of Earth.</em>
+      </div>
+    </div>
+
+    <div class="scale-legend">
+      <div>
+        <strong>1 weight</strong>
+        a single number, ~32 bits<br>
+        e.g. <span style="color:var(--accent)">0.00214</span>
+      </div>
+      <div>
+        <strong>1 neuron</strong>
+        ~12,000 weights<br>
+        a single dimension of meaning
+      </div>
+      <div>
+        <strong>1 layer</strong>
+        ~2 billion weights<br>
+        96 of these are stacked
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================= -->
+  <!-- PANEL 2: MECHANISM                                              -->
+  <!-- ============================================================= -->
+  <section class="section">
+    <div class="section-head">
+      <div class="section-num">II.<br>MECHANISM</div>
+      <div>
+        <h2 class="section-title">The operation, performed <em>~10¹⁵ times</em>.</h2>
+        <p class="section-sub">
+          The parameters themselves do nothing. What moves is the multiplication
+          — input vectors meeting weight matrices, billions of small arithmetics
+          per token. Watch one happen.
+        </p>
+      </div>
+    </div>
+
+    <div class="mech-grid">
+      <div class="matrix-stage">
+        <div class="matrix-tag">y = Wx + b · multiply-accumulate</div>
+        <canvas id="matrix-canvas"></canvas>
+      </div>
+
+      <div class="mech-prose">
+        <p class="lede">
+          To predict the next word, the model takes a vector
+          <span class="vec">x = [0.21, -0.04, 0.78, …]</span>
+          — your sentence, encoded — and multiplies it against a weight
+          matrix <span class="vec">W</span>. The result is rotated, stretched,
+          bent into a new shape. Then the next layer does it again.
+        </p>
+
+        <div class="pull">
+          The weights are frozen. The input flows. Meaning is the
+          shape that survives 96 such transformations.
+        </div>
+
+        <p>
+          Each cell that brightens left of the diagonal is one
+          multiplication. A modern model performs roughly a <em>quadrillion</em>
+          of these to read a single page. The parameters are the lookup
+          table; attention is the choreography.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================= -->
+  <!-- PANEL 3: FLOW                                                   -->
+  <!-- ============================================================= -->
+  <section class="section" style="border-bottom:none;">
+    <div class="section-head">
+      <div class="section-num">III.<br>FLOW</div>
+      <div>
+        <h2 class="section-title">A sentence, <em>passing through</em>.</h2>
+        <p class="section-sub">
+          Every word becomes a vector. Every vector traverses the stack —
+          embedding, attention, feed-forward, normalize, repeat — until the
+          model commits to one next token. Hover any layer.
+        </p>
+      </div>
+    </div>
+
+    <div class="flow-stage">
+      <canvas id="flow-canvas"></canvas>
+      <div class="stage-labels" id="stage-labels"></div>
+      <div class="flow-readout">
+        <div id="flow-status">— initializing —</div>
+        <div class="now" id="flow-now">·</div>
+      </div>
+    </div>
+
+    <div class="token-strip">
+      <span class="lbl">SENTENCE →</span>
+      <span class="tok active" data-i="0">The</span>
+      <span class="tok" data-i="1">cat</span>
+      <span class="tok" data-i="2">sat</span>
+      <span class="tok" data-i="3">on</span>
+      <span class="tok" data-i="4">the</span>
+      <span class="tok" data-i="5">___</span>
+    </div>
+
+    <div class="marginalia">
+      <div class="marg">
+        <div class="k">Embedding</div>
+        <div class="v">12,288<em>D</em></div>
+        <div class="d">Each token becomes a point in 12,288-dimensional space.</div>
+      </div>
+      <div class="marg">
+        <div class="k">Layers</div>
+        <div class="v">96<em>×</em></div>
+        <div class="d">Stacked transformer blocks, each refining the vector.</div>
+      </div>
+      <div class="marg">
+        <div class="k">Attention heads</div>
+        <div class="v">96<em>/layer</em></div>
+        <div class="d">Parallel "viewpoints" mixing context across tokens.</div>
+      </div>
+      <div class="marg">
+        <div class="k">Output</div>
+        <div class="v">~50K<em>vocab</em></div>
+        <div class="d">A probability distribution. One word wins.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COLOPHON -->
+  <div class="colophon">
+    <div>SET IN FRAUNCES & JETBRAINS MONO</div>
+    <div class="end">— a quiet way of looking at very large numbers —</div>
+    <div>FIN.</div>
+  </div>
+
+</div>
+
+<div class="tip" id="tip"></div>
+
+<script>
+// ==================================================================
+// GLOBAL TOOLTIP
+// ==================================================================
+const tip = document.getElementById('tip');
+function showTip(html, x, y) {
+  tip.innerHTML = html;
+  tip.classList.add('show');
+  tip.style.left = (x + 14) + 'px';
+  tip.style.top = (y + 14) + 'px';
+}
+function hideTip() { tip.classList.remove('show'); }
+
+// ==================================================================
+// COUNTER
+// ==================================================================
+const counterEl = document.getElementById('counter');
+let counterTarget = 175_000_000;
+let counterCur = 0;
+function tickCounter() {
+  if (counterCur < counterTarget) {
+    counterCur += Math.ceil((counterTarget - counterCur) * 0.04 + 1000);
+    if (counterCur > counterTarget) counterCur = counterTarget;
+    counterEl.textContent = counterCur.toLocaleString() + ' motes rendered';
+    requestAnimationFrame(tickCounter);
+  } else {
+    counterEl.textContent = counterCur.toLocaleString() + ' motes · 1 mote = 1,000 weights';
+  }
+}
+setTimeout(tickCounter, 400);
+
+// ==================================================================
+// PANEL I — DOTFIELD (scale)
+// ==================================================================
+(function dotfield() {
+  const cvs = document.getElementById('dotfield');
+  const ctx = cvs.getContext('2d');
+  let W, H, dpr, dots = [], mouse = {x:-999, y:-999, active:false};
+
+  function resize() {
+    dpr = window.devicePixelRatio || 1;
+    const rect = cvs.getBoundingClientRect();
+    W = rect.width; H = rect.height;
+    cvs.width = W * dpr; cvs.height = H * dpr;
+    ctx.scale(dpr, dpr);
+    init();
+  }
+
+  function init() {
+    dots = [];
+    // dense field but bounded; each dot = abstraction of "thousands"
+    const target = Math.floor((W * H) / 60);
+    for (let i = 0; i < target; i++) {
+      dots.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        r: Math.random() * 1.4 + 0.3,
+        phase: Math.random() * Math.PI * 2,
+        speed: 0.2 + Math.random() * 0.6,
+        hue: Math.random()
+      });
+    }
+  }
+
+  cvs.addEventListener('mousemove', (e) => {
+    const r = cvs.getBoundingClientRect();
+    mouse.x = e.clientX - r.left;
+    mouse.y = e.clientY - r.top;
+    mouse.active = true;
+    // approx weights in radius
+    const radiusPx = 60;
+    const totalArea = W * H;
+    const totalDots = dots.length;
+    const localDots = totalDots * (Math.PI * radiusPx * radiusPx) / totalArea;
+    const localWeights = Math.round(localDots) * 1000;
+    showTip(`<strong>≈ ${localWeights.toLocaleString()}</strong> weights<br>under your cursor`, e.clientX, e.clientY);
+  });
+  cvs.addEventListener('mouseleave', () => { mouse.active = false; hideTip(); });
+
+  let t = 0;
+  function frame() {
+    t += 0.012;
+    ctx.clearRect(0, 0, W, H);
+
+    // soft drift gradient
+    const g = ctx.createRadialGradient(W*0.3, H*0.4, 20, W*0.3, H*0.4, W*0.7);
+    g.addColorStop(0, 'rgba(217,119,87,0.04)');
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+
+    for (const d of dots) {
+      // gentle pulse
+      const pulse = 0.5 + 0.5 * Math.sin(t * d.speed + d.phase);
+      let r = d.r * (0.6 + pulse * 0.6);
+      let alpha = 0.12 + pulse * 0.25;
+      let color = '243, 237, 225';
+
+      if (mouse.active) {
+        const dx = d.x - mouse.x, dy = d.y - mouse.y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if (dist < 80) {
+          const k = 1 - dist / 80;
+          alpha = 0.2 + k * 0.8;
+          r = d.r * (1 + k * 2.2);
+          color = d.hue > 0.5 ? '217, 119, 87' : '201, 169, 110';
+        }
+      }
+
+      ctx.beginPath();
+      ctx.arc(d.x, d.y, r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${color}, ${alpha})`;
+      ctx.fill();
+    }
+
+    requestAnimationFrame(frame);
+  }
+
+  resize();
+  window.addEventListener('resize', resize);
+  frame();
+})();
+
+// ==================================================================
+// PANEL II — MATRIX MULTIPLY
+// ==================================================================
+(function matrix() {
+  const cvs = document.getElementById('matrix-canvas');
+  const ctx = cvs.getContext('2d');
+  let W, H, dpr;
+  const N = 16; // matrix size displayed
+  let weights = [];   // W matrix
+  let inputVec = [];  // x
+  let outputVec = []; // y
+  let activeRow = -1;
+  let activeCol = -1;
+  let progress = 0;   // sweeps through
+  let hover = null;
+
+  function resize() {
+    dpr = window.devicePixelRatio || 1;
+    const rect = cvs.getBoundingClientRect();
+    W = rect.width; H = rect.height;
+    cvs.width = W * dpr; cvs.height = H * dpr;
+    ctx.scale(dpr, dpr);
+  }
+
+  function init() {
+    weights = [];
+    for (let i = 0; i < N; i++) {
+      const row = [];
+      for (let j = 0; j < N; j++) row.push((Math.random() - 0.5) * 2);
+      weights.push(row);
+    }
+    inputVec = Array.from({length: N}, () => (Math.random() - 0.5) * 2);
+    outputVec = Array.from({length: N}, () => 0);
+  }
+
+  cvs.addEventListener('mousemove', (e) => {
+    const r = cvs.getBoundingClientRect();
+    const mx = e.clientX - r.left, my = e.clientY - r.top;
+    const layout = computeLayout();
+    if (mx > layout.matX && mx < layout.matX + layout.matSize &&
+        my > layout.matY && my < layout.matY + layout.matSize) {
+      const col = Math.floor((mx - layout.matX) / layout.cell);
+      const row = Math.floor((my - layout.matY) / layout.cell);
+      if (col >= 0 && col < N && row >= 0 && row < N) {
+        hover = {row, col};
+        const v = weights[row][col].toFixed(3);
+        showTip(`weight <strong>w<sub>${row},${col}</sub></strong> = ${v}<br>one of ${(N*N).toLocaleString()} shown · billions exist`, e.clientX, e.clientY);
+        return;
+      }
+    }
+    hover = null;
+    hideTip();
+  });
+  cvs.addEventListener('mouseleave', () => { hover = null; hideTip(); });
+
+  function computeLayout() {
+    const pad = 28;
+    const labelSp = 38;
+    const avail = Math.min(W - pad*2 - labelSp*2, H - pad*2 - labelSp*2);
+    const matSize = avail;
+    const cell = matSize / N;
+    const matX = pad + labelSp;
+    const matY = pad + labelSp;
+    return {matX, matY, matSize, cell, pad, labelSp};
+  }
+
+  function frame() {
+    progress += 0.4;
+    if (progress >= N) {
+      progress = 0;
+      // recompute outputs
+      outputVec = outputVec.map(() => 0);
+    }
+    activeCol = Math.floor(progress);
+
+    ctx.clearRect(0, 0, W, H);
+    const L = computeLayout();
+
+    // draw input vector x (left column)
+    for (let i = 0; i < N; i++) {
+      const v = inputVec[i];
+      const intensity = Math.abs(v);
+      const isPos = v > 0;
+      ctx.fillStyle = isPos
+        ? `rgba(217,119,87,${0.15 + intensity * 0.55})`
+        : `rgba(77,122,140,${0.15 + intensity * 0.55})`;
+      const x = L.matX - L.labelSp + 6;
+      const y = L.matY + i * L.cell + 1;
+      ctx.fillRect(x, y, L.labelSp - 12, L.cell - 2);
+    }
+    // label
+    ctx.fillStyle = '#a89f8e';
+    ctx.font = '10px JetBrains Mono';
+    ctx.textAlign = 'center';
+    ctx.fillText('x', L.matX - L.labelSp/2, L.matY - 8);
+
+    // draw weights matrix W
+    for (let i = 0; i < N; i++) {
+      for (let j = 0; j < N; j++) {
+        const v = weights[i][j];
+        const intensity = Math.abs(v);
+        let alpha = 0.08 + intensity * 0.35;
+        let color;
+
+        // active column highlighting (current multiplication)
+        const dist = j - activeCol;
+        if (dist === 0) {
+          alpha = Math.min(1, alpha + 0.5);
+          color = v > 0 ? '255,107,61' : '107,142,127';
+        } else if (dist > 0 && dist < 2) {
+          alpha = Math.min(1, alpha + 0.2);
+          color = v > 0 ? '217,119,87' : '107,142,127';
+        } else {
+          color = v > 0 ? '243,237,225' : '168,159,142';
+        }
+
+        if (hover && hover.row === i && hover.col === j) {
+          alpha = 1;
+          color = '201,169,110';
+        }
+
+        ctx.fillStyle = `rgba(${color}, ${alpha})`;
+        ctx.fillRect(L.matX + j * L.cell + 0.5, L.matY + i * L.cell + 0.5, L.cell - 1, L.cell - 1);
+      }
+    }
+    // matrix label
+    ctx.fillStyle = '#a89f8e';
+    ctx.font = '10px JetBrains Mono';
+    ctx.textAlign = 'center';
+    ctx.fillText('W (weights)', L.matX + L.matSize / 2, L.matY - 8);
+
+    // draw output vector y on right
+    // accumulate output as sweep progresses
+    if (activeCol < N) {
+      for (let i = 0; i < N; i++) {
+        outputVec[i] += weights[i][activeCol] * inputVec[activeCol] * 0.06;
+      }
+    }
+    for (let i = 0; i < N; i++) {
+      const v = Math.tanh(outputVec[i]); // squashed
+      const intensity = Math.abs(v);
+      const isPos = v > 0;
+      ctx.fillStyle = isPos
+        ? `rgba(217,119,87,${0.1 + intensity * 0.7})`
+        : `rgba(77,122,140,${0.1 + intensity * 0.7})`;
+      const x = L.matX + L.matSize + 6;
+      const y = L.matY + i * L.cell + 1;
+      ctx.fillRect(x, y, L.labelSp - 12, L.cell - 2);
+    }
+    ctx.fillStyle = '#d97757';
+    ctx.font = '10px JetBrains Mono';
+    ctx.textAlign = 'center';
+    ctx.fillText('y', L.matX + L.matSize + L.labelSp/2, L.matY - 8);
+
+    // sweep indicator below matrix
+    ctx.fillStyle = '#5e574a';
+    ctx.font = '9px JetBrains Mono';
+    ctx.textAlign = 'left';
+    ctx.fillText(`step ${(activeCol+1).toString().padStart(2,'0')} / ${N} · in real models, this completes ~10¹² times per token`, L.matX, L.matY + L.matSize + 22);
+
+    requestAnimationFrame(frame);
+  }
+
+  resize();
+  window.addEventListener('resize', () => { resize(); });
+  init();
+  frame();
+})();
+
+// ==================================================================
+// PANEL III — FLOW (token through stack)
+// ==================================================================
+(function flow() {
+  const cvs = document.getElementById('flow-canvas');
+  const ctx = cvs.getContext('2d');
+  const labelHost = document.getElementById('stage-labels');
+  const statusEl = document.getElementById('flow-status');
+  const nowEl = document.getElementById('flow-now');
+  let W, H, dpr;
+
+  const stages = [
+    {name: 'tokens',     label: 'STAGE 01', detail: 'Words become integer IDs.',                        color: '#c9a96e'},
+    {name: 'embedding',  label: 'STAGE 02', detail: 'Each token → vector in 12,288-D space.',          color: '#d97757'},
+    {name: 'attention',  label: 'STAGE 03', detail: 'Tokens look at each other; context mixes in.',    color: '#d97757'},
+    {name: 'mlp',        label: 'STAGE 04', detail: 'Feed-forward layer transforms each vector.',      color: '#6b8e7f'},
+    {name: 'norm',       label: 'STAGE 05', detail: 'Normalize. Repeat × 96 layers.',                  color: '#6b8e7f'},
+    {name: 'unembed',    label: 'STAGE 06', detail: 'Map back to vocabulary scores.',                  color: '#c9a96e'},
+    {name: 'output',     label: 'STAGE 07', detail: 'Softmax → probability distribution. Pick one.',   color: '#ff6b3d'}
+  ];
+
+  let particles = []; // tokens flowing through
+  let hover = -1;
+  const tokens = ['The', 'cat', 'sat', 'on', 'the'];
+  const candidateOutputs = ['mat', 'floor', 'rug', 'chair', 'sill'];
+
+  function resize() {
+    dpr = window.devicePixelRatio || 1;
+    const rect = cvs.getBoundingClientRect();
+    W = rect.width; H = rect.height;
+    cvs.width = W * dpr; cvs.height = H * dpr;
+    ctx.scale(dpr, dpr);
+    layoutLabels();
+  }
+
+  function layoutLabels() {
+    labelHost.innerHTML = '';
+    stages.forEach((s, i) => {
+      const x = padL() + i * stageGap();
+      const el = document.createElement('div');
+      el.className = 'stage-tick';
+      el.style.left = x + 'px';
+      el.dataset.i = i;
+      el.innerHTML = `<span class="lbl">${s.label}</span><span class="nm">${s.name}</span>`;
+      el.addEventListener('mouseenter', (e) => {
+        hover = i;
+        document.querySelectorAll('.stage-tick').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+        statusEl.textContent = s.detail;
+        nowEl.textContent = s.name;
+      });
+      el.addEventListener('mouseleave', () => {
+        hover = -1;
+        el.classList.remove('active');
+      });
+      labelHost.appendChild(el);
+    });
+  }
+
+  function padL() { return 60; }
+  function padR() { return 60; }
+  function stageGap() { return (W - padL() - padR()) / (stages.length - 1); }
+
+  // spawn a token particle
+  function spawn(tokenIdx) {
+    const baseY = H * 0.55;
+    const word = tokens[tokenIdx % tokens.length];
+    // each token = a "cloud" of dimension dots
+    const dim = 28;
+    const cloud = [];
+    for (let k = 0; k < dim; k++) {
+      cloud.push({
+        offsetY: (Math.random() - 0.5) * 6,
+        offsetX: (Math.random() - 0.5) * 6,
+        seed: Math.random() * 100,
+        speed: 0.85 + Math.random() * 0.3
+      });
+    }
+    particles.push({
+      progress: 0,
+      tokenIdx,
+      word,
+      cloud,
+      baseY: baseY + (tokenIdx % tokens.length - 2) * 36,
+      lifeTime: 0,
+      finalWord: candidateOutputs[Math.floor(Math.random() * candidateOutputs.length)]
+    });
+  }
+
+  let lastSpawn = 0;
+  let activeStageIdx = 0;
+  let stagePulse = 0;
+
+  function frame(t) {
+    ctx.clearRect(0, 0, W, H);
+    const gap = stageGap();
+
+    // background rails
+    ctx.strokeStyle = 'rgba(94,87,74,0.25)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < stages.length; i++) {
+      const x = padL() + i * gap;
+      ctx.beginPath();
+      ctx.moveTo(x, 60);
+      ctx.lineTo(x, H - 60);
+      ctx.stroke();
+
+      // draw stage representation
+      drawStageVisual(i, x);
+    }
+
+    // rolling stage pulse — which stage is "lit"
+    stagePulse += 0.008;
+    activeStageIdx = Math.floor(stagePulse) % stages.length;
+    const focusIdx = hover >= 0 ? hover : activeStageIdx;
+    const focusX = padL() + focusIdx * gap;
+    // glow column
+    const grad = ctx.createLinearGradient(focusX - 40, 0, focusX + 40, 0);
+    grad.addColorStop(0, 'rgba(217,119,87,0)');
+    grad.addColorStop(0.5, 'rgba(217,119,87,0.06)');
+    grad.addColorStop(1, 'rgba(217,119,87,0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(focusX - 40, 50, 80, H - 100);
+
+    // auto-update status if not hovering
+    if (hover < 0) {
+      const s = stages[activeStageIdx];
+      statusEl.textContent = s.detail;
+      nowEl.textContent = s.name;
+      // sync .active class on label
+      document.querySelectorAll('.stage-tick').forEach((el, i) => {
+        el.classList.toggle('active', i === activeStageIdx);
+      });
+    }
+
+    // spawn tokens periodically
+    if (t - lastSpawn > 1100) {
+      spawn(particles.length);
+      lastSpawn = t;
+    }
+
+    // update + draw particles
+    for (let p of particles) {
+      p.progress += 0.0035 * p.cloud[0].speed;
+      p.lifeTime += 1;
+      if (p.progress > 1.05) continue;
+
+      const xRaw = padL() + p.progress * (stages.length - 1) * gap;
+      const stageF = p.progress * (stages.length - 1);
+      const stageNow = Math.floor(stageF);
+      const stageFrac = stageF - stageNow;
+
+      // draw the token cloud
+      for (const m of p.cloud) {
+        // expand/contract based on stage
+        let spread = 8;
+        let color = '243,237,225';
+        let alpha = 0.7;
+
+        if (stageNow === 0) { spread = 4; color = '201,169,110'; }
+        else if (stageNow === 1) { spread = 14; color = '217,119,87'; }
+        else if (stageNow >= 2 && stageNow <= 4) {
+          // attention/mlp/norm — chaotic mixing
+          spread = 18 + Math.sin(t*0.005 + m.seed) * 8;
+          color = stageNow % 2 === 0 ? '107,142,127' : '217,119,87';
+        }
+        else if (stageNow === 5) { spread = 10; color = '201,169,110'; }
+        else if (stageNow >= 6) { spread = 3; color = '255,107,61'; alpha = 1; }
+
+        const wobble = Math.sin(t * 0.003 + m.seed) * spread;
+        const wobble2 = Math.cos(t * 0.0024 + m.seed * 1.3) * spread;
+        const x = xRaw + m.offsetX + wobble2;
+        const y = p.baseY + m.offsetY + wobble;
+
+        ctx.beginPath();
+        ctx.arc(x, y, 1.4, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${color}, ${alpha})`;
+        ctx.fill();
+      }
+
+      // word label as it enters
+      if (p.progress < 0.12) {
+        const a = 1 - p.progress / 0.12;
+        ctx.fillStyle = `rgba(243,237,225,${a})`;
+        ctx.font = "italic 18px Fraunces";
+        ctx.textAlign = 'center';
+        ctx.fillText(p.word, xRaw, p.baseY - 14);
+      }
+      // emerging final word at output
+      if (p.progress > 0.92) {
+        const a = (p.progress - 0.92) / 0.08;
+        ctx.fillStyle = `rgba(255,107,61,${Math.min(1, a)})`;
+        ctx.font = "italic 18px Fraunces";
+        ctx.textAlign = 'center';
+        ctx.fillText(p.finalWord, xRaw, p.baseY - 14);
+      }
+    }
+
+    // prune
+    particles = particles.filter(p => p.progress < 1.2);
+
+    requestAnimationFrame(frame);
+  }
+
+  // small visual signature per stage (drawn behind)
+  function drawStageVisual(i, x) {
+    ctx.save();
+    ctx.translate(x, H * 0.18);
+    const focused = (hover === i || (hover < 0 && activeStageIdx === i));
+    const baseAlpha = focused ? 0.5 : 0.18;
+
+    if (i === 0) { // tokens — square brackets
+      ctx.strokeStyle = `rgba(201,169,110,${baseAlpha})`;
+      ctx.lineWidth = 1;
+      ctx.strokeRect(-10, -10, 20, 20);
+    } else if (i === 1) { // embedding — radiating lines
+      ctx.strokeStyle = `rgba(217,119,87,${baseAlpha})`;
+      for (let k = 0; k < 6; k++) {
+        const a = (k/6) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.moveTo(0,0);
+        ctx.lineTo(Math.cos(a)*14, Math.sin(a)*14);
+        ctx.stroke();
+      }
+    } else if (i === 2) { // attention — crossing arcs
+      ctx.strokeStyle = `rgba(217,119,87,${baseAlpha})`;
+      ctx.beginPath(); ctx.arc(0, 0, 12, 0, Math.PI); ctx.stroke();
+      ctx.beginPath(); ctx.arc(0, 0, 12, Math.PI, Math.PI*2); ctx.stroke();
+    } else if (i === 3) { // mlp — bars
+      ctx.fillStyle = `rgba(107,142,127,${baseAlpha})`;
+      for (let k = 0; k < 5; k++) {
+        ctx.fillRect(-12 + k*5, -10 + (k%2)*4, 3, 18);
+      }
+    } else if (i === 4) { // norm — circle
+      ctx.strokeStyle = `rgba(107,142,127,${baseAlpha})`;
+      ctx.beginPath(); ctx.arc(0, 0, 12, 0, Math.PI*2); ctx.stroke();
+    } else if (i === 5) { // unembed — fan
+      ctx.strokeStyle = `rgba(201,169,110,${baseAlpha})`;
+      for (let k = -2; k <= 2; k++) {
+        ctx.beginPath();
+        ctx.moveTo(0, 12);
+        ctx.lineTo(k*5, -12);
+        ctx.stroke();
+      }
+    } else if (i === 6) { // output — solid dot
+      ctx.fillStyle = `rgba(255,107,61,${baseAlpha+0.2})`;
+      ctx.beginPath(); ctx.arc(0, 0, 6, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  resize();
+  window.addEventListener('resize', resize);
+  // seed initial
+  spawn(0);
+  spawn(1);
+  requestAnimationFrame(function loop(t) { frame(t); requestAnimationFrame(loop); });
+})();
+
+// ==================================================================
+// TOKEN STRIP — purely decorative interactive accent
+// ==================================================================
+document.querySelectorAll('.tok').forEach(el => {
+  el.addEventListener('click', () => {
+    document.querySelectorAll('.tok').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+  });
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Liquid Signal Shader</title>
+<style>
+  :root{color-scheme:dark;--bg:#050507;--panel:rgba(10,10,14,.72);--line:rgba(255,255,255,.13);--text:#f5f2ea;--muted:#a8a29a}
+  html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;color:var(--text);cursor:auto !important}
+  *{cursor:auto !important}
+  canvas{position:fixed;inset:0;width:100%;height:100%;display:block;cursor:auto !important}
+  .ui{position:fixed;left:18px;top:18px;width:min(360px,calc(100vw - 36px));background:var(--panel);border:1px solid var(--line);backdrop-filter:blur(18px);border-radius:18px;padding:16px;box-shadow:0 24px 70px rgba(0,0,0,.42)}
+  h1{font-size:13px;margin:0 0 5px;letter-spacing:.08em;text-transform:uppercase;font-weight:700}
+  p{margin:0 0 14px;color:var(--muted);font-size:11px;line-height:1.45}
+  label{display:grid;grid-template-columns:92px 1fr 42px;gap:10px;align-items:center;font-size:11px;color:#ddd;margin:10px 0}
+  input[type=range]{width:100%;accent-color:#f4eee1}
+  select{width:100%;background:rgba(255,255,255,.08);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:8px;font:inherit;font-size:11px}
+  option{background:#111;color:#fff}
+  .buttons{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}
+  button{background:rgba(255,255,255,.08);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:9px 8px;font:inherit;font-size:11px;cursor:auto !important}
+  button:hover{background:rgba(255,255,255,.16)}
+  .hint{position:fixed;right:18px;bottom:14px;color:rgba(255,255,255,.55);font-size:11px;text-align:right;line-height:1.5}
+  .hide{display:none}
+</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<section class="ui" id="ui">
+  <h1>Liquid Signal</h1>
+  <p>Version 4. Sharper gel layers, less smoke, more graphic signal.</p>
+  <label>density <input id="gain" type="range" min="0" max="2" step="0.001" value="1.00"><span id="gainv">1.00</span></label>
+  <label>drift <input id="fold" type="range" min="0" max="8" step="0.001" value="1.20"><span id="foldv">1.20</span></label>
+  <label>warp <input id="warp" type="range" min="0" max="3" step="0.001" value="0.65"><span id="warpv">0.65</span></label>
+  <label>blur <input id="trace" type="range" min="0" max="1" step="0.001" value="0.34"><span id="tracev">0.34</span></label>
+  <label>blue <input id="color" type="range" min="0" max="1" step="0.001" value="0.55"><span id="colorv">0.55</span></label>
+  <label>speed <input id="speed" type="range" min="0" max="2" step="0.001" value="0.90"><span id="speedv">0.90</span></label>
+  <label>layers <input id="layers" type="range" min="1" max="8" step="1" value="2"><span id="layersv">5</span></label>
+  <label>distort <input id="distortion" type="range" min="0" max="2" step="0.001" value="0.38"><span id="distortionv">0.38</span></label>
+  <label>grain <input id="grain" type="range" min="0" max="0.12" step="0.001" value="0.020"><span id="grainv">0.02</span></label>
+  <label>chroma <input id="chroma" type="range" min="0" max="0.25" step="0.001" value="0.075"><span id="chromav">0.08</span></label>
+  <label>mouse <select id="mouseMode">
+    <option value="0" selected>off</option>
+    <option value="1">attract</option>
+    <option value="2">repel</option>
+    <option value="3">orbit</option>
+  </select><span></span></label>
+  <label>palette <select id="palette">
+    <option value="0">warm signal</option>
+    <option value="1">acid bloom</option>
+    <option value="2">ice glass</option>
+    <option value="3">infrared</option>
+    <option value="4">mono paper</option>
+    <option value="5">plum dusk</option>
+    <option value="6">cyber lime</option>
+    <option value="7">sunset scan</option>
+  </select><span></span></label>
+  <div class="buttons">
+    <button data-preset="soft">soft</button>
+    <button data-preset="cream">cream</button>
+    <button data-preset="bleed">bleed</button>
+    <button data-preset="glass">glass</button>
+  </div>
+</section>
+<div class="hint">space pauses<br>h hides UI<br>s saves PNG</div>
+<script>
+const canvas = document.getElementById('gl');
+const gl = canvas.getContext('webgl', { antialias:false, preserveDrawingBuffer:true });
+if(!gl) document.body.innerHTML = 'WebGL not supported';
+
+const vert = `
+attribute vec2 p;
+void main(){ gl_Position = vec4(p,0.0,1.0); }
+`;
+const frag = `
+precision highp float;
+uniform vec2 r, mouse;
+uniform float t, gain, fold, warp, trace, colorAmt, layerCount, distortion, grainAmt, chroma, mouseMode;
+uniform int palette;
+
+float sdCircle(vec2 p, vec2 c, float rad){ return length(p-c)-rad; }
+float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1,311.7))) * 43758.5453123); }
+float noise(vec2 p){
+  vec2 i=floor(p), f=fract(p);
+  f=f*f*(3.0-2.0*f);
+  float a=hash(i), b=hash(i+vec2(1,0)), c=hash(i+vec2(0,1)), d=hash(i+vec2(1,1));
+  return mix(mix(a,b,f.x),mix(c,d,f.x),f.y);
+}
+float fbm(vec2 p){
+  float v=0.0, a=.5;
+  for(int i=0;i<5;i++){ v += a*noise(p); p*=2.03; a*=.5; }
+  return v;
+}
+float softBand(float d, float w){ return 1.0-smoothstep(0.0,w,abs(d)); }
+float fill(float d, float blur){ return 1.0-smoothstep(0.0,blur,d); }
+
+vec3 overlay(vec3 base, vec3 col, float a){ return mix(base, col, clamp(a,0.0,1.0)); }
+
+vec3 palBase(){
+  if(palette==1) return vec3(.78,.80,.70);
+  if(palette==2) return vec3(.76,.82,.86);
+  if(palette==3) return vec3(.10,.08,.08);
+  if(palette==4) return vec3(.82,.81,.76);
+  if(palette==5) return vec3(.70,.65,.72);
+  if(palette==6) return vec3(.05,.07,.05);
+  if(palette==7) return vec3(.86,.72,.62);
+  return vec3(.82,.82,.78);
+}
+vec3 palOrb(float k){
+  if(palette==1) return mix(vec3(.84,1.00,.02), vec3(1.00,.12,.72), k);
+  if(palette==2) return mix(vec3(.65,.95,1.00), vec3(.10,.24,.90), k);
+  if(palette==3) return mix(vec3(1.00,.55,.05), vec3(.70,.00,.00), k);
+  if(palette==4) return mix(vec3(.76,.74,.66), vec3(.22,.21,.19), k);
+  if(palette==5) return mix(vec3(.90,.52,.82), vec3(.20,.04,.42), k);
+  if(palette==6) return mix(vec3(.62,1.00,.03), vec3(.00,.22,.10), k);
+  if(palette==7) return mix(vec3(1.00,.74,.12), vec3(.80,.10,.24), k);
+  return mix(vec3(.82,.74,.04), vec3(.62,.00,.00), k);
+}
+vec3 palLow(float k){
+  if(palette==1) return mix(vec3(.90,.95,.28), vec3(.24,.88,.44), k);
+  if(palette==2) return mix(vec3(.70,.84,.94), vec3(.42,.55,.88), k);
+  if(palette==3) return mix(vec3(.40,.05,.00), vec3(.95,.16,.02), k);
+  if(palette==4) return mix(vec3(.70,.67,.58), vec3(.45,.42,.36), k);
+  if(palette==5) return mix(vec3(.80,.58,.72), vec3(.28,.10,.34), k);
+  if(palette==6) return mix(vec3(.06,.22,.10), vec3(.80,1.00,.00), k);
+  if(palette==7) return mix(vec3(.98,.58,.22), vec3(.58,.08,.32), k);
+  return mix(vec3(.83,.76,.35), vec3(.76,.08,.00), k);
+}
+vec3 palBand(float k){
+  if(palette==1) return mix(vec3(.80,.55,1.00), vec3(.00,1.00,.68), k);
+  if(palette==2) return mix(vec3(.88,1.00,1.00), vec3(.38,.62,1.00), k);
+  if(palette==3) return mix(vec3(1.00,.28,.00), vec3(1.00,.78,.12), k);
+  if(palette==4) return mix(vec3(.92,.91,.86), vec3(.55,.54,.50), k);
+  if(palette==5) return mix(vec3(.94,.72,1.00), vec3(.52,.42,.86), k);
+  if(palette==6) return mix(vec3(.35,1.00,.75), vec3(.82,1.00,.05), k);
+  if(palette==7) return mix(vec3(.98,.34,.42), vec3(.64,.76,1.00), k);
+  return mix(vec3(.72,.86,1.0), vec3(.68,.66,1.0), k);
+}
+
+
+void main(){
+  vec2 uv = gl_FragCoord.xy / r.xy;
+  vec2 p = (gl_FragCoord.xy*2.0-r)/r.y;
+  float time = t; // seconds, speed controlled in JS
+
+  // animated, slightly lensy coordinate warp
+  vec2 w = p;
+
+  // mouse attractor, centered in shader space
+  vec2 mp = (mouse*2.0-1.0) * vec2(r.x/r.y, 1.0);
+  float md = length(w-mp);
+  float force = exp(-md*1.65) * .95;
+  if(mouseMode > .5 && mouseMode < 1.5){
+    w = mix(w, mp, clamp(force*.72,0.0,.85));
+  }
+  if(mouseMode > 1.5 && mouseMode < 2.5){
+    w += normalize(w-mp+1e-4) * force * .78;
+  }
+  if(mouseMode > 2.5){
+    vec2 d = w-mp;
+    float a = force * 1.65;
+    w = mp + mat2(cos(a),-sin(a),sin(a),cos(a))*d;
+  }
+  w.x += .055*sin(p.y*2.3 + time*.75)*warp;
+  w.y += .045*cos(p.x*2.1 - time*.62)*warp;
+  w += .030*vec2(sin(time*.55+p.y*7.0), cos(time*.45+p.x*6.0))*fold*.08;
+  float n1 = fbm(p*1.8 + vec2(time*.08, -time*.05));
+  float n2 = fbm(p*2.5 + vec2(-time*.06, time*.09));
+  w += (vec2(n1,n2)-.5) * distortion * .18;
+  w += .035*distortion*vec2(sin(p.y*11.0+time*.7), cos(p.x*10.0-time*.6));
+
+  vec3 col = palBase(); // paper / screen base
+
+  // huge right orb, cropped hard by viewport, blurred internally
+  vec2 c1 = vec2(.86 + .10*sin(time*.23), .38 + .07*cos(time*.19));
+  float d1 = sdCircle(w, c1, .82 + .055*sin(time*.31));
+  float m1 = fill(d1, .035 + trace*.085);
+  vec3 orb = palOrb(smoothstep(-.58,.34,w.x+.12));
+  orb = mix(orb, vec3(.04,.09,.00), smoothstep(-.04,.08,d1+.02) * smoothstep(-.15,.12,-w.y+.02));
+  col = overlay(col, orb, m1*.96*gain);
+  float rim1 = softBand(d1, .012 + trace*.035);
+  col = overlay(col, palBand(.35), rim1*.34);
+
+  // pale center veil that cuts through the orb
+  float d2 = sdCircle(w, vec2(.05 + .06*cos(time*.21), -.05 + .05*sin(time*.17)), .92);
+  float veil = 1.0-fill(d2, .16);
+  col = mix(col, palBase()+vec3(.02,.01,.02), veil*.38);
+
+  // lower sweeping yellow field
+  float curve = w.y + .54 + .24*w.x*w.x - .18*sin(w.x*1.7+time*.42) + .05*cos(time*.27);
+  float lower = smoothstep(.025,-.055,curve);
+  vec3 low = palLow(smoothstep(.12,1.25,w.x));
+  col = overlay(col, low, lower*.82);
+  float cutLine = softBand(curve, .010 + trace*.025);
+  col = overlay(col, palBand(.82), cutLine*.45);
+
+  // extra translucent layers, like stacked gels or slow feedback ghosts
+  for(int i=0;i<8;i++){
+    if(float(i) < layerCount){
+      float fi = float(i);
+      vec2 lc = vec2(-.72 + .32*fi + .10*sin(time*(.18+.04*fi)+fi), -.26 + .17*cos(time*(.15+.03*fi)+fi*1.7));
+      float lr = .38 + .08*sin(fi*2.1 + time*.23);
+      float ld = sdCircle(w, lc, lr);
+      float lm = fill(ld, .045 + trace*.055) * (.22 + .045*fi) * gain;
+      vec3 lcol = mix(palLow(fract(fi*.23)), palBand(fract(fi*.37)), .55);
+      col = overlay(col, lcol, lm*.24);
+      float lrim = softBand(ld, .009 + trace*.020);
+      col = overlay(col, palBand(fract(fi*.41)), lrim*.15);
+    }
+  }
+
+  // soft blue lavender edge between grey and yellow
+  float blueBand = softBand(curve+.020, .030 + trace*.035);
+  vec3 blue = palBand(smoothstep(-.55,.15,w.x));
+  col = overlay(col, blue, blueBand*.62*(.75+.25*colorAmt));
+
+  // muted beige lower left haze
+  float beige = fill(sdCircle(w, vec2(-.72,-.72), .72), .10);
+  col = overlay(col, palLow(.18), beige*.42);
+
+  // top left cut off yellow block
+  vec2 q = w - vec2(-.42,.94);
+  q = mat2(.94,-.34,.34,.94)*q;
+  float block = smoothstep(.42,.38,abs(q.x)) * smoothstep(.24,.20,abs(q.y));
+  col = overlay(col, palOrb(.12), block*.42);
+
+  // fine contour rings make it feel graphic instead of smoky
+  float rings = 0.0;
+  rings += softBand(fract((d1+time*.018)*10.0)-.5, .025);
+  rings += softBand(fract((curve-time*.015)*12.0)-.5, .018);
+  col = overlay(col, palBand(.55), rings*.055);
+
+  // chromatic softness, subtle grain, vignette
+  float glow = fill(sdCircle(w, vec2(.98,.28), .93), .55);
+  float edgeEnergy = blueBand + softBand(d1, .12 + trace*.09) + softBand(curve-.04, .16);
+  col.r += glow*.035 + edgeEnergy*chroma*.75;
+  col.g += edgeEnergy*chroma*.18;
+  col.b += blueBand*.055 - edgeEnergy*chroma*.55;
+
+  float grain = fract(sin(dot(gl_FragCoord.xy+floor(t*24.0), vec2(12.9898,78.233))) * 43758.5453);
+  col += (grain-.5)*grainAmt;
+  col *= .98 + .03*smoothstep(1.6,.1,length(p));
+
+  gl_FragColor = vec4(clamp(col,0.0,1.0),1.0);
+}
+`;
+function shader(type, src){ const s=gl.createShader(type); gl.shaderSource(s,src); gl.compileShader(s); if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)) throw gl.getShaderInfoLog(s); return s; }
+const prog = gl.createProgram();
+gl.attachShader(prog, shader(gl.VERTEX_SHADER, vert));
+gl.attachShader(prog, shader(gl.FRAGMENT_SHADER, frag));
+gl.linkProgram(prog);
+if(!gl.getProgramParameter(prog,gl.LINK_STATUS)) throw gl.getProgramInfoLog(prog);
+gl.useProgram(prog);
+const buf=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,buf); gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1, 1,-1, -1,1, -1,1, 1,-1, 1,1]),gl.STATIC_DRAW);
+const loc=gl.getAttribLocation(prog,'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+const U = n => gl.getUniformLocation(prog,n);
+const uni = {r:U('r'),mouse:U('mouse'),t:U('t'),gain:U('gain'),fold:U('fold'),warp:U('warp'),trace:U('trace'),colorAmt:U('colorAmt'),layerCount:U('layerCount'),distortion:U('distortion'),grainAmt:U('grainAmt'),chroma:U('chroma'),mouseMode:U('mouseMode'),palette:U('palette')};
+const ids = ['gain','fold','warp','trace','color','speed','layers','distortion','grain','chroma'];
+const state = Object.fromEntries(ids.map(id=>[id,parseFloat(document.getElementById(id).value)]));
+ids.forEach(id=>document.getElementById(id).addEventListener('input',e=>{state[id]=parseFloat(e.target.value);document.getElementById(id+'v').textContent=state[id].toFixed(2)}));
+let palette=0, mouseMode=0;
+let mouse={x:.5,y:.5};
+document.getElementById('palette').addEventListener('change',e=>palette=parseInt(e.target.value,10));
+document.getElementById('mouseMode').addEventListener('change',e=>mouseMode=parseInt(e.target.value,10));
+addEventListener('pointermove', e=>{ mouse.x=e.clientX/innerWidth; mouse.y=1-e.clientY/innerHeight; });
+addEventListener('pointerdown', e=>{ mouse.x=e.clientX/innerWidth; mouse.y=1-e.clientY/innerHeight; });
+const presets={soft:[1.00,1.20,.50,.34,.55,.90,5,.38,.020,.075],cream:[.82,.45,.12,.48,.25,.55,3,.10,.008,.020],bleed:[1.18,2.0,.82,.28,.75,1.10,7,.72,.035,.11],glass:[.95,3.1,1.15,.30,1.0,.75,5,.28,.010,.09]};
+document.querySelectorAll('button').forEach(b=>b.onclick=()=>{ presets[b.dataset.preset].forEach((v,i)=>{ const id=ids[i]; state[id]=v; document.getElementById(id).value=v; document.getElementById(id+'v').textContent=v.toFixed(2); }); });
+let paused=false, start=performance.now(), hold=0;
+function resize(){ const dpr=Math.min(devicePixelRatio,2); canvas.width=innerWidth*dpr; canvas.height=innerHeight*dpr; gl.viewport(0,0,canvas.width,canvas.height); }
+addEventListener('resize',resize); resize();
+addEventListener('keydown',e=>{ if(e.key===' '){paused=!paused; if(!paused) start=performance.now()-hold*1000/Math.max(state.speed,.001);} if(e.key==='h') ui.classList.toggle('hide'); if(e.key==='s'){ const a=document.createElement('a'); a.download='silent-oscilloscope.png'; a.href=canvas.toDataURL(); a.click(); } });
+function draw(now){ let tt = paused ? hold : (now-start)*.001*state.speed; if(!paused) hold=tt; gl.uniform2f(uni.r,canvas.width,canvas.height); gl.uniform2f(uni.mouse,mouse.x,mouse.y); gl.uniform1f(uni.t,tt); gl.uniform1f(uni.gain,state.gain); gl.uniform1f(uni.fold,state.fold); gl.uniform1f(uni.warp,state.warp); gl.uniform1f(uni.trace,state.trace); gl.uniform1f(uni.colorAmt,state.color); gl.uniform1f(uni.layerCount,state.layers); gl.uniform1f(uni.distortion,state.distortion); gl.uniform1f(uni.grainAmt,state.grain); gl.uniform1f(uni.chroma,state.chroma); gl.uniform1f(uni.mouseMode,mouseMode); gl.uniform1i(uni.palette,palette); gl.drawArrays(gl.TRIANGLES,0,6); requestAnimationFrame(draw); }
+requestAnimationFrame(draw);
+</script>
+</body>
+</html>

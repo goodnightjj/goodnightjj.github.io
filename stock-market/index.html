@@ -1,0 +1,1273 @@
+<!doctype html>
+<!--
+  MARKETS, NARRATED — 1871 → present
+  Single-file, replay-only build. No API keys, no model selection, no live
+  inference. The only network use is CDN scripts + fonts.
+
+  DATA SOURCE — a Shiller CSV you've downloaded beforehand:
+  • Easiest: grab data.csv from github.com/datasets/s-and-p-500 (monthly
+    Shiller series: Date, SP500, …, Real Price, PE10), put it next to this
+    file, and serve the folder (npx serve .) — it loads automatically.
+  • Opened via file:// the browser blocks local fetches, so a load bar
+    appears instead: drag the CSV onto it or browse. Same result.
+  • Until a CSV is loaded, the chart shows an embedded ANNUAL APPROXIMATION
+    (anchored to Shiller's values) and says so on the chart.
+  The parser is tolerant: ISO dates (1871-01-01) or Shiller fractional
+  dates (1871.01, where .1 means October); uses Real Price + PE10 when
+  present, else computes real prices from SP500 × CPI.
+
+  NARRATION — replayed from the corpus embedded between the __CORPUS__
+  markers below: 13 era moments × 4 voices, authored offline, played at a
+  simulated Cerebras-class cadence (the chip says "simulated"). To replace
+  it with passages recorded from a real run (real TTFT / tok-s, label flips
+  to "recorded"), run the optional companion script elsewhere:
+      node generate-corpus.mjs  (pass your key; add the write flag to
+      inject in place, or the years flag for a full per-year corpus)
+  Scrubbing snaps to the nearest moment in the corpus; a per-year corpus
+  unlocks every year automatically.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Markets, Narrated — 1871 → present</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;1,8..60,400&display=swap');
+
+:root {
+  --paper: #F6F5F1;
+  --surface: #FFFFFF;
+  --ink: #17150F;
+  --ink-soft: #74705F;
+  --ink-faint: #A9A593;
+  --hairline: #E5E3D8;
+  --accent: #C24914;
+  --accent-bright: #EE5B2B;
+  --shadow: 0 1px 2px rgba(23,21,15,.04), 0 12px 32px -16px rgba(23,21,15,.10);
+  --sans: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+  --serif: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+  --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
+  --radius: 2px;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; }
+
+.mn-root {
+  min-height: 100vh;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-weight: 500;
+  -webkit-font-smoothing: antialiased;
+  position: relative;
+  overflow-x: hidden;
+}
+.mn-root::before {
+  content: "";
+  position: absolute;
+  top: -240px; right: -180px;
+  width: 640px; height: 640px;
+  border-radius: 2px;
+  background: radial-gradient(closest-side, rgba(238,91,43,.07), transparent 70%);
+  pointer-events: none;
+}
+
+.mn-shell { max-width: 1600px; margin: 0 auto; padding: 28px 28px 30px; position: relative; }
+
+.mn-eyebrow {
+  font-size: 11px; letter-spacing: .22em; text-transform: uppercase;
+  color: var(--ink-soft); font-weight: 600;
+}
+.mn-title {
+  font-size: clamp(26px, 3.2vw, 35px);
+  font-weight: 300; letter-spacing: -0.02em; line-height: 1.04;
+  margin: 6px 0 6px;
+}
+.mn-sub { font-size: 14.5px; color: var(--ink-soft); line-height: 1.6; max-width: 56ch; margin: 0; }
+.mn-headrow { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+
+.mn-perf {
+  font-family: var(--mono); font-size: 12px; color: var(--ink-soft);
+  display: inline-flex; align-items: center; gap: 9px;
+  background: var(--surface); border: 1px solid var(--hairline);
+  border-radius: 2px; padding: 8px 14px; box-shadow: var(--shadow);
+  white-space: nowrap;
+}
+.mn-perf b { color: var(--accent); font-weight: 500; }
+.mn-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ink-faint); flex: none; }
+.mn-dot.live { background: var(--accent-bright); animation: mn-pulse 1.1s ease-in-out infinite; }
+
+/* csv load bar — shown only while on fallback data */
+.mn-loadbar {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap;
+  border: 1px dashed var(--hairline); border-radius: 16px;
+  padding: 11px 18px; margin-top: 16px;
+  font-size: 13px; color: var(--ink-soft); line-height: 1.5;
+  transition: border-color .15s ease, background .15s ease;
+}
+.mn-loadbar.drag { border-color: var(--accent-bright); background: var(--surface); color: var(--ink); }
+.mn-loaderr { color: var(--accent); font-size: 12px; flex-basis: 100%; }
+.mn-btn {
+  font-family: var(--sans); font-size: 13px; font-weight: 600; color: var(--ink);
+  background: transparent; border: 1px solid var(--ink); border-radius: 999px;
+  padding: 8px 16px; cursor: pointer; white-space: nowrap;
+}
+.mn-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.mn-filehidden { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+
+/* chart card */
+.mn-card {
+  background: var(--surface); border: 1px solid var(--hairline);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+  padding: 16px 20px 8px; margin-top: 14px;
+}
+.mn-chartwrap { outline: none; border-radius: 12px; }
+.mn-chartwrap:focus-visible { box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--accent); }
+.mn-svg { display: block; width: 100%; height: auto; touch-action: none; cursor: crosshair; }
+
+.mn-line { fill: none; stroke: var(--ink); stroke-width: 1.2; }
+.mn-line.draw { stroke-dasharray: 4200; stroke-dashoffset: 4200; animation: mn-draw 1.3s ease-out forwards; }
+.mn-grid { stroke: var(--hairline); stroke-width: 1; }
+.mn-gridlabel, .mn-axislabel { font-family: var(--mono); font-size: 10px; fill: var(--ink-faint); }
+.mn-capearea { fill: rgba(23,21,15,.055); }
+.mn-capeline { fill: none; stroke: rgba(23,21,15,.30); stroke-width: 1; }
+.mn-cursorline { stroke: var(--accent-bright); stroke-width: 1; }
+.mn-cursordot { fill: var(--accent-bright); }
+.mn-chipbox { fill: var(--surface); stroke: var(--hairline); }
+.mn-chipyear { font-family: var(--mono); font-size: 13px; font-weight: 500; fill: var(--ink); }
+.mn-chipstat { font-family: var(--mono); font-size: 10.5px; fill: var(--ink-soft); }
+
+/* era strip + source note */
+.mn-eras { position: relative; height: 34px; margin: 2px 0 4px; }
+.mn-era {
+  position: absolute; top: 0; transform: translateX(-50%);
+  width: 26px; height: 26px; border-radius: 50%;
+  background: transparent; border: none; padding: 0; cursor: pointer;
+  display: grid; place-items: center;
+}
+.mn-era::after {
+  content: ""; width: 7px; height: 7px; border-radius: 50%;
+  background: var(--ink-faint); transition: transform .15s ease, background .15s ease;
+}
+.mn-era:hover::after { background: var(--ink-soft); transform: scale(1.35); }
+.mn-era[aria-pressed="true"]::after { background: var(--accent-bright); transform: scale(1.5); }
+.mn-era:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.mn-cardfoot {
+  display: flex; justify-content: space-between; gap: 16px;
+  font-size: 11px; color: var(--ink-faint); padding: 0 2px 6px;
+}
+
+/* personas */
+.mn-personas { display: flex; gap: 8px; flex-wrap: wrap; margin: 14px 0 10px; }
+.mn-persona {
+  font-family: var(--sans); font-size: 13px; font-weight: 500;
+  color: var(--ink-soft); background: transparent;
+  border: 1px solid var(--hairline); border-radius: 999px;
+  padding: 7px 15px; cursor: pointer;
+  transition: color .15s ease, border-color .15s ease, background .15s ease;
+}
+.mn-persona:hover { color: var(--ink); border-color: var(--ink-faint); }
+.mn-persona[aria-pressed="true"] { color: var(--ink); background: var(--surface); border-color: var(--ink); }
+.mn-persona:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* narration */
+.mn-narration {
+  background: var(--surface); border: 1px solid var(--hairline);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+  padding: 16px 24px 14px; min-height: 0;
+  display: flex; flex-direction: column;
+}
+.mn-narrhead {
+  font-family: var(--mono); font-size: 12px; color: var(--ink-soft);
+  display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  padding-bottom: 11px; border-bottom: 1px solid var(--hairline); margin-bottom: 12px;
+}
+.mn-text {
+  font-family: var(--sans); font-weight: 500; font-size: 13px; line-height: 1.6;
+  color: var(--ink); max-width: 64ch; min-height: 96px; flex: 1;
+}
+.mn-text .caret {
+  display: inline-block; width: 8px; height: 1.05em; margin-left: 2px;
+  background: var(--accent-bright); vertical-align: text-bottom;
+  animation: mn-blink .9s steps(1) infinite;
+}
+.mn-placeholder { color: var(--ink-faint); font-style: italic; }
+.mn-error { font-family: var(--sans); font-size: 14px; color: var(--accent); }
+.mn-narrfoot {
+  font-family: var(--mono); font-size: 11px; color: var(--ink-faint);
+  padding-top: 11px; margin-top: 12px; border-top: 1px solid var(--hairline);
+}
+
+.mn-footnote { font-size: 11.5px; color: var(--ink-faint); line-height: 1.6; margin-top: 10px; max-width: 124ch; }
+
+/* ── control panel ───────────────────────────────────────────────────────── */
+/* bottom row: controls (2/3) beside narration (1/3) */
+.mn-bottom {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+  align-items: start;
+  margin-top: 10px;
+}
+.mn-bottom .mn-narration { min-height: 300px; }
+
+.mn-controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(176px, 1fr));
+  gap: 14px 20px;
+  align-content: start;
+  background: var(--surface); border: 1px solid var(--hairline);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+  padding: 18px 22px;
+  min-height: 300px;
+}
+.mn-ctrl { display: flex; flex-direction: column; gap: 9px; min-width: 0; }
+.mn-ctrl-label {
+  font-size: 10px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--ink-faint); font-weight: 600; display: flex; justify-content: space-between; gap: 8px;
+}
+.mn-ctrl-val { color: var(--accent); font-family: var(--mono); letter-spacing: 0; text-transform: none; }
+
+/* segmented control */
+.mn-seg { display: inline-flex; background: var(--paper); border: 1px solid var(--hairline); border-radius: 999px; padding: 2px; }
+.mn-seg button {
+  flex: 1 1 0; font-family: var(--sans); font-size: 12px; font-weight: 500;
+  color: var(--ink-soft); background: transparent; border: none; border-radius: 999px;
+  padding: 6px 12px; cursor: pointer; white-space: nowrap; transition: color .15s ease, background .15s ease, box-shadow .15s ease;
+}
+.mn-seg button:hover:not([aria-pressed="true"]):not(:disabled) { color: var(--ink); }
+.mn-seg button[aria-pressed="true"] { color: var(--ink); background: var(--surface); box-shadow: 0 1px 2px rgba(23,21,15,.10); }
+.mn-seg button:disabled { color: var(--ink-faint); cursor: not-allowed; opacity: .55; }
+.mn-seg button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* range slider */
+.mn-range { -webkit-appearance: none; appearance: none; width: 100%; height: 22px; background: transparent; cursor: pointer; }
+.mn-range:focus-visible { outline: none; }
+.mn-range:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px var(--paper), 0 0 0 5px var(--accent); }
+.mn-range::-webkit-slider-runnable-track { height: 3px; border-radius: 3px; background: var(--hairline); }
+.mn-range::-moz-range-track { height: 3px; border-radius: 3px; background: var(--hairline); }
+.mn-range::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none; width: 16px; height: 16px; margin-top: -6.5px;
+  border-radius: 50%; background: var(--surface); border: 1.5px solid var(--accent); box-shadow: var(--shadow);
+}
+.mn-range::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: var(--surface); border: 1.5px solid var(--accent); }
+.mn-range:disabled { opacity: .4; cursor: not-allowed; }
+
+/* overlay toggle chips */
+.mn-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.mn-chip {
+  font-family: var(--sans); font-size: 12px; font-weight: 500; color: var(--ink-soft);
+  background: transparent; border: 1px solid var(--hairline); border-radius: 999px;
+  padding: 7px 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 7px;
+  transition: color .15s ease, border-color .15s ease, background .15s ease;
+}
+.mn-chip:hover { color: var(--ink); border-color: var(--ink-faint); }
+.mn-chip[aria-pressed="true"] { color: var(--ink); border-color: var(--ink); background: var(--surface); }
+.mn-chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.mn-chipdot { width: 8px; height: 8px; border-radius: 2px; background: var(--ink-faint); flex: none; }
+.mn-chip[aria-pressed="true"] .mn-chipdot { background: var(--swatch, var(--accent-bright)); }
+
+/* zoom track */
+.mn-zoom { position: relative; height: 30px; margin-top: 6px; user-select: none; touch-action: none; }
+.mn-zoom-track { position: absolute; top: 13px; left: 0; right: 0; height: 4px; border-radius: 4px; background: var(--hairline); }
+.mn-zoom-sel { position: absolute; top: 13px; height: 4px; border-radius: 4px; background: var(--accent-bright); cursor: grab; }
+.mn-zoom-sel:active { cursor: grabbing; }
+.mn-zoom-handle {
+  position: absolute; top: 7px; width: 16px; height: 16px; margin-left: -8px;
+  border-radius: 50%; background: var(--surface); border: 1.5px solid var(--accent);
+  box-shadow: var(--shadow); cursor: ew-resize;
+}
+.mn-zoom-handle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.mn-zoom-row { display: flex; justify-content: space-between; align-items: center; }
+.mn-zoom-reset {
+  font-family: var(--sans); font-size: 11px; font-weight: 600; color: var(--ink-soft);
+  background: transparent; border: none; cursor: pointer; padding: 0;
+}
+.mn-zoom-reset:hover { color: var(--ink); }
+.mn-zoom-reset:disabled { color: var(--ink-faint); cursor: default; opacity: .5; }
+.mn-zoom-reset:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+/* overlay strokes */
+.mn-ma { fill: none; stroke: var(--accent); stroke-width: 1.2; opacity: .85; }
+.mn-return { fill: none; stroke: #2F6F4F; stroke-width: 1.3; }
+.mn-zero { stroke: var(--hairline); stroke-width: 1; stroke-dasharray: 3 3; }
+.mn-bear { fill: rgba(194,73,20,.07); }
+
+
+@keyframes mn-pulse { 50% { opacity: .35; } }
+@keyframes mn-blink { 50% { opacity: 0; } }
+@keyframes mn-draw { to { stroke-dashoffset: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .mn-line.draw { animation: none; stroke-dashoffset: 0; }
+  .mn-dot.live, .mn-text .caret { animation: none; }
+  .mn-era::after, .mn-persona, .mn-loadbar { transition: none; }
+}
+@media (max-width: 820px) {
+  .mn-bottom { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  .mn-shell { padding: 40px 18px 56px; }
+  .mn-card { padding: 18px 14px 10px; }
+  .mn-narration { padding: 24px 20px 18px; }
+  .mn-text { font-size: 13px; }
+}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.26.4/babel.min.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-presets="react">
+const { useState, useRef, useMemo, useEffect, useCallback } = React;
+
+/* ── data ────────────────────────────────────────────────────────────────
+   Source of truth is a Shiller CSV loaded at runtime. Until one is loaded,
+   an embedded annual approximation (anchored to Shiller's values) stands in,
+   and the chart labels itself accordingly. */
+
+const FALLBACK_ANCHORS = [
+  [1871,110,null],[1874,95,null],[1877,82,null],[1881,142,18.5],[1885,118,16.2],
+  [1888,132,17.0],[1892,168,19.4],[1896,118,16.6],[1899,200,22.9],[1901,215,25.2],
+  [1903,165,17.2],[1906,245,20.2],[1907,152,12.4],[1909,230,14.9],[1912,222,13.8],
+  [1916,235,11.0],[1917,152,6.4],[1920,118,5.1],[1921,112,5.4],[1924,172,8.7],
+  [1926,252,11.3],[1928,380,18.8],[1929,455,30.0],[1930,322,16.8],[1931,192,9.6],
+  [1932,112,8.3],[1933,162,13.1],[1936,292,17.1],[1937,287,18.2],[1938,205,13.5],
+  [1940,192,12.1],[1942,136,8.5],[1945,232,12.0],[1946,268,14.6],[1949,196,10.2],
+  [1952,302,12.5],[1956,482,18.3],[1959,585,18.4],[1961,662,21.0],[1965,852,23.7],
+  [1966,872,24.1],[1968,882,21.5],[1970,662,14.7],[1972,802,18.7],[1974,392,8.9],
+  [1976,542,11.4],[1978,432,9.2],[1980,482,8.9],[1982,338,7.4],[1984,422,9.6],
+  [1986,602,14.7],[1987,642,16.1],[1988,542,13.7],[1990,602,15.6],[1992,722,19.8],
+  [1994,762,20.3],[1996,1052,24.8],[1998,1752,36.0],[1999,2352,42.0],[2000,2652,43.5],
+  [2001,2152,32.0],[2002,1702,24.0],[2003,1552,22.4],[2005,1852,26.5],[2007,2302,27.3],
+  [2008,1852,21.0],[2009,1152,15.2],[2011,1752,21.5],[2013,2302,23.5],[2015,2702,26.0],
+  [2016,2752,25.7],[2018,3402,31.5],[2019,3502,29.5],[2020,3802,30.5],[2021,5202,37.5],
+  [2022,4102,28.5],[2023,4902,30.8],[2024,5902,35.5],[2025,6500,38.5],
+];
+
+/* annual rows -> { year, price, cape, drawdown, cagr10 } */
+function deriveAnnual(rows) {
+  let peak = 0;
+  return rows.map((d, i) => {
+    peak = Math.max(peak, d.price);
+    const tenAgo = rows[i - 10];
+    return { ...d, drawdown: (d.price / peak - 1) * 100,
+      cagr10: tenAgo ? (Math.pow(d.price / tenAgo.price, 0.1) - 1) * 100 : null };
+  });
+}
+
+function buildFallback() {
+  const raw = [];
+  for (let i = 0; i < FALLBACK_ANCHORS.length - 1; i++) {
+    const [y0, p0, c0] = FALLBACK_ANCHORS[i];
+    const [y1, p1, c1] = FALLBACK_ANCHORS[i + 1];
+    for (let y = y0; y < y1; y++) {
+      const t = (y - y0) / (y1 - y0);
+      const base = Math.exp(Math.log(p0) + (Math.log(p1) - Math.log(p0)) * t);
+      const texture = y === y0 ? 1 : 1 + 0.018 * Math.sin(y * 1.7) + 0.012 * Math.sin(y * 4.3 + 1);
+      const cape = c0 != null && c1 != null ? c0 + (c1 - c0) * t : t === 0 ? c0 : null;
+      raw.push({ year: y, price: +(base * texture).toFixed(1), cape: cape != null ? +cape.toFixed(1) : null });
+    }
+  }
+  const last = FALLBACK_ANCHORS[FALLBACK_ANCHORS.length - 1];
+  raw.push({ year: last[0], price: last[1], cape: last[2] });
+  return { annual: deriveAnnual(raw), monthly: null, source: "fallback", label: "approximate fallback data", hasNominal: false };
+}
+
+/* Tolerant Shiller CSV parser.
+   Dates: 1871-01-01 / 1871-01 / Shiller fractional 1871.01 (.1 = October).
+   Values: prefers "Real Price" + PE10; else computes real from SP500 × CPI. */
+function parseShillerCSV(textContent, label) {
+  const lines = textContent.replace(/\r/g, "").split("\n").filter((l) => l.trim());
+  if (lines.length < 2) throw new Error("That file looks empty.");
+  const header = lines[0].split(",").map((h) => h.trim().toLowerCase());
+  const find = (re) => header.findIndex((h) => re.test(h));
+  const di = find(/^date/);
+  const rpi = find(/^real ?price/);
+  const pei = find(/pe ?10|cape/);
+  const spi = find(/^(sp ?500|s&p|price)$/);
+  const cpii = find(/consumer|cpi/);
+  if (di < 0) throw new Error("No Date column found — is this the Shiller CSV?");
+  if (rpi < 0 && (spi < 0 || cpii < 0))
+    throw new Error("Need a Real Price column, or SP500 + CPI to compute one.");
+
+  const monthly = [];
+  for (let i = 1; i < lines.length; i++) {
+    const cells = lines[i].split(",");
+    const rawDate = (cells[di] || "").trim();
+    if (!rawDate) continue;
+    let year, month;
+    if (rawDate.includes("-")) {
+      const parts = rawDate.split("-");
+      year = +parts[0]; month = +parts[1] || 6;
+    } else if (rawDate.includes(".")) {
+      const [y, f] = rawDate.split(".");
+      year = +y; month = f === "1" ? 10 : +f; // Shiller: .1 is October, .10 truncated
+    } else { year = +rawDate; month = 6; }
+    if (!Number.isFinite(year) || year < 1800 || year > 2100) continue;
+
+    const real = rpi >= 0 ? parseFloat(cells[rpi]) : NaN;
+    const nominal = spi >= 0 ? parseFloat(cells[spi]) : NaN;
+    const cpi = cpii >= 0 ? parseFloat(cells[cpii]) : NaN;
+    const cape = pei >= 0 ? parseFloat(cells[pei]) : NaN;
+    monthly.push({ year, month: Math.min(12, Math.max(1, month || 6)),
+      real, nominal, cpi, cape: Number.isFinite(cape) ? cape : null });
+  }
+  if (monthly.length < 120) throw new Error("Fewer than ten years of rows — wrong file?");
+
+  // realize prices: prefer the Real Price column, else nominal × (latest CPI / CPI)
+  let latestCPI = null;
+  for (let i = monthly.length - 1; i >= 0; i--) if (Number.isFinite(monthly[i].cpi)) { latestCPI = monthly[i].cpi; break; }
+  for (const m of monthly) {
+    m.price = Number.isFinite(m.real) ? m.real
+      : Number.isFinite(m.nominal) && Number.isFinite(m.cpi) && latestCPI ? m.nominal * (latestCPI / m.cpi)
+      : NaN;
+  }
+  const clean = monthly.filter((m) => Number.isFinite(m.price) && m.price > 0);
+  if (clean.length < 120) throw new Error("Couldn't read usable prices from that file.");
+
+  const hasNominal = clean.some((m) => Number.isFinite(m.nominal) && m.nominal > 0);
+
+  // annual aggregates (means)
+  const byYearMap = new Map();
+  for (const m of clean) {
+    const b = byYearMap.get(m.year) || { year: m.year, ps: [], ns: [], cs: [] };
+    b.ps.push(m.price);
+    if (Number.isFinite(m.nominal) && m.nominal > 0) b.ns.push(m.nominal);
+    if (m.cape != null) b.cs.push(m.cape);
+    byYearMap.set(m.year, b);
+  }
+  const years = [...byYearMap.keys()].sort((a, b) => a - b);
+  const annualRows = [];
+  for (let y = years[0]; y <= years[years.length - 1]; y++) {
+    const b = byYearMap.get(y);
+    if (!b) continue; // tolerate gaps by skipping (scrub clamps to range)
+    const mean = (xs) => xs.reduce((s, x) => s + x, 0) / xs.length;
+    annualRows.push({ year: y, price: +mean(b.ps).toFixed(1),
+      nominal: b.ns.length ? +mean(b.ns).toFixed(1) : null,
+      cape: b.cs.length ? +mean(b.cs).toFixed(1) : null });
+  }
+  return { annual: deriveAnnual(annualRows), monthly: clean, source: "csv", label, hasNominal };
+}
+
+const byYear = (annual, y) => {
+  const min = annual[0].year, max = annual[annual.length - 1].year;
+  const c = Math.min(Math.max(y, min), max);
+  return annual.find((d) => d.year === c) || annual[annual.length - 1];
+};
+
+const ERAS = [
+  [1873, "Panic of 1873"], [1907, "Bankers' Panic"], [1921, "Postwar bottom — CAPE near 5"],
+  [1929, "The Crash"], [1932, "The bottom"], [1942, "Wartime low"],
+  [1966, "Go-Go years peak"], [1974, "Stagflation trough"], [1982, "The great bull begins"],
+  [1987, "Black Monday"], [2000, "Dot-com summit"], [2009, "GFC bottom"], [2020, "Pandemic crash"],
+];
+
+const PERSONAS = [
+  { id: "historian", label: "The Historian" },
+  { id: "reporter", label: "The Floor Reporter" },
+  { id: "value", label: "The Value Investor" },
+  { id: "skeptic", label: "The Skeptic" },
+];
+/* __CORPUS_START__ */
+const CORPUS = {
+  meta: { recorded: false, ttft: 170, tps: 2100,
+          note: "Authored placeholder corpus — simulated cadence. Regenerate with generate-corpus.mjs for recorded passages and real timings." },
+  passages: {
+
+"1873:historian": "When Jay Cooke & Company closed its doors on September 18, the firm that had financed the Union war effort took the railroad boom down with it. The Northern Pacific had swallowed capital faster than it could lay track, and the Exchange simply shut — ten days, an admission that prices had no floor. What followed earned its name slowly: the Long Depression, years of falling prices and idle rails. The lesson, relearned each generation since, is that infrastructure manias end when the bonds outrun the traffic.",
+
+"1873:reporter": "The crowd outside Cooke's marble banking house won't disperse — runners keep arriving with the same word from Philadelphia, and nobody on Broad Street believes it yet. Jay Cooke, the man who sold the war loans, suspended. Northern Pacific paper can't find a bid at any price, call money is unobtainable, and brokers are failing by the hour. This afternoon the governors did the unthinkable and closed the Exchange itself. No one can say when it reopens, or what anything is worth when it does.",
+
+"1873:value": "The fashion these years was railway paper at any price — bonds backed by traffic no one has yet hauled, through territory no one yet farms. A buyer of certainties stood aside and was called timid. Now the promoters' arithmetic meets the timetable's, and the difference is being settled in failed banks. There is no decade of honest earnings to measure these roads against, which was precisely the warning. When you cannot compute what a thing earns, you are not investing in it; you are believing in it.",
+
+"1873:skeptic": "The consensus held that rails could only multiply, that the man who financed the war was therefore infallible at financing everything, and that western land plus eastern credit equaled destiny. Infallibility is always the tell. A bank run by a national hero is still a bank, and a bond backed by future settlers is backed by people who have not arrived. The crowd is shocked the Exchange closed. The real shock is how long it stayed open while everyone agreed with everyone.",
+
+"1907:historian": "It began with a failed corner on copper and ended with the American financial system run from a private library. When the Knickerbocker Trust fell, depositors discovered the trusts held everyone's money and no one's reserves; with no central bank, the lender of last resort was simply J. P. Morgan, locking bank presidents in a room until they pledged. CAPE near twelve marked the fear honestly. The panic's true product arrived six years later: a Federal Reserve, built so the next rescue wouldn't require one old man's signature.",
+
+"1907:reporter": "The line outside the Knickerbocker stretches down Fifth Avenue before the doors open, and it isn't shrinking — these are depositors, not speculators, and they want currency, not explanations. Call money touched one hundred percent on the floor today; loans simply cannot be had. Word is the trust presidents were summoned to Morgan's library at midnight and the doors locked behind them. The Exchange stayed open on borrowed millions. Whether it opens tomorrow depends on what one man decides tonight.",
+
+"1907:value": "The trusts paid for their copper adventures with depositors' money, and the market is now flinging out sound certificates with the rotten — which is the only useful thing a panic does. At twelve times a decade of earnings, with call rates briefly at usury, the seller is not pricing businesses; he is pricing his own terror. Railroad dividends that survived 1893 will survive Mr. Heinze. Buy what is certain while the crowd liquidates what is merely near it.",
+
+"1907:skeptic": "We are assured the system is sound because Mr. Morgan says so, and the proof of soundness is that everything depends on Mr. Morgan saying so. Consider the architecture: trusts holding reserves of roughly nothing, a stock exchange floated week to week on one banker's word, and a nation congratulating itself on needing no central bank. The crowd calls the library meetings reassuring. A system reassured by the health of a seventy-year-old man is not a system; it is a patient.",
+
+"1921:historian": "Nobody attended the great bottom of August 1921; that is rather the point. After the postwar collapse — prices, farms, inventories, all deflating at once — equities sold near five times a decade's earnings, the cheapest American stocks would ever be measured. The crowd had concluded the war boom was the aberration and stagnation the rule. From that despair ran the eight-year advance that ended at a permanently high plateau. Bottoms are made of exhaustion, not insight, and this one was bone-dry of both buyers and hope.",
+
+"1921:reporter": "The commission houses are letting clerks go — there is nothing to commission. Steel trades at half its war price, volume is the thinnest in memory, and seats on the Exchange change hands at markdowns that would have seemed a misprint in 1919. The talk in every boardroom is the same: the war inflation was a fever, this deflation is the cure, and the cure may last years. Stocks have no friends today. Even the bears are bored.",
+
+"1921:value": "The market this summer offers a dollar of decade-averaged earning power for roughly five dollars — terms a buyer sees perhaps twice in a lifetime, and only when it feels like a funeral. Dividend yields run fat against bonds, balance sheets were scrubbed clean by the collapse, and the seller's only argument is his exhaustion. Despair is the discount. The arithmetic does not require prosperity to work; it requires only that the United States continue, which the price treats as an open question.",
+
+"1921:skeptic": "The consensus now holds that stagnation is permanent — announced, you'll notice, by the same crowd that held the war boom permanent two years ago. Unanimity has merely switched costumes. Every banker who couldn't lend you enough in 1919 cannot find a reason to own anything in 1921. When pessimism becomes this respectable, this comfortable, this safe at dinner parties, it has stopped being analysis and started being fashion. Fashion is what tops and bottoms are made of.",
+
+"1929:historian": "The peak came quietly on September 3, with the Dow at 381 and Professor Fisher about to bless a permanently high plateau. Beneath it: a margin pyramid at ten percent down, call money funding speculation from half the world, and investment trusts levering trusts that held trusts. CAPE at thirty had one precedent — none. Babson's September warning drew laughter; October answered with Black Thursday and then Black Tuesday. Within three years, nine of every ten dollars at the top were gone. The plateau held for sixty days.",
+
+"1929:reporter": "You cannot hear the gong over the roar today. Radio at new highs again, the trusts issuing paper as fast as the printers run, call loans renewing near ten percent — and still the money pours in from Chicago, from London, from the bucket shops upstate. The ticker ran late again this afternoon, hours behind the prices. My bootblack offered me a tip on a utilities pool this morning, and the worst of it is I checked, and he was already up.",
+
+"1929:value": "Thirty times a decade of earnings, dividend yields beneath the rate speculators pay to carry the shares — the market now charges you to lend it your money and calls the arrangement opportunity. Every measure that mattered for fifty years is dismissed as antique; the new era requires no arithmetic, only participation. Selling here costs nothing but one's reputation at dinner. That is the entire price, and it is the bargain of the age. We are sellers, early and embarrassed, and intend to remain both.",
+
+"1929:skeptic": "A permanently high plateau — there it is, the era's epitaph, delivered as a forecast. When the professors arrive to bless the prices, the prices have run out of buyers and sent for the clergy. Everyone is levered to a neighbor's certainty: the trusts own the trusts, the loans fund the loans, and the last skeptics converted in August, which should frighten you more than any bear. The crowd asks what could possibly end it. Wrong question. Ask what is left to continue it.",
+
+"1932:historian": "On July 8 the Dow closed at 41.22 — eighty-nine percent below the plateau, four months before Roosevelt's election, at the exact moment belief in equities completed its extinction. U.S. Steel and General Motors had given back a generation of gains; dividend yields ran to double digits because no one trusted the dividends. The bottom arrived not when the news improved but when the sellers were simply finished. It remains the best entry in American market history, available exclusively to those the previous three years had ruined or terrified.",
+
+"1932:reporter": "The floor is quieter than the street outside — that is the strangest part. A few hundred thousand shares drift by noon, specialists stand idle at posts that once mobbed, and the bread line along Broad Street moves with more urgency than the tape. Steel under thirty, Radio a ghost of its quotation, good bonds begging. Brokers who survived twenty-nine by going short have now been carried out by the rallies. Nobody calls the bottom anymore. Nobody calls anything.",
+
+"1932:value": "The exchange this summer sells dollars for forty cents and cannot find takers. Companies trade below the cash in their tills — pay for the treasury, receive the business gratis — and the objection is always the same: earnings are vanishing. So they are. But price is what you pay for the decade, not the quarter, and at eight times collapsed earnings the quarter is all anyone will price. The balance sheet says buy while the employment line says run. The balance sheet has the longer memory.",
+
+"1932:skeptic": "The consensus has concluded that common stocks are finished as a class — permanently, scientifically, this time with footnotes. Note the credentials: it is the identical unanimity that ratified 381, now ratifying 41, with equal confidence and the same membership. The crowd was not wrong about direction twice; it was wrong about permanence twice. When every survivor agrees the patient is dead, check whether they are doctors or heirs. At these prices, pessimism is no longer a judgment. It is an asset class, and it is crowded.",
+
+"1942:historian": "The secular bottom arrived in late April 1942, in the same news cycle that surrendered Bataan — the market pricing not recession but the possibility of losing. Volume had dried to nothing; patriotic money bought war bonds, and equities sat orphaned under blackout curtains even as the plants behind them ran three shifts for the government. From that unattended low began a rise that, with interruptions, carried a quarter century. Markets do not bottom on good news. They bottom when the bad news is finally, fully believed.",
+
+"1942:reporter": "Bataan has fallen and the tape barely stirred — there is the whole market in one line. Rubber is rationed, the coastwise lights are dimmed, and a good industrial share can be had for the price of its own inventory, if you can find a buyer to discuss it with. The crowd that mobbed this floor in twenty-nine would not recognize it: a few clerks, thin volume by two o'clock. Washington needs the nation's savings for bonds. The Exchange has become the quietest room in the war.",
+
+"1942:value": "Eight times a depressed decade of earnings, for companies running flat-out on government order books — the market has priced in terms of defeat that not even the enemy's communiqués propose. The pessimist's case requires the United States to lose a war it is visibly retooling to win; the buyer's case requires only that it doesn't. Yields are generous, balance sheets are filling with receivables stamped by the Treasury, and the competition for shares consists of nobody. We accept the terms.",
+
+"1942:skeptic": "Everyone knows markets cannot rise in wartime — it is said on the floor with the weariness of settled law. Consult the law's history: markets bottom on catastrophe believed, not on victory announced, and catastrophe is now fully subscribed. The crowd waits for good news to buy, which guarantees it will buy higher; the news and the tape have never kept the same calendar. When the only argument against shares is the front page, and the front page is already priced, the front page is finished as information.",
+
+"1966:historian": "In February the Dow kissed 995 and could not hold it — the number that became a ceiling for a generation. The Go-Go years were at full throttle: performance funds turning portfolios like produce, conglomerates buying real earnings with imaginative paper, Gerald Tsai's name alone moving prices. Beneath the celebration, Vietnam and the Great Society had lit an inflation that compounded quietly. In nominal terms the market went sideways for sixteen years; in real terms, it went down a mountain. The top was not an event. It was a decade pretending to be one.",
+
+"1966:reporter": "The performance funds turned over half their books last quarter and the money keeps arriving — nobody wants last year's manager. Tsai's new fund was oversubscribed before lunch on opening day; conglomerate paper, freshly issued, buys century-old companies by Friday. On the desks they talk earnings momentum, never dividends — dividends are for trustees. There's a credit pinch coming out of Washington that the older men keep mentioning. The younger men, who run the money now, have stopped hearing them.",
+
+"1966:value": "Twenty-four times a decade of earnings, for the privilege of conglomerate accounting — pay for synergy, receive dilution, applaud the footnotes. The performance game compounds beautifully until the quarter it doesn't, and it is financed by the conviction that someone faster will always be behind you. We hold more cash than is fashionable and endure the ridicule, which is the cheapest thing on the Exchange this year. The arithmetic of twenty-four times has a long memory. The crowd's, measured generously, runs about eleven months.",
+
+"1966:skeptic": "The fund manager is now a celebrity — magazine covers, oversubscriptions, a public that knows his name and not his holdings. When investing becomes performance art, the audience is paying admission, and admission this season runs twenty-four times earnings. The conglomerateurs assemble companies the way the trusts of twenty-nine assembled trusts, and the new generation explains, patiently, that the old measures no longer apply. That sentence is the most reliable sell signal in American finance. It has never missed. It is everywhere this year.",
+
+"1974:historian": "The bottom came in early December with the Dow under 600 — down roughly half from the peak, far worse in real terms, with inflation running twelve percent and the Nifty Fifty wreckage still smoking. The embargo had quadrupled oil, Nixon had resigned into the bear's arms, and Polaroid and Avon — one-decision stocks, the decision being buy — had lost four-fifths of their value. Yields near six percent and single-digit multiples marked the despair precisely. It was among the great entries of the century, taken by almost no one, because almost no one had anything left to enter with.",
+
+"1974:reporter": "The tape bleeds a little every day now — no panic, just leakage, which the old hands say is worse. Gas lines wrap the block outside while the one-decision stocks complete their second decision: Avon down by four-fifths, Polaroid worse, and the institutions that swore by them swear off equities entirely. A president resigned in August and the market barely changed expression. Around the lunch counters they're saying stocks are finished as an asset class. They say it quietly, the way people say true things.",
+
+"1974:value": "Single-digit multiples, dividend yields pressing six percent, franchises priced at scrap — and the standing objection is inflation, as if inflation had repealed the difference between price and value rather than widened it. The Nifty Fifty taught its lesson at fifty times earnings; the market has overcorrected the tuition to eight. One buys durable businesses here at prices that assume the seventies are permanent. Nothing is permanent, least of all a consensus this tired. The excuse is inflation. The gift is the prices. Accept the gift.",
+
+"1974:skeptic": "Everyone now knows that stocks cannot beat inflation, that the institutions are right to abandon them, that the era of equities is closed — everyone knows it with the same serenity with which everyone knew, four years ago, that fifty times earnings was reasonable for a cosmetics company. 'Everyone knows' has a perfect record across this century: expensively, reliably wrong, at tops and bottoms alike. The crowd is not stupid; it is unanimous, which is worse. When capitulation becomes conventional wisdom, the convention is the last seller.",
+
+"1982:historian": "The low printed on August 12 — Dow 777, CAPE near seven — with mortgages at sixteen percent and the obituaries for American industry already typeset. Volcker's medicine had broken inflation's spine, though the patient didn't yet believe it. Five days later Henry Kaufman, Salomon's most credible bear, turned, and the Dow posted the largest one-day point gain in its history. From a starting valuation of seven times earnings ran an eighteen-year bull market that ended at forty-four. The despair was the fuel. It usually is.",
+
+"1982:reporter": "Word moved up the wire before lunch — Kaufman has turned. Doctor Doom himself, calling rates down, and the floor simply erupted: a record point gain, specialists swamped with buy orders from institutions that yesterday wouldn't return calls about equities. The prime is finally falling, money funds still pay double digits, and the public, mortgaged at sixteen percent, wants no part of any of it. Strangest tape in years — a roaring rally in a market everyone agrees is finished.",
+
+"1982:value": "Seven times a depressed decade of earnings, with disinflation visibly beginning — the arithmetic here is generational, and therefore inadmissible. No committee will approve it: equities have humiliated trustees for a decade, and committees price careers, not cash flows. So the bargain sits in plain view, fully reasoned, professionally untouchable. Bond yields are the stated objection; bond yields are also why the multiple is seven. One of those two numbers is about to move a long way. We are positioned for the one with the better record.",
+
+"1982:skeptic": "The consensus is complete: America is industrially finished, Japan is inevitable, and equities are dead — there was a magazine cover to certify the death, which is how you know the patient is stirring. Obituaries written this confidently usually mark births. Notice that the case against stocks is now entirely retrospective: a decade of pain, projected forward as law. The crowd has mistaken its own exhaustion for analysis. At seven times earnings, pessimism is fully invested. It has nothing left to sell but the bottom.",
+
+"1987:historian": "On October 19 the Dow surrendered twenty-two and a half percent in a single session — 508 points, twice the worst day of 1929 — and the machines did much of the selling. Portfolio insurance, designed to limit loss, sold falling markets automatically and deepened the hole it was hedging. Greenspan, two months into the job, pledged liquidity on Tuesday morning, and the system held. The strangest part came after: the economy barely blinked, and the year closed positive. It was a crash without a depression — a repricing of mechanism, not of meaning.",
+
+"1987:reporter": "The tape ran better than an hour late by afternoon and the prices it finally printed nobody believed — five hundred eight points gone, a fifth of the market in a day, and not one man on this floor can give you the reason. The sell programs fed on themselves; specialists ran out of capital before they ran out of orders; the phones at the retail houses simply ring. Tonight everyone is asking whether tomorrow opens at all, and the only answer anyone has is the new chairman's word.",
+
+"1987:value": "Nothing about the businesses changed between Friday and Monday — no earnings vanished, no franchises burned. What repriced was mechanism: machines hedging machines, selling because selling, the multiple getting honest in a single afternoon. For the owner of businesses this is weather, violent and brief. For the owner of strategies it is bankruptcy. The distinction was always the entire game. Buy what the insurance programs are forced to sell; their compulsion is your discount, and compulsion is the most reliable seller there is.",
+
+"1987:skeptic": "Portfolio insurance — the proposition that you can sell faster than everyone else who bought the same guarantee of selling faster. Any strategy that works only if others don't use it deserves exactly the Monday it received. The marvel isn't the crash; it's the confidence beforehand, the conviction that risk had been engineered away by promising to act on it later, in size, with company. The machines did nothing wrong. They executed the crowd's instructions faithfully. The crowd has simply never read its own instructions before.",
+
+"2000:historian": "The NASDAQ touched 5048 in March, the CAPE stood in the forties — past even 1929's mark — and profitless companies were valued on eyeballs, a metric invented because revenue declined to appear. The merger of the era put a dial-up service atop Time Warner. Then the tape turned: the index halved and halved again, and the broad market began a decade that ended lower in real terms than it started. The network did change everything, as promised. The arithmetic of forty-four times earnings changed nothing, as always.",
+
+"2000:reporter": "Another IPO doubled by lunch — no revenue to speak of, a business plan measured in eyeballs, and a first-day pop that made the founders' lockup paper worth more than the airline I flew in on. The Super Bowl was wall-to-wall dot-com spots; the business channels run tickers on the tickers. Cisco is closing on the most-valuable-company crown, and the analysts' targets read like area codes. Out in the chat rooms they call doubters 'old economy.' The doubters have stopped arguing. Most of them are buying.",
+
+"2000:value": "Forty-four times a decade of earnings — half again past 1929's worst — and the rebuttal is that the network changes everything. Perhaps it does; railways and electricity changed everything too, and their shareholders were carried out on the same arithmetic. Transformations are real; that is never the question. The question is what you paid for them. At these prices one is not buying the future; one is reimbursing the optimists for having imagined it first, at retail, with a service charge. We decline, and accept the customary ridicule.",
+
+"2000:skeptic": "The business plans monetize attention 'later' — later is doing heroic work in every model this year. Profit has been rebranded as a failure of vision. When the cab driver pitches you a B2B play, understand the B2B is you. The new economy's central discovery is that losses scale magnificently; its second discovery, scheduled for delivery shortly, is whose. Everyone in the market is early to the future and confident someone else is late. That arrangement nets to zero, minus underwriting fees, which are the one revenue line that always prints.",
+
+"2009:historian": "On March 9 the S&P touched 666 intraday — a number the floor joked about darkly, because dark jokes were the only bids around. Citigroup traded near a dollar, nationalization was a weekday rumor, and the consensus held that the system itself was the open question. It was the generational low, arriving as generational lows do: disguised as the end of everything, unpurchasable by anyone who needed to be sure first. The market doubled before most committees finished debating whether it was investable. They were still drafting the memo.",
+
+"2009:reporter": "The number on the screen is 666 and nobody on the desk will say it out loud twice. Another bank is rumored into government hands by Friday — the rumor rotates, the Friday is constant. Citi changes hands for the price of its own ATM fee. Rallies last until lunch and are sold by two; the only conviction left is that conviction is for tourists. Washington talks stress tests, the desks talk survivors. Volume says capitulation. Sentiment says nothing. Sentiment stopped returning calls in January.",
+
+"2009:value": "Thirteen times a depressed decade of earnings, for franchises priced as if liquidation were the base case — terrifying, and therefore approximately correct. The discipline now is sizing: buy what is unkillable, in amounts that fear cannot shake loose, because the only error available at these prices is being forced to sell them to someone calmer. The system may yet break; that risk is real and it is also, at thirteen times, the merchandise. One is paid here precisely for enduring what cannot currently be endured. That is the whole job.",
+
+"2009:skeptic": "The consensus has discovered that capitalism is over. It makes this discovery roughly every thirty-five years, on schedule, with footnotes, and the schedule — not the discovery — is the signal. Note who is certain now: the same institutions that found no risk anywhere in 2006 can now find nothing else. Their models have swung from omniscience to apocalypse without passing through humility. When the people who missed the cliff edge announce the bottom is bottomless, they are describing their own balance sheets, not yours.",
+
+"2020:historian": "Thirty-four percent in twenty-three sessions — the fastest bear market on record, with circuit breakers tripping four times in two weeks and the NYSE floor itself going dark. Oil futures would shortly trade below zero, a sentence previously reserved for jokes. Then, on March 23, the Fed declared its purchases unlimited, and the low printed that same day. What followed was as violent as the fall: stimulus met shut-in savings met a brokerage app, and the melt-up confused everyone who had correctly predicted the catastrophe. Both moves were real. Neither apologized.",
+
+"2020:reporter": "Four trading halts in two weeks — the breakers are becoming routine, which is its own kind of alarming. The floor closes Monday; the Exchange will run on screens against silence for the first time in its history. Oil is heading somewhere no model has a cell for, credit desks are quoting air, and every morning the futures are locked before breakfast, one direction or the other. The Fed says 'unlimited' today, a word central bankers don't use. The tape's reply, by the close, was the first green in what feels like a year.",
+
+"2020:value": "The multiple compressed five years in a month, while half the earnings beneath it are suspended, not destroyed — and the work now is telling those apart. A closed restaurant chain and a broken one trade identically this week; only one deserves it. Panic prices everything as permanent; that is its function, and your margin. Buy unbroken businesses at broken prices, keep reserves for the chance the closure outlasts the cash, and let the people pricing the apocalypse by the hour supply the merchandise. They are highly motivated.",
+
+"2020:skeptic": "Certainty inverted in ten sessions: February's permanence became March's apocalypse, held by the same crowd, with the same confidence, citing the same models pointed the other way. The virus moved faster than opinion, and opinion is still levered. Now every strategist who never mentioned pandemics has a pandemic framework, precision arriving, as always, just after relevance. Distrust both crowds — they are one crowd. The only honest sentence on any desk this month is 'nobody knows,' and you will notice it appears in no one's outlook piece."
+
+  }
+};
+/* __CORPUS_END__ */
+
+/* ── replay engine ───────────────────────────────────────────────────────── */
+
+const REPLAY_YEARS = [...new Set(Object.keys(CORPUS.passages).map((k) => +k.split(":")[0]))]
+  .sort((a, b) => a - b);
+const nearestReplayYear = (y) =>
+  REPLAY_YEARS.reduce((best, yr) => (Math.abs(yr - y) < Math.abs(best - y) ? yr : best), REPLAY_YEARS[0]);
+
+function replayNarration({ passage, signal, onDelta }) {
+  return new Promise((resolve, reject) => {
+    const text = typeof passage === "string" ? passage : passage.text;
+    const ttft = (passage.ttft ?? CORPUS.meta.ttft) || 170;
+    const tps = (passage.tps ?? CORPUS.meta.tps) || 2100;
+    const recorded = Boolean(CORPUS.meta.recorded);
+    const charsPerSec = tps * 4;
+    const t0 = performance.now();
+    let timer = null;
+
+    const finish = () => resolve({
+      text, recorded,
+      ms: Math.round(ttft + (text.length / charsPerSec) * 1000),
+      ttft: Math.round(ttft), tps,
+    });
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      onDelta(text);
+      return finish();
+    }
+
+    let shown = 0;
+    const step = () => {
+      shown = Math.min(text.length, shown + Math.max(2, Math.round(charsPerSec * 0.03)));
+      onDelta(text.slice(0, shown));
+      if (shown < text.length) timer = setTimeout(step, 30);
+      else finish();
+    };
+    timer = setTimeout(step, ttft);
+
+    signal.addEventListener("abort", () => {
+      clearTimeout(timer);
+      reject(new DOMException("aborted", "AbortError"));
+    });
+  });
+}
+
+/* ── chart ───────────────────────────────────────────────────────────────── */
+
+const VW = 1400;
+const PRICE_TOP = 12, PRICE_BOTTOM = 134;
+const CAPE_TOP = 150, CAPE_BOTTOM = 178;
+const VH = 186;
+const PAD_L = 48, PAD_R = 18;
+const GRID_CANDIDATES = [10, 30, 100, 300, 1000, 3000, 10000, 30000];
+
+const xPct = (year, minY, maxY) =>
+  ((PAD_L + ((year - minY) / (maxY - minY)) * (VW - PAD_L - PAD_R)) / VW) * 100;
+
+/* ── analysis helpers ────────────────────────────────────────────────────── */
+
+const priceOf = (row, basis) => (basis === "nominal" ? row.nominal : row.price);
+
+function niceTicks(max, count) {
+  if (!(max > 0)) return [];
+  const raw = max / count;
+  const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const norm = raw / mag;
+  const step = (norm < 1.5 ? 1 : norm < 3 ? 2 : norm < 7 ? 5 : 10) * mag;
+  const ticks = [];
+  for (let v = step; v < max; v += step) ticks.push(+v.toFixed(6));
+  return ticks;
+}
+
+// trailing simple moving average over `win` points
+function movingAverage(pts, win) {
+  if (win <= 1) return pts.map((p) => ({ x: p.x, v: p.price }));
+  const out = [];
+  let sum = 0;
+  const q = [];
+  for (const p of pts) {
+    q.push(p.price); sum += p.price;
+    if (q.length > win) sum -= q.shift();
+    if (q.length === win) out.push({ x: p.x, v: sum / win });
+  }
+  return out;
+}
+
+/* ── chart ───────────────────────────────────────────────────────────────── */
+
+function Chart({ data, year, onScrub, onCommit, drawIn,
+                 basis, axisMode, lowerPanel, windowYears, maOn, maMonths, bearsOn,
+                 viewMin, viewMax }) {
+  const svgRef = useRef(null);
+  const dragging = useRef(false);
+  const { annual, monthly } = data;
+
+  // annual series on the active basis, with running-peak drawdown
+  const basisRows = useMemo(() => {
+    let peak = 0;
+    return annual.map((r) => {
+      const p = priceOf(r, basis);
+      if (p > 0) peak = Math.max(peak, p);
+      return { year: r.year, p, cape: r.cape, dd: p > 0 && peak > 0 ? (p / peak - 1) * 100 : 0 };
+    });
+  }, [annual, basis]);
+
+  const byYr = useMemo(() => new Map(basisRows.map((r) => [r.year, r])), [basisRows]);
+
+  // high-resolution source points for the price line (monthly if available)
+  const srcPts = useMemo(() => {
+    if (monthly) {
+      return monthly.map((m) => ({
+        x: m.year + (m.month - 0.5) / 12,
+        price: basis === "nominal" ? m.nominal : m.price,
+        cape: m.cape,
+      }));
+    }
+    return basisRows.map((r) => ({ x: r.year, price: r.p, cape: r.cape }));
+  }, [monthly, basisRows, basis]);
+
+  const inView = (x) => x >= viewMin - 1 && x <= viewMax + 1;
+
+  const scales = useMemo(() => {
+    const vis = srcPts.filter((p) => inView(p.x) && p.price > 0);
+    const prices = vis.length ? vis.map((p) => p.price) : [1, 100];
+    const lo = Math.min(...prices), hi = Math.max(...prices);
+    const xOf = (x) => PAD_L + ((x - viewMin) / (viewMax - viewMin)) * (VW - PAD_L - PAD_R);
+    let yOf, grid;
+    if (axisMode === "log") {
+      const a = Math.log10(lo * 0.8), b = Math.log10(hi * 1.25);
+      yOf = (v) => PRICE_BOTTOM - ((Math.log10(v) - a) / (b - a)) * (PRICE_BOTTOM - PRICE_TOP);
+      grid = GRID_CANDIDATES.filter((g) => g > lo * 0.8 && g < hi * 1.25);
+    } else {
+      const top = hi * 1.06;
+      yOf = (v) => PRICE_BOTTOM - (v / top) * (PRICE_BOTTOM - PRICE_TOP);
+      grid = niceTicks(top, 4);
+    }
+    // decade ticks across the visible window
+    const firstDecade = Math.ceil(viewMin / 20) * 20;
+    const decades = [];
+    for (let y = firstDecade; y <= viewMax; y += 20) decades.push(y);
+    if (viewMax - viewMin <= 40) { // denser ticks when zoomed in
+      decades.length = 0;
+      const first = Math.ceil(viewMin / 10) * 10;
+      for (let y = first; y <= viewMax; y += 10) decades.push(y);
+    }
+    return { xOf, yOf, grid, decades };
+  }, [srcPts, axisMode, viewMin, viewMax]);
+
+  const fmtPrice = (v) => (v >= 1000 ? (v / 1000).toFixed(v >= 10000 ? 0 : 1) + "k" : Math.round(v));
+
+  // paths
+  const pricePath = useMemo(() => {
+    const vis = srcPts.filter((p) => inView(p.x) && p.price > 0);
+    return vis.map((p, i) => (i === 0 ? "M" : "L") + scales.xOf(p.x).toFixed(1) + "," + scales.yOf(p.price).toFixed(1)).join(" ");
+  }, [srcPts, scales]);
+
+  const maPath = useMemo(() => {
+    if (!maOn) return "";
+    const win = monthly ? maMonths : Math.max(1, Math.round(maMonths / 12));
+    const ma = movingAverage(srcPts.filter((p) => p.price > 0), win).filter((p) => inView(p.x));
+    if (ma.length < 2) return "";
+    return ma.map((p, i) => (i === 0 ? "M" : "L") + scales.xOf(p.x).toFixed(1) + "," + scales.yOf(p.v).toFixed(1)).join(" ");
+  }, [maOn, maMonths, srcPts, monthly, scales]);
+
+  // bear-market bands (drawdown beyond −20% on the active basis)
+  const bearBands = useMemo(() => {
+    if (!bearsOn) return [];
+    const bands = [];
+    let start = null;
+    for (const r of basisRows) {
+      const bear = r.dd <= -20;
+      if (bear && start == null) start = r.year;
+      if (!bear && start != null) { bands.push([start, r.year]); start = null; }
+    }
+    if (start != null) bands.push([start, basisRows[basisRows.length - 1].year]);
+    return bands
+      .map(([a, b]) => [Math.max(a, viewMin), Math.min(b, viewMax)])
+      .filter(([a, b]) => b > a);
+  }, [bearsOn, basisRows, viewMin, viewMax]);
+
+  // lower panel
+  const lower = useMemo(() => {
+    if (lowerPanel === "cape") {
+      const cpts = srcPts.filter((p) => inView(p.x) && p.cape != null);
+      if (cpts.length < 2) return null;
+      const capeMax = Math.max(46, ...cpts.map((p) => p.cape)) * 1.05;
+      const yc = (c) => CAPE_BOTTOM - (c / capeMax) * (CAPE_BOTTOM - CAPE_TOP);
+      const line = cpts.map((p, i) => (i === 0 ? "M" : "L") + scales.xOf(p.x).toFixed(1) + "," + yc(p.cape).toFixed(1)).join(" ");
+      const area = line + " L" + scales.xOf(cpts[cpts.length - 1].x).toFixed(1) + "," + CAPE_BOTTOM +
+        " L" + scales.xOf(cpts[0].x).toFixed(1) + "," + CAPE_BOTTOM + " Z";
+      return { kind: "cape", line, area };
+    }
+    if (lowerPanel === "return") {
+      const rpts = [];
+      for (const r of basisRows) {
+        const prev = byYr.get(r.year - windowYears);
+        if (prev && prev.p > 0 && r.p > 0 && inView(r.year))
+          rpts.push({ x: r.year, r: (Math.pow(r.p / prev.p, 1 / windowYears) - 1) * 100 });
+      }
+      if (rpts.length < 2) return null;
+      const rmax = Math.max(8, Math.ceil(Math.max(...rpts.map((p) => Math.abs(p.r))) / 5) * 5);
+      const yr = (v) => (CAPE_TOP + CAPE_BOTTOM) / 2 - (v / rmax) * ((CAPE_BOTTOM - CAPE_TOP) / 2);
+      const line = rpts.map((p, i) => (i === 0 ? "M" : "L") + scales.xOf(p.x).toFixed(1) + "," + yr(p.r).toFixed(1)).join(" ");
+      return { kind: "return", line, zeroY: yr(0), rmax };
+    }
+    return null;
+  }, [lowerPanel, srcPts, basisRows, byYr, windowYears, scales]);
+
+  const yearFromClientX = useCallback((clientX) => {
+    const rect = svgRef.current.getBoundingClientRect();
+    const vx = ((clientX - rect.left) / rect.width) * VW;
+    const t = (vx - PAD_L) / (VW - PAD_L - PAD_R);
+    return Math.min(viewMax, Math.max(viewMin, Math.round(viewMin + t * (viewMax - viewMin))));
+  }, [viewMin, viewMax]);
+
+  const handleKey = (e) => {
+    const step = e.shiftKey ? 10 : 1;
+    let next = null;
+    if (e.key === "ArrowLeft" || e.key === "ArrowDown") next = Math.max(viewMin, year - step);
+    if (e.key === "ArrowRight" || e.key === "ArrowUp") next = Math.min(viewMax, year + step);
+    if (e.key === "Home") next = viewMin;
+    if (e.key === "End") next = viewMax;
+    if (next != null) { e.preventDefault(); onScrub(next); return; }
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onCommit(year); }
+  };
+
+  const cYear = Math.min(viewMax, Math.max(viewMin, year));
+  const d = byYr.get(cYear) || basisRows[basisRows.length - 1];
+  const cx = scales.xOf(cYear), cy = d.p > 0 ? scales.yOf(d.p) : PRICE_BOTTOM;
+  const chipW = 158, chipFlip = cx > VW - chipW - 30;
+  const chipX = chipFlip ? cx - chipW - 12 : cx + 12;
+  const hasCape = d.cape != null;
+
+  return (
+    <div
+      className="mn-chartwrap"
+      role="slider"
+      tabIndex={0}
+      aria-label={"Year selector, " + viewMin + " to " + viewMax + ". Arrow keys to step, Shift for decades, Enter to narrate."}
+      aria-valuemin={viewMin}
+      aria-valuemax={viewMax}
+      aria-valuenow={cYear}
+      aria-valuetext={cYear + " — " + basis + " price " + Math.round(d.p) + (hasCape ? ", CAPE " + d.cape : "")}
+      onKeyDown={handleKey}
+    >
+      <svg
+        ref={svgRef}
+        className="mn-svg"
+        viewBox={"0 0 " + VW + " " + VH}
+        aria-hidden="true"
+        onPointerDown={(e) => { dragging.current = true; e.currentTarget.setPointerCapture(e.pointerId); onScrub(yearFromClientX(e.clientX)); }}
+        onPointerMove={(e) => { if (dragging.current) onScrub(yearFromClientX(e.clientX)); }}
+        onPointerUp={(e) => { dragging.current = false; onCommit(yearFromClientX(e.clientX)); }}
+        onPointerCancel={() => { dragging.current = false; }}
+      >
+        {bearBands.map(([a, b], i) => (
+          <rect key={i} className="mn-bear" x={scales.xOf(a)} y={PRICE_TOP}
+            width={Math.max(0, scales.xOf(b) - scales.xOf(a))} height={PRICE_BOTTOM - PRICE_TOP} />
+        ))}
+
+        {scales.grid.map((p) => (
+          <g key={p}>
+            <line className="mn-grid" x1={PAD_L} x2={VW - PAD_R} y1={scales.yOf(p)} y2={scales.yOf(p)} />
+            <text className="mn-gridlabel" x={PAD_L - 8} y={scales.yOf(p) + 3} textAnchor="end">{fmtPrice(p)}</text>
+          </g>
+        ))}
+
+        <path className={"mn-line" + (drawIn ? " draw" : "")} d={pricePath} />
+        {maPath && <path className="mn-ma" d={maPath} />}
+
+        {lower && lower.kind === "cape" && (
+          <React.Fragment>
+            <text className="mn-axislabel" x={PAD_L - 8} y={CAPE_TOP + 6} textAnchor="end">CAPE</text>
+            <path className="mn-capearea" d={lower.area} />
+            <path className="mn-capeline" d={lower.line} />
+          </React.Fragment>
+        )}
+        {lower && lower.kind === "return" && (
+          <React.Fragment>
+            <text className="mn-axislabel" x={PAD_L - 8} y={CAPE_TOP + 6} textAnchor="end">{windowYears}y rtn</text>
+            <line className="mn-zero" x1={PAD_L} x2={VW - PAD_R} y1={lower.zeroY} y2={lower.zeroY} />
+            <text className="mn-gridlabel" x={VW - PAD_R} y={CAPE_TOP + 6} textAnchor="end">+{lower.rmax}%</text>
+            <text className="mn-gridlabel" x={VW - PAD_R} y={CAPE_BOTTOM} textAnchor="end">−{lower.rmax}%</text>
+            <path className="mn-return" d={lower.line} />
+          </React.Fragment>
+        )}
+
+        {scales.decades.map((y) => (
+          <text key={y} className="mn-axislabel" x={scales.xOf(y)} y={VH - 6} textAnchor="middle">{y}</text>
+        ))}
+
+        <line className="mn-cursorline" x1={cx} x2={cx} y1={PRICE_TOP} y2={lowerPanel === "off" ? PRICE_BOTTOM : CAPE_BOTTOM} />
+        <circle className="mn-cursordot" cx={cx} cy={cy} r="3.5" />
+
+        <g transform={"translate(" + chipX + "," + Math.max(PRICE_TOP, Math.min(cy - 30, PRICE_BOTTOM - 64)) + ")"}>
+          <rect className="mn-chipbox" width={chipW} height="58" rx="9" />
+          <text className="mn-chipyear" x="12" y="22">{cYear}</text>
+          <text className="mn-chipstat" x="12" y="38">
+            ${Math.round(d.p).toLocaleString()}{hasCape ? " · CAPE " + d.cape : ""}
+          </text>
+          <text className="mn-chipstat" x="12" y="51">
+            {d.dd <= -1 ? d.dd.toFixed(0) + "% off peak" : "at the highs"}
+          </text>
+        </g>
+      </svg>
+    </div>
+  );
+}
+
+function EraStrip({ year, onPick, viewMin, viewMax }) {
+  return (
+    <div className="mn-eras" role="group" aria-label="Notable moments">
+      {ERAS.filter(([y]) => y >= viewMin && y <= viewMax).map(([y, label]) => (
+        <button
+          key={y}
+          type="button"
+          className="mn-era"
+          style={{ left: xPct(y, viewMin, viewMax) + "%" }}
+          title={y + " — " + label}
+          aria-label={y + " — " + label}
+          aria-pressed={year === y}
+          onClick={() => onPick(y)}
+        />
+      ))}
+    </div>
+  );
+}
+
+/* ── zoom track ──────────────────────────────────────────────────────────── */
+
+function ZoomTrack({ dataMin, dataMax, viewMin, viewMax, onChange }) {
+  const ref = useRef(null);
+  const drag = useRef(null);
+  const span = Math.max(1, dataMax - dataMin);
+  const MINW = 4;
+  const pct = (y) => ((y - dataMin) / span) * 100;
+
+  const onDown = (mode) => (e) => {
+    e.preventDefault();
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+    drag.current = { mode, startX: e.clientX, startMin: viewMin, startMax: viewMax };
+  };
+  const onMove = (e) => {
+    if (!drag.current || !ref.current) return;
+    const d = drag.current;
+    const dyr = ((e.clientX - d.startX) / ref.current.getBoundingClientRect().width) * span;
+    let nMin = d.startMin, nMax = d.startMax;
+    if (d.mode === "min") nMin = Math.min(Math.max(dataMin, d.startMin + dyr), d.startMax - MINW);
+    else if (d.mode === "max") nMax = Math.max(Math.min(dataMax, d.startMax + dyr), d.startMin + MINW);
+    else {
+      const w = d.startMax - d.startMin;
+      nMin = Math.min(Math.max(dataMin, d.startMin + dyr), dataMax - w);
+      nMax = nMin + w;
+    }
+    onChange(Math.round(nMin), Math.round(nMax));
+  };
+  const onUp = () => { drag.current = null; };
+
+  const handleKey = (which) => (e) => {
+    const step = e.shiftKey ? 10 : 1;
+    let nMin = viewMin, nMax = viewMax, hit = true;
+    if (which === "min") {
+      if (e.key === "ArrowLeft") nMin = Math.max(dataMin, viewMin - step);
+      else if (e.key === "ArrowRight") nMin = Math.min(viewMax - MINW, viewMin + step);
+      else hit = false;
+    } else {
+      if (e.key === "ArrowLeft") nMax = Math.max(viewMin + MINW, viewMax - step);
+      else if (e.key === "ArrowRight") nMax = Math.min(dataMax, viewMax + step);
+      else hit = false;
+    }
+    if (hit) { e.preventDefault(); onChange(nMin, nMax); }
+  };
+
+  return (
+    <div className="mn-zoom" ref={ref}>
+      <div className="mn-zoom-track" />
+      <div
+        className="mn-zoom-sel"
+        style={{ left: pct(viewMin) + "%", width: (pct(viewMax) - pct(viewMin)) + "%" }}
+        onPointerDown={onDown("pan")} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}
+      />
+      <div
+        className="mn-zoom-handle" role="slider" tabIndex={0}
+        aria-label="Range start" aria-valuemin={dataMin} aria-valuemax={dataMax} aria-valuenow={viewMin}
+        style={{ left: pct(viewMin) + "%" }}
+        onPointerDown={onDown("min")} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}
+        onKeyDown={handleKey("min")}
+      />
+      <div
+        className="mn-zoom-handle" role="slider" tabIndex={0}
+        aria-label="Range end" aria-valuemin={dataMin} aria-valuemax={dataMax} aria-valuenow={viewMax}
+        style={{ left: pct(viewMax) + "%" }}
+        onPointerDown={onDown("max")} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}
+        onKeyDown={handleKey("max")}
+      />
+    </div>
+  );
+}
+
+/* ── app ─────────────────────────────────────────────────────────────────── */
+
+const CSV_CANDIDATES = ["data.csv", "shiller.csv", "ie_data.csv"];
+
+function App() {
+  const [data, setData] = useState(buildFallback);
+  const [loadError, setLoadError] = useState("");
+  const [dragOver, setDragOver] = useState(false);
+  const fileRef = useRef(null);
+
+  // analysis controls
+  const [basis, setBasis] = useState("real");
+  const [axisMode, setAxisMode] = useState("log");
+  const [lowerPanel, setLowerPanel] = useState("cape");
+  const [windowYears, setWindowYears] = useState(10);
+  const [maOn, setMaOn] = useState(false);
+  const [maMonths, setMaMonths] = useState(60);
+  const [bearsOn, setBearsOn] = useState(false);
+  const [view, setView] = useState(null); // {min,max} | null = full range
+
+  const [year, setYear] = useState(1929);
+  const [personaId, setPersonaId] = useState("historian");
+  const [status, setStatus] = useState("idle");
+  const [text, setText] = useState("");
+  const [narrated, setNarrated] = useState(null);
+  const [perf, setPerf] = useState(null);
+  const [drawIn, setDrawIn] = useState(true);
+  const abortRef = useRef(null);
+
+  const persona = PERSONAS.find((p) => p.id === personaId);
+  const annual = data.annual;
+  const dataMin = annual[0].year, dataMax = annual[annual.length - 1].year;
+  const viewMin = view ? view.min : dataMin;
+  const viewMax = view ? view.max : dataMax;
+  const idx = useMemo(() => new Map(annual.map((r) => [r.year, r])), [annual]);
+
+  const adoptCSV = useCallback((textContent, label) => {
+    try {
+      const parsed = parseShillerCSV(textContent, label);
+      setData(parsed);
+      setLoadError("");
+      setView(null); // reset zoom to the new range
+    } catch (e) {
+      setLoadError(e.message || "Couldn't read that file.");
+    }
+  }, []);
+
+  // if the loaded data has no nominal series, force real basis
+  useEffect(() => { if (!data.hasNominal && basis === "nominal") setBasis("real"); }, [data, basis]);
+
+  useEffect(() => {
+    if (location.protocol === "file:") return;
+    let cancelled = false;
+    (async () => {
+      for (const name of CSV_CANDIDATES) {
+        try {
+          const res = await fetch(name);
+          if (!res.ok) continue;
+          const body = await res.text();
+          if (!cancelled && body.includes(",")) { adoptCSV(body, name); return; }
+        } catch { /* served-only path */ }
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [adoptCSV]);
+
+  const narrate = useCallback((y, pId) => {
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+    const target = nearestReplayYear(y);
+    if (target !== y) setYear(target);
+    const passage = CORPUS.passages[target + ":" + pId];
+    setNarrated({ year: target, personaId: pId });
+    if (!passage) { setStatus("error"); setText("No passage for " + target + " in this corpus."); return; }
+    setStatus("playing"); setText("");
+    replayNarration({ passage, signal: controller.signal, onDelta: (t) => setText(t) })
+      .then((result) => {
+        if (controller.signal.aborted) return;
+        setText(result.text);
+        setPerf({ ms: result.ms, ttft: result.ttft, tps: result.tps, recorded: result.recorded });
+        setStatus("done");
+      })
+      .catch((err) => {
+        if (controller.signal.aborted || err.name === "AbortError") return;
+        setStatus("error"); setText(err.message || "Replay failed.");
+      });
+  }, []);
+
+  useEffect(() => {
+    const t = setTimeout(() => { setDrawIn(false); narrate(1929, "historian"); }, 1200);
+    return () => { clearTimeout(t); abortRef.current?.abort(); };
+  }, [narrate]);
+
+  const commitYear = (y) => { setYear(y); narrate(y, personaId); };
+  const pickPersona = (id) => { setPersonaId(id); narrate(year, id); };
+  const onFile = (file) => { if (file) file.text().then((t) => adoptCSV(t, file.name)); };
+
+  const handleZoom = (min, max) => {
+    setView(min <= dataMin && max >= dataMax ? null : { min, max });
+    setYear((y) => Math.min(max, Math.max(min, y)));
+  };
+
+  // rolling-return readout for the narration header (active basis + window)
+  const rr = useMemo(() => {
+    const cur = idx.get(narrated ? narrated.year : year);
+    const prev = idx.get((narrated ? narrated.year : year) - windowYears);
+    if (!cur || !prev) return null;
+    const a = priceOf(prev, basis), b = priceOf(cur, basis);
+    if (!(a > 0) || !(b > 0)) return null;
+    return (Math.pow(b / a, 1 / windowYears) - 1) * 100;
+  }, [idx, narrated, year, windowYears, basis]);
+
+  const busy = status === "playing";
+  const d = idx.get(Math.min(viewMax, Math.max(viewMin, year))) || annual[annual.length - 1];
+  const dispPrice = priceOf(d, basis);
+  const Seg = ({ value, onChange, options }) => (
+    <div className="mn-seg" role="group">
+      {options.map((o) => (
+        <button key={o.v} type="button" aria-pressed={value === o.v}
+          disabled={o.disabled} title={o.title}
+          onClick={() => !o.disabled && onChange(o.v)}>{o.label}</button>
+      ))}
+    </div>
+  );
+
+  return (
+    <div className="mn-root">
+      <div className="mn-shell">
+
+        <header className="mn-headrow">
+          <div>
+            <div className="mn-eyebrow">Market narration</div>
+            <h1 className="mn-title">A century and a half on your terms</h1>
+            <p className="mn-sub">
+              The {basis} S&amp;P composite, {dataMin} → {dataMax}, after Robert Shiller's data —
+              park anywhere on the line and a voice tells the era.
+            </p>
+          </div>
+          <div className="mn-perf" aria-live="off">
+            <span className={"mn-dot" + (busy ? " live" : "")} />
+            {perf
+              ? <span>{perf.tps.toLocaleString()} tok/s · {perf.recorded ? "recorded" : "simulated"} cadence</span>
+              : <span>{busy ? "playing…" : "replay ready"}</span>}
+          </div>
+        </header>
+
+        {data.source !== "csv" && (
+          <div
+            className={"mn-loadbar" + (dragOver ? " drag" : "")}
+            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={(e) => { e.preventDefault(); setDragOver(false); onFile(e.dataTransfer.files?.[0]); }}
+          >
+            <span>
+              Showing the embedded approximation (no nominal series). For the real monthly data,
+              drop the Shiller CSV here <span aria-hidden="true">·</span> github.com/datasets/s-and-p-500
+            </span>
+            <button type="button" className="mn-btn" onClick={() => fileRef.current?.click()}>Load CSV</button>
+            <input ref={fileRef} type="file" accept=".csv,text/csv" className="mn-filehidden"
+              aria-label="Load Shiller CSV" onChange={(e) => onFile(e.target.files?.[0])} />
+            {loadError && <span className="mn-loaderr">{loadError}</span>}
+          </div>
+        )}
+
+        <section className="mn-card" aria-label="Market chart">
+          <Chart data={data} year={year} onScrub={setYear} onCommit={commitYear} drawIn={drawIn}
+            basis={basis} axisMode={axisMode} lowerPanel={lowerPanel} windowYears={windowYears}
+            maOn={maOn} maMonths={maMonths} bearsOn={bearsOn} viewMin={viewMin} viewMax={viewMax} />
+          <EraStrip year={year} onPick={commitYear} viewMin={viewMin} viewMax={viewMax} />
+          <div className="mn-cardfoot">
+            <span>{data.source === "csv" ? "shiller monthly · " + data.label : "approximate fallback data"}</span>
+            <span>drag the chart, or tap a moment</span>
+          </div>
+        </section>
+
+        <div className="mn-personas" role="group" aria-label="Narrator">
+          {PERSONAS.map((p) => (
+            <button key={p.id} type="button" className="mn-persona"
+              aria-pressed={p.id === personaId} onClick={() => pickPersona(p.id)}>{p.label}</button>
+          ))}
+        </div>
+
+        <div className="mn-bottom">
+        <div className="mn-controls">
+          <div className="mn-ctrl">
+            <span className="mn-ctrl-label">Price basis</span>
+            <Seg value={basis} onChange={setBasis} options={[
+              { v: "real", label: "Real" },
+              { v: "nominal", label: "Nominal", disabled: !data.hasNominal,
+                title: data.hasNominal ? "" : "Load a CSV with a nominal series" },
+            ]} />
+          </div>
+          <div className="mn-ctrl">
+            <span className="mn-ctrl-label">Y-axis</span>
+            <Seg value={axisMode} onChange={setAxisMode} options={[
+              { v: "log", label: "Log" }, { v: "linear", label: "Linear" },
+            ]} />
+          </div>
+          <div className="mn-ctrl">
+            <span className="mn-ctrl-label">Lower panel</span>
+            <Seg value={lowerPanel} onChange={setLowerPanel} options={[
+              { v: "cape", label: "CAPE" }, { v: "return", label: "Return" }, { v: "off", label: "Off" },
+            ]} />
+          </div>
+          <div className="mn-ctrl">
+            <span className="mn-ctrl-label">
+              <span>Rolling window</span><span className="mn-ctrl-val">{windowYears}y</span>
+            </span>
+            <input className="mn-range" type="range" min="1" max="30" step="1" value={windowYears}
+              aria-label="Rolling return window in years"
+              onChange={(e) => setWindowYears(+e.target.value)} />
+          </div>
+          <div className="mn-ctrl">
+            <span className="mn-ctrl-label">
+              <span>Moving avg</span>
+              <span className="mn-ctrl-val">{maOn ? (maMonths >= 12 ? maMonths / 12 + "y" : maMonths + "mo") : "off"}</span>
+            </span>
+            <input className="mn-range" type="range" min="6" max="120" step="6" value={maMonths}
+              disabled={!maOn} aria-label="Moving average period in months"
+              onChange={(e) => setMaMonths(+e.target.value)} />
+          </div>
+          <div className="mn-ctrl">
+            <span className="mn-ctrl-label">Overlays</span>
+            <div className="mn-chips">
+              <button type="button" className="mn-chip" aria-pressed={maOn}
+                style={{ "--swatch": "var(--accent)" }} onClick={() => setMaOn((v) => !v)}>
+                <span className="mn-chipdot" />Moving avg
+              </button>
+              <button type="button" className="mn-chip" aria-pressed={bearsOn}
+                style={{ "--swatch": "rgba(194,73,20,.6)" }} onClick={() => setBearsOn((v) => !v)}>
+                <span className="mn-chipdot" />Bear markets
+              </button>
+            </div>
+          </div>
+          <div className="mn-ctrl" style={{ gridColumn: "1 / -1" }}>
+            <span className="mn-ctrl-label mn-zoom-row">
+              <span>Visible range</span>
+              <button type="button" className="mn-zoom-reset" disabled={!view}
+                onClick={() => setView(null)}>
+                {view ? viewMin + "–" + viewMax + " · reset" : "full range"}
+              </button>
+            </span>
+            <ZoomTrack dataMin={dataMin} dataMax={dataMax} viewMin={viewMin} viewMax={viewMax} onChange={handleZoom} />
+          </div>
+        </div>
+
+        <section className="mn-narration" aria-label="Narration">
+          <div className="mn-narrhead">
+            <span>{narrated ? narrated.year : year} · {persona.label.toLowerCase()}</span>
+            <span>
+              ${Math.round(dispPrice).toLocaleString()}
+              {d.cape != null ? " · CAPE " + d.cape : ""}
+              {rr != null ? " · " + windowYears + "y " + (rr >= 0 ? "+" : "") + rr.toFixed(1) + "%/yr" : ""}
+            </span>
+          </div>
+
+          <div className="mn-text" aria-live="polite">
+            {status === "error" ? (
+              <div className="mn-error">{text}</div>
+            ) : text ? (
+              <React.Fragment>{text}{busy && <span className="caret" aria-hidden="true" />}</React.Fragment>
+            ) : (
+              <span className="mn-placeholder">{busy ? "Listening for the first words…" : "Pick a year to begin."}</span>
+            )}
+          </div>
+
+          <div className="mn-narrfoot">
+            replay · {REPLAY_YEARS.length} moments × {PERSONAS.length} voices
+          </div>
+        </section>
+        </div>
+
+        <p className="mn-footnote">
+          For demo purposes only - not an investment advice.
+        </p>
+
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+
+</script>
+</body>
+</html>

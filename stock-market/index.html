@@ -84,8 +84,8 @@ body { margin: 0; }
   font-weight: 300; letter-spacing: -0.02em; line-height: 1.04;
   margin: 6px 0 6px;
 }
-.mn-sub { font-size: 14.5px; color: var(--ink-soft); line-height: 1.6; max-width: 56ch; margin: 0; }
-.mn-headrow { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+.mn-sub { font-size: 14.5px; color: var(--ink-soft); line-height: 1.6; max-width: 56ch; margin: 0 0 30px 0; }
+.mn-headrow { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; flex-wrap: wrap; margin-top: 30px;}
 
 .mn-perf {
   font-family: var(--mono); font-size: 12px; color: var(--ink-soft);
@@ -1130,24 +1130,6 @@ function App() {
               : <span>{busy ? "playing…" : "replay ready"}</span>}
           </div>
         </header>
-
-        {data.source !== "csv" && (
-          <div
-            className={"mn-loadbar" + (dragOver ? " drag" : "")}
-            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-            onDragLeave={() => setDragOver(false)}
-            onDrop={(e) => { e.preventDefault(); setDragOver(false); onFile(e.dataTransfer.files?.[0]); }}
-          >
-            <span>
-              Showing the embedded approximation (no nominal series). For the real monthly data,
-              drop the Shiller CSV here <span aria-hidden="true">·</span> github.com/datasets/s-and-p-500
-            </span>
-            <button type="button" className="mn-btn" onClick={() => fileRef.current?.click()}>Load CSV</button>
-            <input ref={fileRef} type="file" accept=".csv,text/csv" className="mn-filehidden"
-              aria-label="Load Shiller CSV" onChange={(e) => onFile(e.target.files?.[0])} />
-            {loadError && <span className="mn-loaderr">{loadError}</span>}
-          </div>
-        )}
 
         <section className="mn-card" aria-label="Market chart">
           <Chart data={data} year={year} onScrub={setYear} onCommit={commitYear} drawIn={drawIn}

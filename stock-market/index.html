@@ -1123,12 +1123,6 @@ function App() {
               park anywhere on the line and a voice tells the era.
             </p>
           </div>
-          <div className="mn-perf" aria-live="off">
-            <span className={"mn-dot" + (busy ? " live" : "")} />
-            {perf
-              ? <span>{perf.tps.toLocaleString()} tok/s · {perf.recorded ? "recorded" : "simulated"} cadence</span>
-              : <span>{busy ? "playing…" : "replay ready"}</span>}
-          </div>
         </header>
 
         <section className="mn-card" aria-label="Market chart">

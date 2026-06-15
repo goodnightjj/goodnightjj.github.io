@@ -80,6 +80,9 @@ header.top{border-bottom:1px solid var(--divider);background:var(--surface);posi
 .eyebrow{font-family:"Sometype Mono";font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:12px}
 .hero h1{font-size:48px;line-height:1.08}
 .hero .context{color:var(--foreground-muted);margin:18px 0 0;font-size:15px;max-width:680px}
+.hero .source{display:inline-flex;align-items:center;gap:7px;margin-top:14px;font-family:"Sometype Mono";font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--foreground-muted);text-decoration:none;border-bottom:1px solid var(--divider-strong);padding-bottom:2px}
+.hero .source:hover{color:var(--accent);border-color:var(--accent)}
+.hero .source svg{width:14px;height:14px}
 
 /* ---------- transcript rows ---------- */
 .qrow{
@@ -188,6 +191,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:var(--u);flex-wrap:w
     <div class="eyebrow">Tournament dataset · 1970–2022</div>
     <h1>Half a century of matches, asking what actually decides them.</h1>
     <p class="context">A machine-learning-ready dataset of 1,322 Men’s FIFA World Cup matches from 1970–2022, designed for predicting match outcomes such as win, draw, or loss. Unlike standard match logs, it includes 70 curated columns with advanced pre-match and per-half features engineered specifically for football predictive modeling.</p>
+    <a class="source" href="https://www.kaggle.com/datasets/isfakiqbalchowdhuruy/fifa-mens-world-cup-dataset-1970-2022" target="_blank" rel="noopener">Data source</a>
   </div>
   <div id="feed"></div>
 </main>

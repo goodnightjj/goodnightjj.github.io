@@ -1,0 +1,557 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>FIFA World Cup — Match Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&family=Sometype+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+:root{
+  /* ---- CDS tokens (light) ---- */
+  --black-900: 0 0% 10%;
+  --neutral-800: 30 1% 20%;
+  --neutral-500: 30 1% 50%;
+  --neutral-300: 30 2% 69%;
+  --neutral-200: 30 4% 79%;
+  --neutral-100: 30 17% 91%;
+  --cream-50: 36 24% 96%;
+  --accent-500: 15 88% 55%;        /* brand orange #F05A28 */
+  --accent-600: 15 88% 47%;
+  --accent-hover: 22 100% 68%;
+  --babyblue: 190 49% 67%;         /* secondary */
+  --warning: 53 100% 58%;
+
+  --background-behind: hsl(var(--cream-50));
+  --surface: hsl(0 0% 100%);
+  --surface-sunken: hsl(var(--neutral-100));
+  --foreground: hsl(var(--black-900));
+  --foreground-muted: hsl(var(--neutral-500));
+  --foreground-subtle: hsl(var(--neutral-300));
+  --divider: hsl(var(--neutral-200));
+  --divider-strong: hsl(var(--neutral-300));
+  --accent: hsl(var(--accent-500));
+  --accent-strong: hsl(var(--accent-600));
+
+  --c-win: hsl(var(--accent-500));
+  --c-draw: hsl(var(--neutral-300));
+  --c-loss: hsl(var(--neutral-800));
+  --c-blue: hsl(var(--babyblue));
+  --c-yellow: hsl(var(--warning));
+
+  --radius: 2px;
+  --u: 16px;
+  --maxw: 1340px;
+  --shadow: 0 1px 2px hsl(var(--black-900) / .06), 0 8px 24px hsl(var(--black-900) / .05);
+}
+
+*{box-sizing:border-box}
+html{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;scroll-behavior:smooth}
+body{
+  margin:0;font-family:"Manrope",system-ui,sans-serif;
+  background:var(--background-behind);color:var(--foreground);
+  font-size:15px;line-height:1.55;
+}
+h1,h2{font-weight:300;letter-spacing:-.02em;margin:0}
+h3,h4{font-weight:600;letter-spacing:-.01em;margin:0}
+button{font-family:inherit;cursor:pointer}
+.mono{font-family:"Sometype Mono",ui-monospace,monospace}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 calc(var(--u)*1.5)}
+
+/* ---------- header ---------- */
+header.top{border-bottom:1px solid var(--divider);background:var(--surface);position:sticky;top:0;z-index:30}
+.top-inner{max-width:var(--maxw);margin:0 auto;padding:calc(var(--u)*.875) calc(var(--u)*1.5);display:flex;align-items:center;gap:var(--u)}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit}
+.brand .mark{width:26px;height:26px;border-radius:var(--radius);background:var(--accent);display:grid;place-items:center;flex:none}
+.brand .mark svg{width:15px;height:15px;display:block}
+.brand .name{font-family:"Sometype Mono";font-weight:600;font-size:13px;letter-spacing:.14em;text-transform:uppercase}
+.brand .sub{color:var(--foreground-muted);font-size:13px;border-left:1px solid var(--divider);padding-left:10px;margin-left:2px}
+.top-spacer{flex:1}
+.top-meta{display:flex;gap:calc(var(--u)*1.25);color:var(--foreground-muted)}
+.top-meta div{display:flex;flex-direction:column;line-height:1.2}
+.top-meta b{font-family:"Sometype Mono";font-weight:500;font-size:14px;color:var(--foreground)}
+.top-meta span{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase}
+@media(max-width:760px){.top-meta{display:none}.brand .sub{display:none}}
+
+/* ---------- hero ---------- */
+.hero{padding:calc(var(--u)*2.5) 0 calc(var(--u)*1.5);max-width:720px}
+.eyebrow{font-family:"Sometype Mono";font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:12px}
+.hero h1{font-size:48px;line-height:1.08}
+.hero .context{color:var(--foreground-muted);margin:18px 0 0;font-size:15px;max-width:680px}
+
+/* ---------- transcript rows ---------- */
+.qrow{
+  display:grid;grid-template-columns:minmax(360px,420px) 1fr;gap:calc(var(--u)*3);
+  border-top:1px solid var(--divider);padding:calc(var(--u)*2.5) 0;align-items:start;
+}
+.qrow:last-child{border-bottom:1px solid var(--divider)}
+@media(max-width:920px){.qrow{grid-template-columns:1fr;gap:calc(var(--u)*1.5)}}
+
+/* left: question + analysis + reasoning */
+.q-meta{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.q-idx{font-family:"Sometype Mono";font-size:11px;letter-spacing:.12em;color:var(--accent);font-weight:500}
+.q-tag{font-family:"Sometype Mono";font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--foreground-subtle);border-left:1px solid var(--divider);padding-left:10px}
+.left h2{font-size:23px;line-height:1.22;margin-bottom:14px}
+.analysis{color:var(--foreground-muted);font-size:14.5px}
+.analysis b{color:var(--foreground);font-weight:600}
+.left.sticky{position:sticky;top:84px}
+@media(max-width:920px){.left.sticky{position:static}}
+
+/* reasoning trace */
+.reason{border:1px solid var(--divider);border-radius:var(--radius);background:var(--surface);margin-top:var(--u);overflow:hidden}
+.reason-head{display:flex;align-items:center;gap:9px;width:100%;background:none;border:none;padding:11px 13px;color:var(--foreground-muted);font-family:"Sometype Mono";font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+.reason-head:hover{color:var(--foreground)}
+.reason-head .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex:none}
+.reason-head .count{color:var(--foreground-subtle)}
+.reason-head .spacer{flex:1}
+.reason-head .chev{width:15px;height:15px;transition:transform .2s}
+.reason[data-open="false"] .chev{transform:rotate(-90deg)}
+.reason-body{padding:2px 13px 12px;border-top:1px solid var(--divider)}
+.reason[data-open="false"] .reason-body{display:none}
+.steps{position:relative}
+.step{display:flex;gap:11px;padding:7px 0;position:relative}
+.step .ico{width:22px;height:22px;border-radius:var(--radius);background:var(--surface-sunken);color:var(--foreground-muted);display:grid;place-items:center;flex:none;position:relative;z-index:1}
+.step .ico svg{width:12px;height:12px}
+.step:not(:last-child) .ico::after{content:"";position:absolute;top:22px;left:50%;transform:translateX(-50%);width:1px;height:calc(100% + 0px);background:var(--divider)}
+.step .body{padding-top:2px}
+.step .txt{font-size:13px;color:var(--foreground)}
+.step .sub{font-family:"Sometype Mono";font-size:11px;color:var(--foreground-muted);margin-top:3px}
+.step.chart .ico,.step.write .ico{color:var(--accent-strong);background:hsl(var(--accent-500) / .1)}
+.step.note .txt{color:var(--foreground-muted)}
+
+/* right: stats + chart panel + takeaway */
+.stats{display:flex;flex-wrap:wrap;gap:var(--u);margin-bottom:var(--u)}
+.stat{background:var(--surface);border:1px solid var(--divider);border-radius:var(--radius);padding:calc(var(--u)*.75) var(--u);min-width:140px;flex:1}
+.stat .v{font-family:"Sometype Mono";font-size:24px;font-weight:500;line-height:1}
+.stat .v.accent{color:var(--accent-strong)}
+.stat .l{color:var(--foreground-muted);font-size:11.5px;margin-top:7px}
+
+.panel{background:var(--surface);border:1px solid var(--divider);border-radius:var(--radius);padding:calc(var(--u)*1.25)}
+.panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--u);flex-wrap:wrap;margin-bottom:var(--u)}
+.panel-head h3{font-size:15px}
+.panel-head .cap{color:var(--foreground-muted);font-size:12.5px;margin-top:4px;max-width:440px}
+.toggle{display:inline-flex;border:1px solid var(--divider-strong);border-radius:var(--radius);overflow:hidden;flex:none}
+.toggle button{background:var(--surface);border:none;padding:6px 11px;font-family:"Sometype Mono";font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--foreground-muted);border-right:1px solid var(--divider)}
+.toggle button:last-child{border-right:none}
+.toggle button[aria-pressed="true"]{background:var(--foreground);color:var(--surface)}
+
+svg.chart{width:100%;height:auto;display:block;overflow:visible}
+.gridline{stroke:var(--divider);stroke-width:1;stroke-dasharray:2 4}
+.axis{stroke:var(--divider);stroke-width:1}
+.tick{font-family:"Sometype Mono";font-size:11px;fill:var(--foreground-muted)}
+.axis-label{font-family:"Sometype Mono";font-size:10px;letter-spacing:.1em;text-transform:uppercase;fill:var(--foreground-subtle)}
+.barseg{cursor:pointer}.barseg:hover{opacity:.82}
+.refline{stroke:var(--foreground-subtle);stroke-width:1.5;stroke-dasharray:4 4}
+.series-line{fill:none;stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
+.dot{cursor:pointer}
+.val-label{font-family:"Sometype Mono";font-size:11px;font-weight:500;fill:var(--foreground)}
+
+.legend{display:flex;flex-wrap:wrap;gap:var(--u);margin-top:var(--u);padding-top:var(--u);border-top:1px solid var(--divider)}
+.legend .item{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--foreground-muted)}
+.legend .sw{width:12px;height:12px;border-radius:var(--radius);flex:none}
+.readout{margin-top:var(--u);background:var(--surface-sunken);border-radius:var(--radius);padding:11px 14px;font-size:13px;color:var(--foreground);min-height:18px}
+.readout .mono{color:var(--accent-strong);font-weight:600}
+.takeaway{margin-top:var(--u);display:flex;gap:12px;align-items:flex-start;border-left:2px solid var(--accent);padding:3px 0 3px 15px}
+.takeaway svg{width:17px;height:17px;color:var(--accent);flex:none;margin-top:2px}
+.takeaway p{margin:0;font-size:14px}.takeaway b{font-weight:600}
+
+footer{border-top:1px solid var(--divider);color:var(--foreground-subtle);font-size:12px;padding:calc(var(--u)*1.5) 0;margin-top:var(--u)}
+footer .wrap{display:flex;justify-content:space-between;gap:var(--u);flex-wrap:wrap}
+
+.tip{position:fixed;pointer-events:none;z-index:50;opacity:0;transition:opacity .1s;background:var(--foreground);color:var(--surface);border-radius:var(--radius);padding:9px 11px;font-size:12px;line-height:1.45;box-shadow:var(--shadow);max-width:220px}
+.tip .t{font-family:"Sometype Mono";font-size:11px;margin-bottom:5px;color:hsl(var(--neutral-300))}
+.tip .r{display:flex;justify-content:space-between;gap:18px}
+.tip .r b{font-family:"Sometype Mono";font-weight:500}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-inner">
+    <a class="brand" href="#top">
+      <span class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-5 3 3 5-7"/></svg></span>
+      <span class="name">FIFA world cup</span><span class="sub">Match Intelligence</span>
+    </a>
+    <span class="top-spacer"></span>
+    <div class="top-meta">
+      <div><b id="m-matches">661</b><span>Matches</span></div>
+      <div><b>14</b><span>Editions</span></div>
+      <div><b>1970–22</b><span>Span</span></div>
+    </div>
+  </div>
+</header>
+
+<main id="top" class="wrap">
+  <div class="hero">
+    <div class="eyebrow">Tournament dataset · 1970–2022</div>
+    <h1>Half a century of matches, asking what actually decides them.</h1>
+    <p class="context">A machine-learning-ready dataset of 1,322 Men’s FIFA World Cup matches from 1970–2022, designed for predicting match outcomes such as win, draw, or loss. Unlike standard match logs, it includes 70 curated columns with advanced pre-match and per-half features engineered specifically for football predictive modeling.</p>
+  </div>
+  <div id="feed"></div>
+</main>
+
+<footer><div class="wrap">
+  <span>FIFA World Cup · Match Intelligence</span>
+  <span class="mono">661 matches · 14 editions · figures rounded</span>
+</div></footer>
+
+<div class="tip" id="tip" role="status" aria-live="polite"></div>
+
+<script>
+"use strict";
+const DATA = {"meta":{"team_matches":1322,"matches":661,"editions":14,"span":"1970–2022"},"possession":[{"bucket":30,"n":127,"win":32,"draw":17,"loss":51},{"bucket":40,"n":240,"win":39,"draw":18,"loss":43},{"bucket":50,"n":254,"win":43,"draw":18,"loss":39},{"bucket":60,"n":126,"win":48,"draw":17,"loss":35},{"bucket":70,"n":21,"win":52,"draw":14,"loss":33}],"home":{"home":{"n":657,"win":46,"draw":20,"loss":34},"away":{"n":665,"win":33,"draw":19,"loss":48},"host":{"n":62,"win":60,"draw":11,"loss":29},"field":{"n":1260,"win":39,"draw":20,"loss":41}},"hosts":[{"year":1970,"team":"Mexico","played":2,"won":1,"gf":1},{"year":1978,"team":"Argentina","played":3,"won":3,"gf":7},{"year":1982,"team":"Spain","played":3,"won":1,"gf":3},{"year":1986,"team":"Mexico","played":3,"won":1,"gf":3},{"year":1990,"team":"Italy","played":5,"won":4,"gf":7},{"year":1994,"team":"United States","played":4,"won":1,"gf":3},{"year":1998,"team":"France","played":6,"won":6,"gf":14},{"year":2002,"team":"Japan","played":4,"won":2,"gf":5},{"year":2002,"team":"South Korea","played":7,"won":4,"gf":8},{"year":2006,"team":"Germany","played":7,"won":6,"gf":14},{"year":2010,"team":"South Africa","played":3,"won":1,"gf":3},{"year":2014,"team":"Brazil","played":7,"won":4,"gf":11},{"year":2018,"team":"Russia","played":5,"won":3,"gf":11},{"year":2022,"team":"Qatar","played":3,"won":0,"gf":1}],"favorites":[{"band":0,"n":155,"win":28},{"band":20,"n":322,"win":32},{"band":40,"n":512,"win":47},{"band":60,"n":139,"win":60}],"evolution":[{"year":1970,"goals":2.73,"yellow":1.73,"red":0,"draw":20},{"year":1974,"goals":2.39,"yellow":1.71,"red":0.098,"draw":29},{"year":1978,"goals":2.81,"yellow":1.44,"red":0.094,"draw":25},{"year":1982,"goals":2.58,"yellow":1.5,"red":0.076,"draw":29},{"year":1986,"goals":2.47,"yellow":1.79,"red":0.104,"draw":26},{"year":1990,"goals":2.27,"yellow":1.98,"red":0.193,"draw":14},{"year":1994,"goals":2.69,"yellow":2.33,"red":0.153,"draw":16},{"year":1998,"goals":2.6,"yellow":2.17,"red":0.188,"draw":25},{"year":2002,"goals":2.52,"yellow":2.08,"red":0.133,"draw":22},{"year":2006,"goals":2.3,"yellow":2.55,"red":0.219,"draw":17},{"year":2010,"goals":2.27,"yellow":1.98,"red":0.133,"draw":22},{"year":2014,"goals":2.67,"yellow":1.44,"red":0.078,"draw":14},{"year":2018,"goals":2.64,"yellow":1.73,"red":0.031,"draw":14},{"year":2022,"goals":2.69,"yellow":1.75,"red":0.031,"draw":16}]};
+
+/* ---------- icons ---------- */
+const ICON={
+  think:'<path d="M12 4l1.4 4.2L18 9.6l-4.6 1.4L12 15l-1.4-4L6 9.6l4.6-1.4z"/>',
+  filter:'<path d="M4 5h16l-6 8v5l-4-2v-3z"/>',
+  compute:'<path d="M3 12h4l3 8 4-16 3 8h4"/>',
+  chart:'<path d="M4 20h16"/><path d="M6 20V12"/><path d="M12 20V5"/><path d="M18 20v-6"/>',
+  write:'<path d="M4 20l4-1 11-11-3-3L5 16z"/>',
+  note:'<circle cx="12" cy="12" r="8"/><path d="M12 11v5"/><path d="M12 8h.01"/>',
+  table:'<rect x="3" y="5" width="18" height="14" rx="1"/><path d="M3 10h18"/><path d="M9 5v14"/>'
+};
+function stepIcon(name){return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICON[name]}</svg>`;}
+
+/* ---------- tooltip ---------- */
+const tip=document.getElementById('tip');
+function showTip(html){tip.innerHTML=html;tip.style.opacity='1';}
+function moveTip(e){const pad=14,w=tip.offsetWidth,h=tip.offsetHeight;let x=e.clientX+pad,y=e.clientY+pad;if(x+w>innerWidth-8)x=e.clientX-w-pad;if(y+h>innerHeight-8)y=e.clientY-h-pad;tip.style.left=x+'px';tip.style.top=y+'px';}
+function hideTip(){tip.style.opacity='0';}
+const SVGNS='http://www.w3.org/2000/svg';
+function el(tag,attrs,txt){const n=document.createElementNS(SVGNS,tag);for(const k in attrs)n.setAttribute(k,attrs[k]);if(txt!=null)n.textContent=txt;return n;}
+
+/* ---------- render target (set before each draw) ---------- */
+let CUR=null;
+function setLegend(items){const L=CUR.legend;L.innerHTML='';items.forEach(it=>{const d=document.createElement('div');d.className='item';d.innerHTML=`<span class="sw" style="background:${it.c}"></span>${it.t}`;L.appendChild(d);});}
+function readout(html){CUR.readout.innerHTML=html;}
+function attachTip(node,html,onHover){
+  node.addEventListener('mouseenter',()=>{showTip(html());if(onHover)onHover();});
+  node.addEventListener('mousemove',moveTip);
+  node.addEventListener('mouseleave',hideTip);
+  node.setAttribute('tabindex','0');node.setAttribute('role','img');
+  node.addEventListener('focus',()=>{const r=node.getBoundingClientRect();showTip(html());moveTip({clientX:r.left+r.width/2,clientY:r.top});if(onHover)onHover();});
+  node.addEventListener('blur',hideTip);
+}
+
+/* =========================================================
+   ANALYSES (data + reasoning + chart renderers)
+   ========================================================= */
+const ANALYSES=[
+{
+  id:'possession',idx:'Q01',tag:'Tempo & control',
+  question:'Does controlling the ball win matches?',
+  analysis:'Possession is tracked only for the 2002–2022 editions — <b>768 team-matches</b>. The win curve rises in lockstep with the ball: a side that dominates possession is far more likely to win than one starved of it. But it plateaus and never approaches certainty — even the most dominant teams lose roughly <b>one match in three</b>.',
+  reasoning:[
+    ['think','Read the question as: does ball control translate to results?'],
+    ['filter','Restrict to editions with possession tracking','2002–2022 · 768 team-matches'],
+    ['compute','Bucket each match into 10-point possession bands'],
+    ['compute','Win / draw / loss rate within each band'],
+    ['chart','Make chart: Outcome by possession share'],
+    ['write','Conclude: possession lifts the odds, not the result']
+  ],
+  stats:[{v:'52%',l:'Win rate at 70%+ possession',a:true},{v:'32%',l:'Win rate at 30–40%'},{v:'1 in 3',l:'Dominant matches still lost'}],
+  panelTitle:'Outcome by possession share',
+  views:[{key:'rate',label:'Win rate',cap:'Share of matches won at each band. Dashed line marks an even 33% three-way split.'},
+         {key:'mix',label:'Outcome mix',cap:'Full win / draw / loss breakdown within each possession band.'}],
+  takeaway:'Possession buys <b>better odds, not the outcome</b> — about 20 points of win rate from ball-starved to ball-dominant, yet a third of dominant displays still end without a win.',
+  render:renderPossession
+},
+{
+  id:'home',idx:'Q02',tag:'Venue & advantage',
+  question:'How much is home — and hosting — actually worth?',
+  analysis:'Across all <b>1,322 team-matches</b>, the nominal home side wins 46% to the away side’s 33% — a 13-point swing from venue alone. Host nations do far better still: <b>60% wins</b>, against 39% for everyone else. France ’98 and Argentina ’78 won every home match they played.',
+  reasoning:[
+    ['think','Separate two effects: home billing vs hosting the tournament'],
+    ['compute','Win / draw / loss for the home vs away side','1,322 team-matches'],
+    ['filter','Flag host-nation matches via the is_host field'],
+    ['compute','Aggregate each host’s record at its own edition'],
+    ['chart','Make chart: Win / draw / loss by role'],
+    ['chart','Make chart: Host nations by edition'],
+    ['write','Conclude: venue is a top edge; hosting strongest']
+  ],
+  stats:[{v:'+13 pts',l:'Home win rate over away',a:true},{v:'60%',l:'Win rate for host nations'},{v:'62',l:'Host-nation matches'}],
+  panelTitle:'Win / draw / loss by role',
+  views:[{key:'role',label:'Home vs away',cap:'Outcome split for the nominal home and away side across every match.'},
+         {key:'host',label:'Hosts vs field',cap:'Host nations compared against all non-host teams.'},
+         {key:'editions',label:'Host by edition',cap:'Each host nation’s record — wins over matches played at home.'}],
+  takeaway:'Venue is one of the largest single edges in the data, strongest for <b>hosts</b>, who pair home crowds with an extra year of prep — though Qatar 2022 is the reminder that hosting guarantees nothing.',
+  render:renderHome
+},
+{
+  id:'favorites',idx:'Q03',tag:'Form & expectation',
+  question:'Do favorites deliver, or is the Cup decided by upsets?',
+  analysis:'Group every team by its prior win rate going in, and the results line up cleanly: <b>28% → 32% → 47% → 60%</b>. Form is real signal. But the ceiling is telling — the best-credentialed sides still fail to win <b>two of every five</b> matches.',
+  reasoning:[
+    ['think','Use prior win rate as a proxy for pre-match expectation'],
+    ['filter','Keep teams with ≥5 prior matches on record'],
+    ['compute','Group by form band; compute actual win rate'],
+    ['compute','Compare against a perfect-calibration diagonal'],
+    ['chart','Make chart: Predicted strength vs actual win rate'],
+    ['write','Conclude: form predicts, upsets persist']
+  ],
+  stats:[{v:'60%',l:'Win rate, strongest form band',a:true},{v:'28%',l:'Win rate, weakest band'},{v:'40%',l:'Top-form matches not won'}],
+  panelTitle:'Predicted strength vs actual win rate',
+  views:[{key:'calib',label:'Calibration',cap:'Each band’s prior win rate against the win rate it achieved. Diagonal = form equals outcome.'},
+         {key:'bars',label:'Win rate',cap:'Actual win rate per form band, sized by matches in each.'}],
+  takeaway:'Form is <b>predictive but not destiny</b>. Back the favorites and you’re right more than half the time at the top — but the 40% upset rate is exactly why the tournament stays watchable.',
+  render:renderFavorites
+},
+{
+  id:'evolution',idx:'Q04',tag:'The game over time',
+  question:'Has the modern game gotten cleaner, not lower-scoring?',
+  analysis:'Scoring has barely moved — every edition lands between 2.3 and 2.8 goals per match. What <b>has</b> changed is conduct: red cards climbed to a 2006 high of 0.22 per team, then collapsed to <b>0.03</b> in 2018 and 2022. The modern game isn’t tighter; it’s cleaner.',
+  reasoning:[
+    ['think','Test the “modern game is cagey” claim across 14 editions'],
+    ['note','Detailed stats are sparse before 2002 — use goals, cards, draws (all editions)'],
+    ['compute','Goals per match, by edition'],
+    ['compute','Cards and draw rate, by edition'],
+    ['chart','Make chart: Match metrics across editions'],
+    ['write','Conclude: scoring steady, red cards collapse']
+  ],
+  stats:[{v:'~2.5',l:'Goals/match — flat 50 yrs',a:true},{v:'0.03',l:'Red cards/team, 2018 & 2022'},{v:'0.22',l:'Red cards/team, 2006 peak'}],
+  panelTitle:'Match metrics across 14 editions',
+  views:[{key:'red',label:'Red cards',cap:'Red cards per team per match, by edition — note the rise into the 2000s and the sharp fall after.'},
+         {key:'goals',label:'Goals',cap:'Goals per match by edition — remarkably stable for fifty years.'},
+         {key:'yellow',label:'Yellow cards',cap:'Yellow cards per team per match, by edition.'},
+         {key:'draw',label:'Draw rate',cap:'Share of matches ending level, by edition.'}],
+  takeaway:'The cliché of the dull, cynical modern match doesn’t survive the data. Goals are <b>steady</b>; what fell off a cliff was the red card — discipline tightened while the spectacle held.',
+  render:renderEvolution
+}
+];
+
+/* =========================================================
+   CHART 1 — POSSESSION
+   ========================================================= */
+function renderPossession(mode){
+  const d=DATA.possession,W=760,H=360,m={t:24,r:20,b:54,l:46};
+  const iw=W-m.l-m.r,ih=H-m.t-m.b;
+  const svg=el('svg',{class:'chart',viewBox:`0 0 ${W} ${H}`});
+  const g=el('g',{transform:`translate(${m.l},${m.t})`});svg.appendChild(g);
+  const bw=iw/d.length,bar=bw*0.56,y=v=>ih-(v/100)*ih;
+  for(let v=0;v<=100;v+=25){g.appendChild(el('line',{class:'gridline',x1:0,y1:y(v),x2:iw,y2:y(v)}));g.appendChild(el('text',{class:'tick',x:-10,y:y(v)+4,'text-anchor':'end'},v+'%'));}
+  g.appendChild(el('line',{class:'axis',x1:0,y1:ih,x2:iw,y2:ih}));
+  d.forEach((b,i)=>{
+    const cx=i*bw+bw/2,x=cx-bar/2,label=`${b.bucket}–${b.bucket+10}%`;
+    if(mode==='mix'){
+      let acc=0;
+      [['win',b.win,'var(--c-win)'],['draw',b.draw,'var(--c-draw)'],['loss',b.loss,'var(--c-loss)']].forEach(([k,val,c])=>{
+        const r=el('rect',{class:'barseg',x,y:y(acc+val),width:bar,height:Math.max((val/100)*ih,0),fill:c,rx:1});
+        attachTip(r,()=>`<div class="t">${label} possession · n=${b.n}</div><div class="r"><span>Win</span><b>${b.win}%</b></div><div class="r"><span>Draw</span><b>${b.draw}%</b></div><div class="r"><span>Loss</span><b>${b.loss}%</b></div>`,()=>readout(`At <span class="mono">${label}</span> possession (${b.n} matches): <span class="mono">${b.win}%</span> win · ${b.draw}% draw · ${b.loss}% loss.`));
+        g.appendChild(r);acc+=val;
+      });
+    }else{
+      const r=el('rect',{class:'barseg',x,y:y(b.win),width:bar,height:ih-y(b.win),fill:'var(--c-win)',rx:1});
+      attachTip(r,()=>`<div class="t">${label} possession · n=${b.n}</div><div class="r"><span>Win rate</span><b>${b.win}%</b></div>`,()=>readout(`Teams holding <span class="mono">${label}</span> of the ball won <span class="mono">${b.win}%</span> of ${b.n} matches.`));
+      g.appendChild(r);g.appendChild(el('text',{class:'val-label',x:cx,y:y(b.win)-9,'text-anchor':'middle'},b.win+'%'));
+    }
+    g.appendChild(el('text',{class:'tick',x:cx,y:ih+22,'text-anchor':'middle'},label));
+  });
+  if(mode==='rate'){
+    g.appendChild(el('line',{class:'refline',x1:0,y1:y(33.3),x2:iw,y2:y(33.3)}));
+    setLegend([{c:'var(--c-win)',t:'Win rate by possession band'},{c:'transparent',t:'– – –  even 3-way split (33%)'}]);
+    readout('Hover any bar for exact figures. Win rate climbs steadily with possession.');
+  }else{
+    setLegend([{c:'var(--c-win)',t:'Win'},{c:'var(--c-draw)',t:'Draw'},{c:'var(--c-loss)',t:'Loss'}]);
+    readout('Hover a segment for the full split. The loss share shrinks as possession grows — but never vanishes.');
+  }
+  g.appendChild(el('text',{class:'axis-label',x:iw/2,y:ih+46,'text-anchor':'middle'},'Possession share'));
+  CUR.chart.appendChild(svg);
+}
+
+/* =========================================================
+   CHART 2 — HOME / HOST
+   ========================================================= */
+function renderHome(mode){
+  if(mode==='editions')return renderHostEditions();
+  const pairs=mode==='role'?[['Home side',DATA.home.home],['Away side',DATA.home.away]]:[['Host nation',DATA.home.host],['Everyone else',DATA.home.field]];
+  const W=760,H=300,m={t:18,r:20,b:48,l:118};
+  const iw=W-m.l-m.r,ih=H-m.t-m.b,rowH=ih/pairs.length,bh=Math.min(rowH*0.5,60);
+  const svg=el('svg',{class:'chart',viewBox:`0 0 ${W} ${H}`});
+  const g=el('g',{transform:`translate(${m.l},${m.t})`});svg.appendChild(g);
+  const x=v=>(v/100)*iw;
+  for(let v=0;v<=100;v+=25){g.appendChild(el('line',{class:'gridline',x1:x(v),y1:0,x2:x(v),y2:ih}));g.appendChild(el('text',{class:'tick',x:x(v),y:ih+20,'text-anchor':'middle'},v+'%'));}
+  pairs.forEach(([name,o],i)=>{
+    const cy=i*rowH+rowH/2;
+    g.appendChild(el('text',{class:'tick',x:-14,y:cy+4,'text-anchor':'end'},name));
+    g.appendChild(el('text',{class:'axis-label',x:-14,y:cy+20,'text-anchor':'end'},'n='+o.n));
+    let acc=0;
+    [['win',o.win,'var(--c-win)'],['draw',o.draw,'var(--c-draw)'],['loss',o.loss,'var(--c-loss)']].forEach(([k,val,c])=>{
+      const r=el('rect',{class:'barseg',x:x(acc),y:cy-bh/2,width:x(val),height:bh,fill:c,rx:1});
+      attachTip(r,()=>`<div class="t">${name} · n=${o.n}</div><div class="r"><span>Win</span><b>${o.win}%</b></div><div class="r"><span>Draw</span><b>${o.draw}%</b></div><div class="r"><span>Loss</span><b>${o.loss}%</b></div>`,()=>readout(`<span class="mono">${name}</span>: <span class="mono">${o.win}%</span> win · ${o.draw}% draw · ${o.loss}% loss across ${o.n} matches.`));
+      g.appendChild(r);
+      acc+=val;
+    });
+  });
+  setLegend([{c:'var(--c-win)',t:'Win'},{c:'var(--c-draw)',t:'Draw'},{c:'var(--c-loss)',t:'Loss'}]);
+  CUR.chart.appendChild(svg);
+  const delta=mode==='role'?DATA.home.home.win-DATA.home.away.win:DATA.home.host.win-DATA.home.field.win;
+  readout(`${mode==='role'?'Home sides':'Hosts'} win <span class="mono">${mode==='role'?DATA.home.home.win:DATA.home.host.win}%</span> — a <span class="mono">+${delta}</span> point edge. Hover a bar for the full split.`);
+}
+function renderHostEditions(){
+  const d=DATA.hosts,W=760,H=360,m={t:24,r:20,b:66,l:40};
+  const iw=W-m.l-m.r,ih=H-m.t-m.b,bw=iw/d.length,bar=bw*0.5,maxP=7,y=v=>ih-(v/maxP)*ih;
+  const svg=el('svg',{class:'chart',viewBox:`0 0 ${W} ${H}`});
+  const g=el('g',{transform:`translate(${m.l},${m.t})`});svg.appendChild(g);
+  for(let v=0;v<=maxP;v++){g.appendChild(el('line',{class:'gridline',x1:0,y1:y(v),x2:iw,y2:y(v)}));g.appendChild(el('text',{class:'tick',x:-10,y:y(v)+4,'text-anchor':'end'},v));}
+  g.appendChild(el('line',{class:'axis',x1:0,y1:ih,x2:iw,y2:ih}));
+  d.forEach((h,i)=>{
+    const cx=i*bw+bw/2;
+    g.appendChild(el('rect',{x:cx-bar/2,y:y(h.played),width:bar,height:ih-y(h.played),fill:'var(--surface-sunken)',stroke:'var(--divider-strong)','stroke-width':1,rx:1}));
+    const r=el('rect',{class:'barseg',x:cx-bar/2,y:y(h.won),width:bar,height:ih-y(h.won),fill:'var(--c-win)',rx:1});
+    attachTip(r,()=>`<div class="t">${h.team} ${h.year}</div><div class="r"><span>Won</span><b>${h.won} / ${h.played}</b></div><div class="r"><span>Goals for</span><b>${h.gf}</b></div>`,()=>readout(`<span class="mono">${h.team} ${h.year}</span> won <span class="mono">${h.won} of ${h.played}</span> home matches, scoring ${h.gf}.`));
+    g.appendChild(r);
+    g.appendChild(el('text',{class:'tick',x:cx,y:ih+18,'text-anchor':'end',transform:`rotate(-42 ${cx} ${ih+18})`,style:'font-size:9.5px'},h.team));
+  });
+  setLegend([{c:'var(--c-win)',t:'Matches won'},{c:'var(--surface-sunken)',t:'Matches played'}]);
+  CUR.chart.appendChild(svg);
+  readout('France ’98 and Argentina ’78 won every home match. Qatar 2022 won none — hosting is an edge, not a promise.');
+}
+
+/* =========================================================
+   CHART 3 — FAVORITES
+   ========================================================= */
+function renderFavorites(mode){
+  const d=DATA.favorites.map(f=>({...f,mid:f.band+10}));
+  if(mode==='bars'){
+    const W=760,H=330,m={t:22,r:20,b:58,l:46};
+    const iw=W-m.l-m.r,ih=H-m.t-m.b,bw=iw/d.length,bar=bw*0.5,y=v=>ih-(v/100)*ih;
+    const svg=el('svg',{class:'chart',viewBox:`0 0 ${W} ${H}`});
+    const g=el('g',{transform:`translate(${m.l},${m.t})`});svg.appendChild(g);
+    for(let v=0;v<=100;v+=25){g.appendChild(el('line',{class:'gridline',x1:0,y1:y(v),x2:iw,y2:y(v)}));g.appendChild(el('text',{class:'tick',x:-10,y:y(v)+4,'text-anchor':'end'},v+'%'));}
+    g.appendChild(el('line',{class:'axis',x1:0,y1:ih,x2:iw,y2:ih}));
+    d.forEach((f,i)=>{const cx=i*bw+bw/2;
+      const r=el('rect',{class:'barseg',x:cx-bar/2,y:y(f.win),width:bar,height:ih-y(f.win),fill:'var(--c-win)',rx:1});
+      attachTip(r,()=>`<div class="t">Prior win rate ${f.band}–${f.band+20}% · n=${f.n}</div><div class="r"><span>Actual win rate</span><b>${f.win}%</b></div>`,()=>readout(`Teams with a <span class="mono">${f.band}–${f.band+20}%</span> prior record won <span class="mono">${f.win}%</span> of ${f.n} matches.`));
+      g.appendChild(r);
+      g.appendChild(el('text',{class:'val-label',x:cx,y:y(f.win)-9,'text-anchor':'middle'},f.win+'%'));
+      g.appendChild(el('text',{class:'tick',x:cx,y:ih+22,'text-anchor':'middle'},`${f.band}–${f.band+20}%`));
+      g.appendChild(el('text',{class:'axis-label',x:cx,y:ih+38,'text-anchor':'middle'},'n='+f.n));
+    });
+    g.appendChild(el('text',{class:'axis-label',x:iw/2,y:H-m.t,'text-anchor':'middle'},'Prior win rate (form band)'));
+    setLegend([{c:'var(--c-win)',t:'Actual win rate'}]);
+    CUR.chart.appendChild(svg);readout('Win rate rises monotonically with form. Hover for sample sizes.');return;
+  }
+  const W=760,H=420,m={t:22,r:26,b:54,l:52};
+  const iw=W-m.l-m.r,ih=H-m.t-m.b,x=v=>(v/100)*iw,y=v=>ih-(v/100)*ih;
+  const svg=el('svg',{class:'chart',viewBox:`0 0 ${W} ${H}`});
+  const g=el('g',{transform:`translate(${m.l},${m.t})`});svg.appendChild(g);
+  for(let v=0;v<=100;v+=25){g.appendChild(el('line',{class:'gridline',x1:x(v),y1:0,x2:x(v),y2:ih}));g.appendChild(el('line',{class:'gridline',x1:0,y1:y(v),x2:iw,y2:y(v)}));g.appendChild(el('text',{class:'tick',x:x(v),y:ih+22,'text-anchor':'middle'},v+'%'));g.appendChild(el('text',{class:'tick',x:-10,y:y(v)+4,'text-anchor':'end'},v+'%'));}
+  g.appendChild(el('line',{class:'axis',x1:0,y1:ih,x2:iw,y2:ih}));
+  g.appendChild(el('line',{class:'refline',x1:x(0),y1:y(0),x2:x(100),y2:y(100)}));
+  g.appendChild(el('text',{class:'axis-label',x:x(80),y:y(87),'text-anchor':'start'},'form = outcome'));
+  let path='';d.forEach((f,i)=>{path+=(i?'L':'M')+x(f.mid)+' '+y(f.win)+' ';});
+  g.appendChild(el('path',{class:'series-line',d:path,stroke:'var(--c-blue)'}));
+  d.forEach(f=>{const c=el('circle',{class:'dot',cx:x(f.mid),cy:y(f.win),r:Math.max(6,Math.sqrt(f.n)/2.2),fill:'var(--c-win)',stroke:'white','stroke-width':2});
+    attachTip(c,()=>`<div class="t">Prior win rate ${f.band}–${f.band+20}% · n=${f.n}</div><div class="r"><span>Expected (form)</span><b>~${f.mid}%</b></div><div class="r"><span>Actual win rate</span><b>${f.win}%</b></div>`,()=>readout(`Form band <span class="mono">${f.band}–${f.band+20}%</span> → actual <span class="mono">${f.win}%</span> win rate (${f.n} matches). Bubble size = sample.`));
+    g.appendChild(c);});
+  g.appendChild(el('text',{class:'axis-label',x:iw/2,y:ih+44,'text-anchor':'middle'},'Prior win rate going in'));
+  g.appendChild(el('text',{class:'axis-label',x:-ih/2,y:-40,'text-anchor':'middle',transform:'rotate(-90)'},'Actual win rate'));
+  setLegend([{c:'var(--c-win)',t:'Form band (size = matches)'},{c:'var(--c-blue)',t:'Trend'}]);
+  CUR.chart.appendChild(svg);
+  readout('Points sit close to the diagonal — form tracks outcome well. The top band reaches only 60%, not 100%: even strong favorites lose.');
+}
+
+/* =========================================================
+   CHART 4 — EVOLUTION
+   ========================================================= */
+const METRICS={
+  red:{label:'Red cards / team',fmt:v=>v.toFixed(2),max:0.25,color:'var(--c-win)'},
+  goals:{label:'Goals / match',fmt:v=>v.toFixed(2),max:3,color:'var(--c-blue)'},
+  yellow:{label:'Yellow cards / team',fmt:v=>v.toFixed(2),max:3,color:'var(--c-yellow)'},
+  draw:{label:'Draw rate',fmt:v=>v+'%',max:35,color:'var(--c-loss)'}
+};
+function renderEvolution(mode){
+  const M=METRICS[mode],d=DATA.evolution,W=760,H=370,m={t:26,r:24,b:52,l:54};
+  const iw=W-m.l-m.r,ih=H-m.t-m.b,x=i=>(i/(d.length-1))*iw,y=v=>ih-(v/M.max)*ih;
+  const svg=el('svg',{class:'chart',viewBox:`0 0 ${W} ${H}`});
+  const g=el('g',{transform:`translate(${m.l},${m.t})`});svg.appendChild(g);
+  for(let t=0;t<=5;t++){const v=M.max*t/5;g.appendChild(el('line',{class:'gridline',x1:0,y1:y(v),x2:iw,y2:y(v)}));g.appendChild(el('text',{class:'tick',x:-10,y:y(v)+4,'text-anchor':'end'},M.fmt(v)));}
+  g.appendChild(el('line',{class:'axis',x1:0,y1:ih,x2:iw,y2:ih}));
+  let path='';d.forEach((r,i)=>{path+=(i?'L':'M')+x(i)+' '+y(r[mode])+' ';});
+  const area=`M0 ${ih} `+d.map((r,i)=>`L${x(i)} ${y(r[mode])}`).join(' ')+` L${iw} ${ih} Z`;
+  const grad='grad-'+mode;const defs=el('defs',{});const lg=el('linearGradient',{id:grad,x1:0,y1:0,x2:0,y2:1});
+  lg.appendChild(el('stop',{offset:'0%','stop-color':M.color,'stop-opacity':.18}));lg.appendChild(el('stop',{offset:'100%','stop-color':M.color,'stop-opacity':0}));
+  defs.appendChild(lg);g.appendChild(defs);
+  g.appendChild(el('path',{d:area,fill:`url(#${grad})`}));
+  g.appendChild(el('path',{class:'series-line',d:path,stroke:M.color}));
+  d.forEach((r,i)=>{g.appendChild(el('text',{class:'tick',x:x(i),y:ih+22,'text-anchor':'middle'},"’"+String(r.year).slice(2)));
+    const c=el('circle',{class:'dot',cx:x(i),cy:y(r[mode]),r:5,fill:M.color,stroke:'white','stroke-width':2});
+    attachTip(c,()=>`<div class="t">${r.year} edition</div><div class="r"><span>${M.label}</span><b>${M.fmt(r[mode])}</b></div>`,()=>readout(`<span class="mono">${r.year}</span> — ${M.label}: <span class="mono">${M.fmt(r[mode])}</span>.`));
+    g.appendChild(c);});
+  g.appendChild(el('text',{class:'axis-label',x:-ih/2,y:-42,'text-anchor':'middle',transform:'rotate(-90)'},M.label));
+  setLegend([{c:M.color,t:M.label+' by edition'}]);
+  CUR.chart.appendChild(svg);
+  readout(`${M.label}: <span class="mono">${M.fmt(d[0][mode])}</span> in 1970 → <span class="mono">${M.fmt(d[d.length-1][mode])}</span> in 2022. Hover any point.`);
+}
+
+/* =========================================================
+   BUILD TRANSCRIPT
+   ========================================================= */
+function buildFeed(){
+  document.getElementById('m-matches').textContent=DATA.meta.matches;
+  const feed=document.getElementById('feed');
+  ANALYSES.forEach(a=>{
+    const row=document.createElement('section');row.className='qrow';row.id=a.id;
+
+    // ---- left ----
+    const left=document.createElement('div');left.className='left sticky';
+    const steps=a.reasoning.map(([ic,txt,sub])=>
+      `<div class="step ${ic}"><span class="ico">${stepIcon(ic)}</span><div class="body"><div class="txt">${txt}</div>${sub?`<div class="sub">${sub}</div>`:''}</div></div>`).join('');
+    left.innerHTML=`
+      <div class="q-meta"><span class="q-idx">${a.idx}</span><span class="q-tag">${a.tag}</span></div>
+      <h2>${a.question}</h2>
+      <p class="analysis">${a.analysis}</p>
+      <div class="reason" data-open="true">
+        <button class="reason-head" aria-expanded="true">
+          <span class="dot"></span>Thought process
+          <span class="count">· ${a.reasoning.length} steps</span>
+          <span class="spacer"></span>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="reason-body"><div class="steps">${steps}</div></div>
+      </div>`;
+
+    // ---- right ----
+    const right=document.createElement('div');right.className='right';
+    const stats=a.stats.map(s=>`<div class="stat"><div class="v ${s.a?'accent':''}">${s.v}</div><div class="l">${s.l}</div></div>`).join('');
+    const toggles=a.views.map((v,i)=>`<button data-view="${v.key}" aria-pressed="${i===0}">${v.label}</button>`).join('');
+    right.innerHTML=`
+      <div class="stats">${stats}</div>
+      <div class="panel">
+        <div class="panel-head">
+          <div><h3>${a.panelTitle}</h3><div class="cap"></div></div>
+          <div class="toggle">${toggles}</div>
+        </div>
+        <div class="chart-area"></div>
+        <div class="legend"></div>
+        <div class="readout"></div>
+      </div>
+      <div class="takeaway"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5"/><path d="M12 16h.01"/></svg><p>${a.takeaway}</p></div>`;
+
+    row.appendChild(left);row.appendChild(right);feed.appendChild(row);
+
+    // refs + behaviour
+    const refs={chart:right.querySelector('.chart-area'),legend:right.querySelector('.legend'),readout:right.querySelector('.readout'),cap:right.querySelector('.cap')};
+    function draw(key){
+      const v=a.views.find(x=>x.key===key);
+      CUR=refs;refs.cap.textContent=v.cap;refs.chart.innerHTML='';refs.legend.innerHTML='';
+      a.render(key);
+    }
+    right.querySelectorAll('.toggle button').forEach(btn=>btn.addEventListener('click',()=>{
+      right.querySelectorAll('.toggle button').forEach(b=>b.setAttribute('aria-pressed','false'));
+      btn.setAttribute('aria-pressed','true');draw(btn.getAttribute('data-view'));
+    }));
+    // reasoning collapse
+    const reason=left.querySelector('.reason'),head=left.querySelector('.reason-head');
+    head.addEventListener('click',()=>{const open=reason.getAttribute('data-open')==='true';reason.setAttribute('data-open',String(!open));head.setAttribute('aria-expanded',String(!open));});
+
+    draw(a.views[0].key);
+  });
+}
+buildFeed();
+</script>
+</body>
+</html>

@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Great Sorting — Capital, Compute, and the AI Reckoning</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Sometype+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+:root {
+  /* ── CDS color primitives ── */
+  --color-orange: 15 88% 55%;
+  --color-orange-hover: 22 100% 68%;
+  --color-black-900: 0 0% 10%;
+  --color-black-800: 30 1% 20%;
+  --color-black-700: 30 1% 32%;
+  --color-black-500: 30 1% 50%;
+  --color-black-300: 30 2% 69%;
+  --color-black-200: 30 4% 79%;
+  --color-black-100: 30 17% 91%;
+  --color-black-50: 36 24% 96%;
+  --color-babyblue: 190 49% 67%;
+  --color-yellow: 53 100% 58%;
+  --color-white: 0 0% 100%;
+  --color-black: 0 0% 0%;
+
+  /* ── semantic aliases (light editorial canvas) ── */
+  --background-behind: hsl(var(--color-black-50));
+  --background: hsl(var(--color-white));
+  --background-raised: hsl(var(--color-black-100));
+  --foreground: hsl(var(--color-black-900));
+  --foreground-muted: hsl(var(--color-black-500));
+  --foreground-faint: hsl(var(--color-black-300));
+  --accent: hsl(var(--color-orange));
+  --accent-hover: hsl(var(--color-orange-hover));
+  --secondary: hsl(var(--color-babyblue));
+  --warning: hsl(var(--color-yellow));
+  --divider: hsl(var(--color-black-100));
+  --ink-on-dark: hsl(var(--color-black-50));
+  --muted-on-dark: hsl(var(--color-black-300));
+
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+
+  --font-body: 'Manrope', system-ui, sans-serif;
+  --font-mono: 'Sometype Mono', ui-monospace, monospace;
+
+  /* spacing — 16px base */
+  --s1: 16px; --s2: 32px; --s3: 48px; --s4: 64px; --s05: 8px;
+  --measure: 34rem;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* fixed-overlay colors — swapped via body.over-dark instead of mix-blend-mode
+     (blend modes on fixed elements force a full re-composite every scroll frame) */
+  --ov-fg: hsl(var(--color-black-500));
+  --ov-brand: hsl(var(--color-black-900));
+  --ov-dot: hsl(var(--color-black-300));
+  --ov-tick: hsl(var(--color-black-900));
+}
+body.over-dark {
+  --ov-fg: hsl(var(--color-black-300));
+  --ov-brand: hsl(var(--color-white));
+  --ov-dot: hsl(var(--color-white) / 0.5);
+  --ov-tick: hsl(var(--color-white) / 0.9);
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  background: var(--background-behind);
+  color: var(--foreground);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-size: 17px;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* ── snap scroller ── */
+.deck {
+  height: 100vh;
+  overflow-y: scroll;
+  scroll-snap-type: y proximity;
+  scroll-behavior: smooth;
+}
+.section {
+  scroll-snap-align: start;
+  min-height: 100vh;
+  position: relative;
+  padding: clamp(40px, 6vh, 88px) clamp(24px, 7vw, 120px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-bottom: 1px solid var(--divider);
+}
+.section--dark {
+  background: hsl(var(--color-black-900));
+  color: var(--ink-on-dark);
+  border-bottom: none;
+}
+.section--wide { justify-content: flex-start; }
+
+/* ── shared editorial type ── */
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: var(--s05);
+  margin: 0 0 var(--s1);
+}
+.section--dark .eyebrow { color: var(--accent); }
+.eyebrow .rule { flex: 0 0 36px; height: 1px; background: currentColor; opacity: 0.5; }
+
+h1 {
+  font-weight: 300;
+  font-size: clamp(2.6rem, 7vw, 6.5rem);
+  line-height: 0.98;
+  letter-spacing: -0.02em;
+  margin: 0 0 var(--s2);
+}
+h2 {
+  font-weight: 300;
+  font-size: clamp(1.9rem, 4vw, 3.4rem);
+  line-height: 1.04;
+  letter-spacing: -0.015em;
+  margin: 0 0 var(--s1);
+  max-width: 18ch;
+}
+h3 {
+  font-weight: 600;
+  font-size: 1.05rem;
+  letter-spacing: -0.01em;
+  margin: 0 0 var(--s05);
+}
+.lede {
+  font-size: clamp(1.15rem, 1.7vw, 1.5rem);
+  line-height: 1.5;
+  font-weight: 400;
+  max-width: var(--measure);
+  color: var(--foreground);
+}
+.section--dark .lede { color: var(--ink-on-dark); }
+.body-col { max-width: var(--measure); }
+.body-col p { margin: 0 0 var(--s1); }
+.body-col p:last-child { margin-bottom: 0; }
+.muted { color: var(--foreground-muted); }
+.section--dark .muted { color: var(--muted-on-dark); }
+.accent-text { color: var(--accent); }
+strong { font-weight: 700; }
+
+.pull {
+  font-weight: 300;
+  font-size: clamp(1.6rem, 3vw, 2.6rem);
+  line-height: 1.18;
+  letter-spacing: -0.015em;
+  border-left: 2px solid var(--accent);
+  padding-left: var(--s2);
+  margin: var(--s3) 0;
+  max-width: 24ch;
+}
+
+.kicker-num {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  color: var(--foreground-faint);
+}
+
+/* ── layout grids ── */
+.split {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.85fr) 1.15fr;
+  gap: clamp(32px, 5vw, 80px);
+  align-items: center;
+  width: 100%;
+}
+.split--reverse { grid-template-columns: 1.15fr minmax(280px, 0.85fr); }
+.split--reverse .text { order: 2; }
+@media (max-width: 900px) {
+  .split, .split--reverse { grid-template-columns: 1fr; }
+  .split--reverse .text { order: 0; }
+}
+
+/* ── figure frame ── */
+figure { margin: 0; width: 100%; }
+.figcap {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--foreground-muted);
+  margin-top: var(--s1);
+  display: flex;
+  gap: var(--s1);
+  flex-wrap: wrap;
+  align-items: baseline;
+}
+.figcap .num { color: var(--accent); font-weight: 600; }
+.section--dark .figcap { color: var(--muted-on-dark); }
+.viz { width: 100%; position: relative; }
+svg { display: block; overflow: visible; max-width: 100%; }
+
+/* ── legend ── */
+.legend { display: flex; flex-wrap: wrap; gap: var(--s1) var(--s2); margin-top: var(--s1); font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.04em; }
+.legend .item { display: flex; align-items: center; gap: var(--s05); color: var(--foreground-muted); }
+.section--dark .legend .item { color: var(--muted-on-dark); }
+.legend .swatch { width: 11px; height: 11px; border-radius: var(--radius-xs); flex: 0 0 auto; }
+.legend .swatch--line { width: 16px; height: 3px; }
+
+/* ── stat row ── */
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: var(--s2); margin: var(--s3) 0 0; }
+.stat .n { font-family: var(--font-mono); font-weight: 600; font-size: clamp(2rem,3.4vw,3rem); letter-spacing: -0.02em; line-height: 1; color: var(--foreground); }
+.section--dark .stat .n { color: var(--ink-on-dark); }
+.stat .n .unit { color: var(--accent); }
+.stat .lbl { font-size: 13px; color: var(--foreground-muted); margin-top: var(--s05); max-width: 22ch; }
+.section--dark .stat .lbl { color: var(--muted-on-dark); }
+
+/* ── tooltip ── */
+.tooltip {
+  position: fixed;
+  pointer-events: none;
+  background: hsl(var(--color-black-900));
+  color: hsl(var(--color-black-50));
+  border: 1px solid hsl(var(--color-black-700));
+  border-radius: var(--radius-xs);
+  padding: 10px 12px;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  line-height: 1.45;
+  letter-spacing: 0.02em;
+  z-index: 200;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+  max-width: 260px;
+}
+.tooltip .tt-title { color: var(--accent); font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; font-size: 10.5px; margin-bottom: 4px; }
+.tooltip .tt-row { display: flex; justify-content: space-between; gap: 18px; }
+.tooltip .tt-row span:last-child { color: hsl(var(--color-white)); }
+
+/* ── progress rail ── */
+.rail {
+  position: fixed;
+  right: clamp(12px, 2vw, 28px);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.rail button {
+  all: unset;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: flex-end;
+}
+.rail .dot { width: 7px; height: 7px; border-radius: var(--radius-xs); background: var(--ov-dot); transition: background 0.3s var(--ease), width 0.3s var(--ease), color 0.3s var(--ease); }
+.rail button[aria-current="true"] .dot { background: hsl(var(--color-orange)); width: 18px; }
+.rail .tick { font-family: var(--font-mono); font-size: 10px; color: transparent; letter-spacing: 0.08em; white-space: nowrap; transition: color 0.2s; }
+.rail button:hover .tick { color: var(--ov-tick); }
+@media (max-width: 720px) { .rail { display: none; } }
+
+/* ── top masthead ── */
+.masthead {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 90;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px clamp(24px, 7vw, 120px);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ov-fg);
+  pointer-events: none;
+  transition: color 0.3s var(--ease);
+}
+.masthead .brand { color: var(--ov-brand); font-weight: 600; transition: color 0.3s var(--ease); }
+.masthead .brand b { color: hsl(var(--color-orange)); }
+
+/* hint */
+.scroll-hint { position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%); font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted-on-dark); display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.scroll-hint .arrow { animation: bob 1.8s var(--ease) infinite; }
+@keyframes bob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(6px)} }
+
+/* reveal */
+.reveal { opacity: 0; transform: translateY(18px); transition: opacity 0.7s var(--ease), transform 0.7s var(--ease); }
+.reveal.in { opacity: 1; transform: none; }
+.reveal.d1 { transition-delay: 0.08s; } .reveal.d2 { transition-delay: 0.16s; } .reveal.d3 { transition-delay: 0.24s; }
+
+/* axes */
+.axis path, .axis line { stroke: var(--foreground-faint); shape-rendering: crispEdges; }
+.section--dark .axis path, .section--dark .axis line { stroke: hsl(var(--color-black-700)); }
+.axis text { font-family: var(--font-mono); font-size: 10.5px; fill: var(--foreground-muted); letter-spacing: 0.02em; }
+.section--dark .axis text { fill: var(--muted-on-dark); }
+.axis-title { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; fill: var(--foreground-muted); }
+.section--dark .axis-title { fill: var(--muted-on-dark); }
+.gridline line { stroke: var(--divider); shape-rendering: crispEdges; }
+.section--dark .gridline line { stroke: hsl(var(--color-black-800)); }
+
+/* market map */
+.mapgrid { display: grid; gap: var(--s05); width: 100%; }
+.maplayer { display: grid; grid-template-columns: 132px 1fr; gap: var(--s1); align-items: stretch; }
+.maplayer .lname { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; padding-top: 6px; }
+.maplayer .lname .ln-sub { display:block; color: var(--foreground-muted); font-size: 10px; margin-top: 4px; letter-spacing: 0.04em; }
+.cells { display: flex; flex-wrap: wrap; gap: var(--s05); }
+.cell {
+  border: 1px solid var(--divider);
+  background: var(--background);
+  border-radius: var(--radius-xs);
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: default;
+  transition: all 0.2s var(--ease);
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 96px;
+}
+.cell .c-cat { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--foreground-muted); display:block; margin-bottom: 3px; }
+.cell:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 4px 16px hsl(var(--color-black-900) / 0.06); }
+.cell[data-heat="hot"] { border-left: 2px solid var(--accent); }
+.cell[data-heat="cool"] { border-left: 2px solid var(--secondary); }
+
+/* ledger table */
+.ledger { width: 100%; border-collapse: collapse; font-size: 14px; }
+.ledger th { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--foreground-muted); text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--foreground); font-weight: 500; }
+.ledger td { padding: 12px 14px; border-bottom: 1px solid var(--divider); vertical-align: baseline; }
+.ledger tr:hover td { background: var(--background); }
+.ledger .num { font-family: var(--font-mono); text-align: right; }
+.ledger .tag { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.04em; text-transform: uppercase; padding: 2px 7px; border-radius: var(--radius-xs); background: var(--background-raised); color: var(--foreground-muted); }
+.ledger .tag--hot { background: hsl(var(--color-orange) / 0.12); color: hsl(var(--color-orange)); }
+
+/* toggle buttons */
+.toggle { display: inline-flex; gap: 0; border: 1px solid var(--divider); border-radius: var(--radius-xs); overflow: hidden; margin-bottom: var(--s2); }
+.toggle button {
+  all: unset; cursor: pointer;
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase;
+  padding: 8px 14px; color: var(--foreground-muted); transition: all 0.2s;
+}
+.toggle button[aria-pressed="true"] { background: var(--foreground); color: var(--background); }
+.toggle button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+/* colophon */
+.colophon { font-size: 14px; }
+.colophon .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap: var(--s2); margin-top: var(--s2); }
+.colophon dt { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
+.colophon dd { margin: 0 0 var(--s1); color: var(--foreground-muted); max-width: 36ch; }
+
+.note-illustrative {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.04em;
+  color: var(--foreground-muted); border: 1px dashed var(--foreground-faint);
+  border-radius: var(--radius-xs); padding: 8px 12px; display: inline-flex; align-items:center; gap: 8px; margin-top: var(--s2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
+  .reveal { opacity: 1; transform: none; }
+}
+</style>
+</head>
+<body class="over-dark">
+
+<div class="masthead">
+  <span class="brand"><b>◢</b> THE GREAT SORTING</span>
+  <span>AI MARKET DOSSIER · 2026</span>
+</div>
+
+<nav class="rail" id="rail" aria-label="Section navigation"></nav>
+<div class="tooltip" id="tip"></div>
+
+<main class="deck" id="deck">
+
+  <!-- 00 HERO -->
+  <section class="section section--dark" data-title="Cover" id="s0">
+    <div class="eyebrow"><span class="rule"></span> AI MARKET DOSSIER · SPECIAL EDITION</div>
+    <h1 style="max-width: 16ch;">The Great<br>Sorting</h1>
+    <p class="lede" style="margin-bottom: var(--s3);">A trillion dollars chased intelligence into being. Now the market begins the harder work — telling the durable from the doomed. A field guide to where the money went, what it bought, and where value will finally settle.</p>
+    <figure>
+      <div class="viz" id="viz-flow"></div>
+      <div class="legend" id="flow-legend"></div>
+    </figure>
+    <div class="scroll-hint"><span>Scroll to begin</span><span class="arrow"><i data-lucide="chevron-down"></i></span></div>
+  </section>
+
+  <!-- 01 THE SETUP -->
+  <section class="section" data-title="The Setup" id="s1">
+    <div class="split split--reverse">
+      <figure class="text-fig">
+        <div class="viz" id="viz-stream"></div>
+        <div class="legend" id="stream-legend"></div>
+        <figcaption class="figcap"><span class="num">FIG. 01</span><span>Annual venture capital into AI, by layer of the stack · 2019–2026 · $bn</span></figcaption>
+      </figure>
+      <div class="text body-col">
+        <div class="eyebrow reveal"><span class="rule"></span> 01 · THE SETUP</div>
+        <h2 class="reveal d1">Money arrived faster than meaning.</h2>
+        <p class="reveal d2 muted">In four years, annual capital into the AI stack rose more than tenfold. The 2023 inflection was not a wave — it was a regime change. Foundation labs absorbed the headlines; infrastructure quietly absorbed the cash.</p>
+        <p class="reveal d3 muted">What the stream chart makes plain is that the boom was never one market. It was four — model, infrastructure, application, tooling — each with its own physics of cost, defensibility, and decay.</p>
+        <div class="stats reveal d3">
+          <div class="stat"><div class="n">10<span class="unit">×</span></div><div class="lbl">Growth in annual AI funding, 2019–2026</div></div>
+          <div class="stat"><div class="n">$198<span class="unit">bn</span></div><div class="lbl">Estimated 2026 deployment across all layers</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 02 THE MAP -->
+  <section class="section section--wide" data-title="The Map" id="s2">
+    <div class="eyebrow reveal"><span class="rule"></span> 02 · THE MAP</div>
+    <h2 class="reveal d1" style="max-width: 26ch;">The stack has four floors. They do not share an economy.</h2>
+    <p class="lede reveal d2 muted" style="margin-bottom: var(--s3);">A taxonomy of the landscape, top to bottom — from the silicon and power that make intelligence possible to the interfaces where it meets a customer. Orange marks where capital is hottest; blue, where it is cooling.</p>
+    <figure class="reveal d2">
+      <div class="mapgrid" id="market-map"></div>
+      <div class="legend">
+        <span class="item"><span class="swatch" style="background:hsl(var(--color-orange))"></span> Capital intensifying</span>
+        <span class="item"><span class="swatch" style="background:hsl(var(--color-babyblue))"></span> Capital cooling</span>
+        <span class="item muted">Hover a tile for round velocity & margin profile</span>
+      </div>
+      <figcaption class="figcap"><span class="num">FIG. 02</span><span>The AI market map · representative companies by layer & category</span></figcaption>
+    </figure>
+  </section>
+
+  <!-- 03 INVESTOR NETWORK -->
+  <section class="section section--wide" data-title="Capital Pools" id="s3">
+    <div class="split">
+      <div class="text body-col">
+        <div class="eyebrow reveal"><span class="rule"></span> 03 · WHERE CAPITAL POOLS</div>
+        <h2 class="reveal d1">A small room writes most of the checks.</h2>
+        <p class="reveal d2 muted">The capital is not evenly sourced. A dense core of crossover funds, sovereign vehicles, and — decisively — the hyperscalers themselves underwrite the model layer. Strategic money now rivals financial money, and it arrives with strings: compute commitments, distribution, and right of first refusal.</p>
+        <p class="reveal d3 muted">Drag a node. The graph snaps back to its tensions — the same dozen names anchor the largest rounds, and the startups they co-fund cluster into spheres of influence.</p>
+        <div class="legend reveal d3" style="margin-top: var(--s2);">
+          <span class="item"><span class="swatch" style="background:hsl(var(--color-orange))"></span> Strategic / corporate</span>
+          <span class="item"><span class="swatch" style="background:hsl(var(--color-black-900))"></span> Financial VC</span>
+          <span class="item"><span class="swatch" style="background:hsl(var(--color-babyblue))"></span> Startup</span>
+        </div>
+      </div>
+      <figure>
+        <div class="viz" id="viz-network"></div>
+        <figcaption class="figcap"><span class="num">FIG. 03</span><span>Co-investment network · node size = capital deployed · link = shared round</span></figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- 04 VALUATIONS -->
+  <section class="section section--wide" data-title="The Price of Belief" id="s4">
+    <div class="eyebrow reveal"><span class="rule"></span> 04 · THE PRICE OF BELIEF</div>
+    <h2 class="reveal d1" style="max-width: 24ch;">Valuations stopped describing businesses and started describing faith.</h2>
+    <p class="lede reveal d2 muted" style="margin-bottom: var(--s2);">Every dot is a company; its position, the last private valuation on a logarithmic scale. The distribution is bimodal — a thin tier of nine-and-ten-figure labs, and a long, crowded tail priced on narrative.</p>
+    <figure class="reveal d2">
+      <div class="viz" id="viz-beeswarm"></div>
+      <div class="legend" id="bee-legend"></div>
+      <figcaption class="figcap"><span class="num">FIG. 04</span><span>Last private valuation · log scale · color = layer · size = capital raised</span></figcaption>
+    </figure>
+  </section>
+
+  <!-- 05 REVENUE QUALITY -->
+  <section class="section section--wide" data-title="Quality of Revenue" id="s5">
+    <div class="eyebrow reveal"><span class="rule"></span> 05 · THE QUALITY OF REVENUE</div>
+    <h2 class="reveal d1" style="max-width: 26ch;">Not all revenue is worth the same multiple — and the market knows it.</h2>
+    <p class="lede reveal d2 muted" style="margin-bottom: var(--s2);">Two lenses on the same question. Left: what investors pay per dollar of recurring revenue, by category. Right: the revenue itself, plotted on the only axes that matter — gross margin against net retention. The top-right quadrant is where durable companies live.</p>
+    <div class="split" style="align-items: flex-start;">
+      <figure class="reveal d2">
+        <div class="viz" id="viz-multiples"></div>
+        <figcaption class="figcap"><span class="num">FIG. 05a</span><span>Forward revenue multiple by category · ×ARR</span></figcaption>
+      </figure>
+      <figure class="reveal d3">
+        <div class="viz" id="viz-revquality"></div>
+        <figcaption class="figcap"><span class="num">FIG. 05b</span><span>Gross margin × net revenue retention · bubble = ARR</span></figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- 06 POSITIONING -->
+  <section class="section section--wide" data-title="Positioning" id="s6">
+    <div class="split split--reverse">
+      <figure class="reveal d2">
+        <div class="viz" id="viz-matrix"></div>
+        <figcaption class="figcap"><span class="num">FIG. 06</span><span>Defensibility × growth · bubble = funding · color = layer</span></figcaption>
+      </figure>
+      <div class="text body-col">
+        <div class="eyebrow reveal"><span class="rule"></span> 06 · POSITIONING</div>
+        <h2 class="reveal d1">Growth is cheap. Defensibility is the whole game.</h2>
+        <p class="reveal d2 muted">Plot every company on two axes — how fast it is growing, and how hard it would be to replace — and the landscape resolves into four fates. The upper-right is rare and richly rewarded. The upper-left, fast but undefended, is where most application startups sit: thrilling charts, borrowed moats.</p>
+        <p class="reveal d3 muted">The model layer enjoys structural defensibility through capital and talent. The application layer must manufacture its own — through data, workflow lock-in, or distribution it does not rent.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 07 ADOPTION -->
+  <section class="section section--wide" data-title="Demand Signals" id="s7">
+    <div class="eyebrow reveal"><span class="rule"></span> 07 · DEMAND SIGNALS</div>
+    <h2 class="reveal d1" style="max-width: 26ch;">Pilots are easy. The question is what survives renewal.</h2>
+    <p class="lede reveal d2 muted" style="margin-bottom: var(--s2);">Enterprise adoption by use case, traced across twelve quarters. The curves diverge sharply: code assistance and support automation cleared procurement and stuck; general-purpose agents drew the most noise and the least durable spend.</p>
+    <figure class="reveal d2">
+      <div class="toggle" role="group" aria-label="Metric" id="adopt-toggle">
+        <button aria-pressed="true" data-mode="adopt">Adoption</button>
+        <button aria-pressed="false" data-mode="retain">Net retention</button>
+      </div>
+      <div class="viz" id="viz-adopt"></div>
+      <div class="legend" id="adopt-legend"></div>
+      <figcaption class="figcap"><span class="num">FIG. 07</span><span>Share of enterprises in production, by use case · quarterly</span></figcaption>
+    </figure>
+  </section>
+
+  <!-- 08 COMPUTE TAX -->
+  <section class="section section--wide" data-title="The Compute Tax" id="s8">
+    <div class="split">
+      <div class="text body-col">
+        <div class="eyebrow reveal"><span class="rule"></span> 08 · THE COMPUTE TAX</div>
+        <h2 class="reveal d1">The cost of intelligence is collapsing. So is the moat it once bought.</h2>
+        <p class="reveal d2 muted">The price of a unit of inference has fallen roughly an order of magnitude a year. For users, a gift. For model companies, an erosion — yesterday's frontier becomes today's commodity, and the premium for being first decays on a half-life.</p>
+        <p class="reveal d3 muted">Beneath every application sits a dependency it does not control: the model, the cloud, the accelerator, the power. Margins at the top are hostage to costs at the bottom.</p>
+        <div class="stats reveal d3">
+          <div class="stat"><div class="n">90<span class="unit">%</span></div><div class="lbl">Annual fall in cost per million tokens, frontier tier</div></div>
+          <div class="stat"><div class="n">~9<span class="unit">mo</span></div><div class="lbl">Time for a frontier capability to commoditize</div></div>
+        </div>
+      </div>
+      <figure>
+        <div class="viz" id="viz-compute"></div>
+        <div class="legend" id="compute-legend"></div>
+        <figcaption class="figcap"><span class="num">FIG. 08</span><span>Cost per 1M tokens · log scale · USD · by capability tier</span></figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- 09 DURABLE VS HYPE -->
+  <section class="section section--wide" data-title="Durable vs Hype" id="s9">
+    <div class="eyebrow reveal"><span class="rule"></span> 09 · DURABLE vs HYPE</div>
+    <h2 class="reveal d1" style="max-width: 24ch;">The sorting, made visible.</h2>
+    <p class="lede reveal d2 muted" style="margin-bottom: var(--s2);">Score each company on two composites — the durability of its revenue and the depth of its moat — and the cohort splits cleanly. The upper-right is a real business. The lower-left is a story with a burn rate. Most of the funding sits between them, waiting to learn which it is.</p>
+    <figure class="reveal d2">
+      <div class="viz" id="viz-durability"></div>
+      <figcaption class="figcap"><span class="num">FIG. 09</span><span>Revenue durability × moat depth · zones labeled · bubble = valuation</span></figcaption>
+    </figure>
+  </section>
+
+  <!-- 10 CONSOLIDATION -->
+  <section class="section section--wide" data-title="Consolidation" id="s10">
+    <div class="eyebrow reveal"><span class="rule"></span> 10 · CONSOLIDATION</div>
+    <h2 class="reveal d1" style="max-width: 26ch;">When the story breaks, the assets move up the stack.</h2>
+    <p class="lede reveal d2 muted" style="margin-bottom: var(--s2);">The acquisition map shows where stranded talent and technology are flowing. Hyperscalers and incumbent platforms are the buyers of last resort; the application tail is the seller. The chord on the left traces the flow between layers; the ledger on the right names the pattern.</p>
+    <div class="split" style="align-items: flex-start;">
+      <figure class="reveal d2">
+        <div class="viz" id="viz-chord"></div>
+        <figcaption class="figcap"><span class="num">FIG. 10a</span><span>Acquisition flow between layers · ribbon width = deal value</span></figcaption>
+      </figure>
+      <figure class="reveal d3">
+        <table class="ledger" id="deal-ledger"></table>
+        <figcaption class="figcap"><span class="num">FIG. 10b</span><span>Representative consolidation ledger</span></figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- 11 THESIS -->
+  <section class="section section--dark section--wide" data-title="Where Value Accrues" id="s11">
+    <div class="eyebrow reveal"><span class="rule"></span> 11 · THE THESIS</div>
+    <h2 class="reveal d1" style="max-width: 22ch;">Follow the dollar of end-user value. See who keeps it.</h2>
+    <p class="lede reveal d2" style="margin-bottom: var(--s2); color: var(--ink-on-dark);">Of every dollar a customer pays for an AI-powered outcome, trace what each layer retains after it pays the layer below. The waterfall is the argument of this dossier in a single chart.</p>
+    <div class="split" style="align-items: center;">
+      <figure class="reveal d2">
+        <div class="viz" id="viz-waterfall"></div>
+        <figcaption class="figcap"><span class="num">FIG. 11</span><span>Value capture across the stack · cents retained per $1 of end-user spend</span></figcaption>
+      </figure>
+      <div class="text body-col reveal d3">
+        <p class="pull" style="margin-top:0; color: var(--ink-on-dark);">Value accrues to defensible demand — not to the layer with the most capital.</p>
+        <p class="muted">The infrastructure layer captures the most today because it owns the scarcest input. The model layer captures less than its valuations imply, because its product commoditizes. And the application layer keeps only what its workflow lock-in can defend.</p>
+        <p class="muted">The durable winners will be the few that own a proprietary loop — distribution, data, or workflow — that does not reprice every nine months. Everyone else is renting their moat from the floor below.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- COLOPHON -->
+  <section class="section" data-title="Colophon" id="s12">
+    <div class="eyebrow"><span class="rule"></span> COLOPHON & METHOD</div>
+    <h2 style="font-size: clamp(1.6rem,3vw,2.4rem); max-width: 24ch;">On the numbers in this dossier.</h2>
+    <div class="colophon body-col" style="max-width: 60rem;">
+      <p class="muted">This is an editorial data narrative. The figures are <strong>illustrative</strong> — synthetic values modeled to reflect the publicly observed shape of the AI venture market between 2019 and 2026. They are intended to convey structure, proportion, and direction, not to report audited figures for any named entity.</p>
+      <dl class="grid">
+        <div><dt>Funding flows</dt><dd>Modeled annual deployment by layer, calibrated to the observed 2023 regime change.</dd></div>
+        <div><dt>Valuations</dt><dd>Last-private marks on a log scale; the bimodal shape is the signal, not any single point.</dd></div>
+        <div><dt>Revenue quality</dt><dd>Gross margin and net retention are the load-bearing axes; multiples follow them.</dd></div>
+        <div><dt>Compute costs</dt><dd>Order-of-magnitude annual decline in cost per token, by capability tier.</dd></div>
+        <div><dt>Value capture</dt><dd>A normalized waterfall of cents retained per dollar of end-user spend.</dd></div>
+        <div><dt>Method</dt><dd>Built as a self-contained document. Visualization with D3. Type set in Manrope & Sometype Mono.</dd></div>
+      </dl>
+      <span class="note-illustrative"><i data-lucide="info"></i> All data illustrative · modeled for narrative clarity</span>
+    </div>
+  </section>
+
+</main>
+
+<script>
+/* ════════════════════════════════════════════════════════════════
+   THE GREAT SORTING — visualization engine
+   ════════════════════════════════════════════════════════════════ */
+const RM = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const C = {
+  orange: 'hsl(15, 88%, 55%)',
+  orangeSoft: 'hsl(15, 88%, 55%, 0.16)',
+  blue: 'hsl(190, 49%, 67%)',
+  blueSoft: 'hsl(190, 49%, 67%, 0.18)',
+  ink: 'hsl(0, 0%, 10%)',
+  ink70: 'hsl(30, 1%, 32%)',
+  ink50: 'hsl(30, 1%, 50%)',
+  ink30: 'hsl(30, 2%, 69%)',
+  ink15: 'hsl(30, 4%, 79%)',
+  cream: 'hsl(36, 24%, 96%)',
+  yellow: 'hsl(53, 100%, 58%)',
+  white: '#fff'
+};
+// layer palette — orange + blue + inks (no green)
+const LAYER = {
+  Model:          C.orange,
+  Infrastructure: C.ink,
+  Application:    C.blue,
+  Tooling:        C.ink50
+};
+const fmt$ = n => '$' + (n >= 1000 ? (n/1000).toFixed(1)+'T' : n + 'bn');
+const tip = document.getElementById('tip');
+function showTip(html, e){ tip.innerHTML = html; tip.style.opacity = 1; moveTip(e); }
+function moveTip(e){
+  const pad = 16, w = tip.offsetWidth, h = tip.offsetHeight;
+  let x = e.clientX + pad, y = e.clientY + pad;
+  if (x + w > innerWidth) x = e.clientX - w - pad;
+  if (y + h > innerHeight) y = e.clientY - h - pad;
+  tip.style.left = x + 'px'; tip.style.top = y + 'px';
+}
+function hideTip(){ tip.style.opacity = 0; }
+
+/* responsive width helper */
+function W(sel, ratio=0.62, max=860){ const el = document.querySelector(sel); const w = Math.min(el.clientWidth, max); return { w, h: Math.max(260, Math.round(w*ratio)) }; }
+
+/* ─────────── 00 · ECOSYSTEM FLOW ─────────── */
+function drawFlow(){
+  const host = '#viz-flow'; const box = document.querySelector(host);
+  const w = box.clientWidth, h = Math.min(360, Math.max(240, w*0.32));
+  const svg = d3.select(host).append('svg').attr('viewBox',`0 0 ${w} ${h}`).attr('width','100%').attr('height',h);
+  const cols = [
+    { name:'CAPITAL', x: w*0.13, nodes:['Sovereign','Crossover','Venture','Strategic'] },
+    { name:'INFRASTRUCTURE', x: w*0.5, nodes:['Compute','Cloud','Models','Power'] },
+    { name:'ADOPTION', x: w*0.87, nodes:['Enterprise','Developer','Consumer','Vertical'] }
+  ];
+  const yFor = (i,n) => (h*0.18) + i*( (h*0.64)/(n-1) );
+  const pts = {};
+  cols.forEach(c => c.nodes.forEach((nm,i)=> pts[c.name+nm] = {x:c.x, y:yFor(i,c.nodes.length), col:c.name}));
+  // links between adjacent columns (fully connected, weighted)
+  const links = [];
+  for (let s=0;s<2;s++){
+    cols[s].nodes.forEach(a => cols[s+1].nodes.forEach(b => {
+      links.push({ a: pts[cols[s].name+a], b: pts[cols[s+1].name+b], w: 0.4+Math.abs(Math.sin((a.length*b.length))) });
+    }));
+  }
+  const g = svg.append('g');
+  // link paths
+  const lp = g.selectAll('path.lnk').data(links).join('path').attr('class','lnk')
+    .attr('d', d => `M${d.a.x},${d.a.y} C${(d.a.x+d.b.x)/2},${d.a.y} ${(d.a.x+d.b.x)/2},${d.b.y} ${d.b.x},${d.b.y}`)
+    .attr('fill','none').attr('stroke', 'hsl(30,4%,79%,0.18)').attr('stroke-width', d=>d.w*1.4);
+  // column labels
+  svg.selectAll('text.col').data(cols).join('text').attr('class','col')
+    .attr('x',d=>d.x).attr('y', h*0.07).attr('text-anchor','middle')
+    .attr('font-family','Sometype Mono').attr('font-size',11).attr('letter-spacing','0.14em')
+    .attr('fill', (d,i)=> i===0?C.orange : i===2?C.blue : C.cream).text(d=>d.name);
+  // nodes
+  const nodes = Object.values(pts);
+  svg.selectAll('text.nl').data(nodes).join('text').attr('class','nl')
+    .attr('x',d=>d.x).attr('y',d=>d.y+4).attr('text-anchor','middle')
+    .attr('font-family','Manrope').attr('font-size',12).attr('font-weight',500).attr('fill',C.cream)
+    .text(d=>Object.keys(pts).find(k=>pts[k]===d).replace(d.col,''));
+  svg.selectAll('circle.nd').data(nodes).join('circle').attr('class','nd')
+    .attr('cx',d=>d.x).attr('cy',d=>d.y-16).attr('r',4)
+    .attr('fill', d=> d.col==='CAPITAL'?C.orange : d.col==='ADOPTION'?C.blue : C.cream);
+
+  // particles
+  if (RM) return;
+  const pg = svg.append('g');
+  const N = Math.min(90, Math.round(w/9));
+  const parts = d3.range(N).map(()=>({ link: links[Math.floor(Math.abs(Math.sin(Math.random()*999))*links.length)%links.length] || links[0], t: Math.random(), v: 0.0016+Math.random()*0.0026 }));
+  function lerpPath(d,t){ // cubic bezier point
+    const x0=d.a.x,y0=d.a.y,x3=d.b.x,y3=d.b.y, x1=(x0+x3)/2,y1=y0, x2=(x0+x3)/2,y2=y3;
+    const u=1-t; const x=u*u*u*x0+3*u*u*t*x1+3*u*t*t*x2+t*t*t*x3; const y=u*u*u*y0+3*u*u*t*y1+3*u*t*t*y2+t*t*t*y3; return [x,y];
+  }
+  const sel = pg.selectAll('circle').data(parts).join('circle').attr('r',1.7)
+    .attr('fill', d=> Math.random()>0.6?C.orange:C.cream).attr('opacity',0.85);
+  // Visibility-gated, ~60fps-capped loop. Stops entirely when the hero is
+  // off-screen or the tab is hidden so it never competes with scrolling elsewhere.
+  let raf = null, running = false, lastT = 0;
+  function tick(t){
+    if(!running) return;
+    if(t - lastT >= 15){            // cap to ~60fps (headless/high-refresh safe)
+      lastT = t;
+      sel.each(function(d){ d.t += d.v; if(d.t>1){ d.t=0; d.link = links[Math.floor(Math.random()*links.length)]; } })
+         .attr('transform', d=>{ const [x,y]=lerpPath(d.link,d.t); return `translate(${x},${y})`; });
+    }
+    raf = requestAnimationFrame(tick);
+  }
+  function start(){ if(running || document.hidden) return; running = true; raf = requestAnimationFrame(tick); }
+  function stop(){ running = false; if(raf){ cancelAnimationFrame(raf); raf = null; } }
+  new IntersectionObserver(es=>es.forEach(e=> e.isIntersecting ? start() : stop()), {threshold:0.04})
+    .observe(document.querySelector('#s0'));
+  document.addEventListener('visibilitychange', ()=> document.hidden ? stop() : start());
+  // legend
+  d3.select('#flow-legend').html(`
+    <span class="item"><span class="swatch" style="background:${C.orange}"></span> Capital sources</span>
+    <span class="item"><span class="swatch" style="background:${C.cream}"></span> Infrastructure layer</span>
+    <span class="item"><span class="swatch" style="background:${C.blue}"></span> Points of adoption</span>`);
+}
+
+/* ─────────── 01 · FUNDING STREAMGRAPH ─────────── */
+function drawStream(){
+  const data = [
+    {year:2019, Model:1.0, Infrastructure:1.5, Application:2.0, Tooling:1.0},
+    {year:2020, Model:2.0, Infrastructure:2.5, Application:3.0, Tooling:1.5},
+    {year:2021, Model:5.0, Infrastructure:4.0, Application:6.0, Tooling:3.0},
+    {year:2022, Model:8.0, Infrastructure:6.0, Application:9.0, Tooling:4.0},
+    {year:2023, Model:28,  Infrastructure:18,  Application:14,  Tooling:7.0},
+    {year:2024, Model:45,  Infrastructure:34,  Application:26,  Tooling:11},
+    {year:2025, Model:62,  Infrastructure:48,  Application:40,  Tooling:15},
+    {year:2026, Model:70,  Infrastructure:58,  Application:52,  Tooling:18}
+  ];
+  const keys = ['Tooling','Application','Infrastructure','Model'];
+  const {w,h} = W('#viz-stream', 0.66, 720);
+  const m = {t:14,r:14,b:28,l:14};
+  const svg = d3.select('#viz-stream').append('svg').attr('viewBox',`0 0 ${w} ${h}`).attr('width','100%').attr('height',h);
+  const x = d3.scaleLinear().domain([2019,2026]).range([m.l, w-m.r]);
+  const stack = d3.stack().keys(keys).offset(d3.stackOffsetWiggle).order(d3.stackOrderInsideOut);
+  const series = stack(data);
+  const y = d3.scaleLinear()
+    .domain([d3.min(series,s=>d3.min(s,d=>d[0])), d3.max(series,s=>d3.max(s,d=>d[1]))])
+    .range([h-m.b, m.t]);
+  const area = d3.area().x(d=>x(d.data.year)).y0(d=>y(d[0])).y1(d=>y(d[1])).curve(d3.curveBasis);
+  const paths = svg.selectAll('path').data(series).join('path')
+    .attr('fill', d=>LAYER[d.key]).attr('opacity', d=> d.key==='Tooling'?0.85:0.92)
+    .attr('d', area).attr('stroke', C.cream).attr('stroke-width',0.5);
+  // animate
+  if(!RM){
+    paths.attr('opacity',0).transition().duration(900).delay((d,i)=>i*120).attr('opacity', d=> d.key==='Tooling'?0.85:0.92);
+  }
+  // x axis (years)
+  const ax = svg.append('g').attr('class','axis').attr('transform',`translate(0,${h-m.b})`)
+    .call(d3.axisBottom(x).ticks(8).tickFormat(d3.format('d')).tickSize(0).tickPadding(8));
+  ax.select('.domain').remove();
+  // inline labels
+  svg.selectAll('text.sl').data(series).join('text').attr('class','sl')
+    .attr('x', w-m.r-4).attr('y', d=> y((d[d.length-1][0]+d[d.length-1][1])/2)+4 )
+    .attr('text-anchor','end').attr('font-family','Sometype Mono').attr('font-size',11)
+    .attr('font-weight',600).attr('fill', d=> d.key==='Infrastructure'?C.cream:C.white)
+    .attr('paint-order','stroke').attr('stroke', d=>LAYER[d.key]).attr('stroke-width',3)
+    .text(d=> d.key);
+  // hover guide
+  const guide = svg.append('line').attr('y1',m.t).attr('y2',h-m.b).attr('stroke',C.ink).attr('stroke-width',1).attr('opacity',0);
+  svg.append('rect').attr('x',m.l).attr('y',m.t).attr('width',w-m.l-m.r).attr('height',h-m.t-m.b).attr('fill','transparent')
+    .on('mousemove',function(e){
+      const yr = Math.round(x.invert(d3.pointer(e,this)[0])); const row = data.find(d=>d.year===yr); if(!row) return;
+      guide.attr('x1',x(yr)).attr('x2',x(yr)).attr('opacity',0.3);
+      const total = keys.reduce((s,k)=>s+row[k],0);
+      showTip(`<div class="tt-title">${yr}</div>`+keys.slice().reverse().map(k=>`<div class="tt-row"><span>${k}</span><span>${row[k]}bn</span></div>`).join('')+`<div class="tt-row" style="border-top:1px solid ${C.ink70};margin-top:4px;padding-top:4px"><span>Total</span><span>${total.toFixed(0)}bn</span></div>`, e);
+    }).on('mouseleave',()=>{hideTip();guide.attr('opacity',0);});
+  d3.select('#stream-legend').html(keys.slice().reverse().map(k=>`<span class="item"><span class="swatch" style="background:${LAYER[k]}"></span> ${k}</span>`).join(''));
+}
+
+/* ─────────── 02 · MARKET MAP ─────────── */
+function drawMap(){
+  const layers = [
+    {name:'Application', sub:'Where AI meets a customer', cells:[
+      {n:'Coding copilots',cat:'Dev',heat:'hot'},{n:'Customer support',cat:'CX',heat:'hot'},{n:'Search & RAG',cat:'Knowledge',heat:'hot'},
+      {n:'Marketing gen',cat:'GTM',heat:'cool'},{n:'Legal & contracts',cat:'Vertical'},{n:'Healthcare scribes',cat:'Vertical',heat:'hot'},
+      {n:'Agents & RPA',cat:'Horizontal',heat:'cool'},{n:'Consumer companions',cat:'Consumer',heat:'cool'},{n:'Design & media',cat:'Creative'}
+    ]},
+    {name:'Tooling', sub:'Build, evaluate, observe', cells:[
+      {n:'Orchestration',cat:'Framework'},{n:'Vector & memory',cat:'Data'},{n:'Eval & observability',cat:'Ops',heat:'hot'},
+      {n:'Fine-tuning',cat:'Training'},{n:'Guardrails',cat:'Safety',heat:'hot'},{n:'Data labeling',cat:'Data'}
+    ]},
+    {name:'Model', sub:'The intelligence itself', cells:[
+      {n:'Frontier labs',cat:'Closed',heat:'hot'},{n:'Open-weight',cat:'Open',heat:'hot'},{n:'Domain models',cat:'Vertical'},
+      {n:'Multimodal',cat:'Frontier',heat:'hot'},{n:'Small / edge',cat:'Efficient',heat:'cool'}
+    ]},
+    {name:'Infrastructure', sub:'Silicon, cloud, power', cells:[
+      {n:'AI accelerators',cat:'Silicon',heat:'hot'},{n:'Hyperscale cloud',cat:'Compute',heat:'hot'},{n:'Neoclouds / GPU',cat:'Compute',heat:'hot'},
+      {n:'Inference serving',cat:'Runtime',heat:'hot'},{n:'Networking',cat:'Fabric'},{n:'Power & cooling',cat:'Energy',heat:'hot'}
+    ]}
+  ];
+  const host = d3.select('#market-map');
+  layers.forEach((L,li)=>{
+    const row = host.append('div').attr('class','maplayer');
+    row.append('div').attr('class','lname').html(`${L.name}<span class="ln-sub">${L.sub}</span>`);
+    const cells = row.append('div').attr('class','cells');
+    cells.selectAll('div').data(L.cells).join('div').attr('class','cell')
+      .attr('data-heat', d=>d.heat||'')
+      .html(d=>`<span class="c-cat">${d.cat}</span>${d.n}`)
+      .on('mousemove', (e,d)=> showTip(`<div class="tt-title">${d.n}</div><div class="tt-row"><span>Layer</span><span>${L.name}</span></div><div class="tt-row"><span>Round velocity</span><span>${d.heat==='hot'?'Accelerating':d.heat==='cool'?'Cooling':'Steady'}</span></div><div class="tt-row"><span>Margin profile</span><span>${L.name==='Infrastructure'?'Capex-heavy':L.name==='Model'?'Compute-bound':L.name==='Application'?'Software-like':'Thin / tooling'}</span></div>`, e))
+      .on('mouseleave', hideTip);
+  });
+}
+
+/* ─────────── 03 · INVESTOR NETWORK ─────────── */
+function drawNetwork(){
+  const investors = [
+    {id:'Hyperscaler A',t:'strategic',cap:9},{id:'Hyperscaler B',t:'strategic',cap:7},{id:'Sovereign Fund',t:'strategic',cap:6},
+    {id:'Crossover I',t:'vc',cap:6},{id:'Crossover II',t:'vc',cap:5},{id:'Seed Lab',t:'vc',cap:3},
+    {id:'Growth Equity',t:'vc',cap:5},{id:'Chipmaker Corp',t:'strategic',cap:4}
+  ];
+  const startups = [
+    {id:'Frontier Lab α',l:'Model'},{id:'Frontier Lab β',l:'Model'},{id:'Open Model Co',l:'Model'},
+    {id:'Neocloud',l:'Infrastructure'},{id:'Serving Co',l:'Infrastructure'},{id:'Accelerator Co',l:'Infrastructure'},
+    {id:'Coding App',l:'Application'},{id:'Support App',l:'Application'},{id:'Agent Co',l:'Application'},
+    {id:'Eval Co',l:'Tooling'},{id:'Vector Co',l:'Tooling'},{id:'Health AI',l:'Application'}
+  ];
+  const edges = [
+    ['Hyperscaler A','Frontier Lab α'],['Hyperscaler A','Neocloud'],['Hyperscaler A','Serving Co'],
+    ['Hyperscaler B','Frontier Lab β'],['Hyperscaler B','Open Model Co'],['Hyperscaler B','Agent Co'],
+    ['Sovereign Fund','Frontier Lab α'],['Sovereign Fund','Frontier Lab β'],['Sovereign Fund','Accelerator Co'],
+    ['Crossover I','Frontier Lab α'],['Crossover I','Coding App'],['Crossover I','Neocloud'],['Crossover I','Eval Co'],
+    ['Crossover II','Frontier Lab β'],['Crossover II','Support App'],['Crossover II','Vector Co'],
+    ['Seed Lab','Eval Co'],['Seed Lab','Vector Co'],['Seed Lab','Agent Co'],['Seed Lab','Health AI'],
+    ['Growth Equity','Coding App'],['Growth Equity','Support App'],['Growth Equity','Serving Co'],['Growth Equity','Neocloud'],
+    ['Chipmaker Corp','Accelerator Co'],['Chipmaker Corp','Open Model Co'],['Chipmaker Corp','Serving Co']
+  ];
+  const nodes = investors.map(d=>({...d, kind:'inv'})).concat(startups.map(d=>({id:d.id, kind:'startup', l:d.l, cap:2.4})));
+  const idx = Object.fromEntries(nodes.map((n,i)=>[n.id,n]));
+  const links = edges.map(([a,b])=>({source:idx[a], target:idx[b]}));
+  const deg = {}; links.forEach(l=>{deg[l.source.id]=(deg[l.source.id]||0)+1; deg[l.target.id]=(deg[l.target.id]||0)+1;});
+
+  const box = document.querySelector('#viz-network');
+  const w = Math.min(box.clientWidth, 720), h = Math.max(420, w*0.82);
+  const svg = d3.select('#viz-network').append('svg').attr('viewBox',`0 0 ${w} ${h}`).attr('width','100%').attr('height',h);
+  const link = svg.append('g').attr('stroke',C.ink15).attr('stroke-opacity',0.6)
+    .selectAll('line').data(links).join('line').attr('stroke-width',1);
+  const node = svg.append('g').selectAll('g').data(nodes).join('g').style('cursor','grab');
+  node.append('circle')
+    .attr('r', d=> d.kind==='inv'? 6+d.cap*1.4 : 5+(deg[d.id]||1)*1.1)
+    .attr('fill', d=> d.kind==='startup'? C.blue : d.t==='strategic'? C.orange : C.ink)
+    .attr('stroke',C.cream).attr('stroke-width',1.5);
+  node.append('text').text(d=>d.id).attr('x',0).attr('y', d=> (d.kind==='inv'?6+d.cap*1.4:7+(deg[d.id]||1))+11 )
+    .attr('text-anchor','middle').attr('font-family','Sometype Mono').attr('font-size', d=>d.kind==='inv'?10.5:9.5)
+    .attr('fill', d=>d.kind==='inv'?C.ink:C.ink50).attr('font-weight', d=>d.kind==='inv'?600:400)
+    .attr('opacity', d=> d.kind==='inv'?1:0.0).attr('class','nlabel');
+  const sim = d3.forceSimulation(nodes)
+    .force('link', d3.forceLink(links).distance(d=> d.source.kind==='inv'&&d.target.kind==='inv'?160:78).strength(0.55))
+    .force('charge', d3.forceManyBody().strength(-220))
+    .force('center', d3.forceCenter(w/2,h/2))
+    .force('collide', d3.forceCollide().radius(d=> (d.kind==='inv'?6+d.cap*1.4:8)+10))
+    .force('x', d3.forceX(w/2).strength(0.05)).force('y', d3.forceY(h/2).strength(0.06));
+  if(RM){ sim.stop(); for(let i=0;i<200;i++) sim.tick(); ticked(); }
+  sim.on('tick', ticked);
+  function ticked(){
+    nodes.forEach(d=>{ d.x=Math.max(20,Math.min(w-20,d.x)); d.y=Math.max(20,Math.min(h-20,d.y)); });
+    link.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y).attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);
+    node.attr('transform',d=>`translate(${d.x},${d.y})`);
+  }
+  node.call(d3.drag()
+    .on('start',(e,d)=>{ if(!e.active) sim.alphaTarget(0.3).restart(); d.fx=d.x; d.fy=d.y; })
+    .on('drag',(e,d)=>{ d.fx=e.x; d.fy=e.y; })
+    .on('end',(e,d)=>{ if(!e.active) sim.alphaTarget(0); d.fx=null; d.fy=null; }));
+  node.on('mouseenter',(e,d)=>{
+    const nb = new Set([d.id]); links.forEach(l=>{ if(l.source.id===d.id) nb.add(l.target.id); if(l.target.id===d.id) nb.add(l.source.id); });
+    node.attr('opacity', n=> nb.has(n.id)?1:0.18);
+    node.selectAll('.nlabel').attr('opacity', n=> nb.has(n.id)?1:0);
+    link.attr('stroke', l=> (l.source.id===d.id||l.target.id===d.id)?C.orange:C.ink15).attr('stroke-opacity', l=> (l.source.id===d.id||l.target.id===d.id)?0.9:0.12);
+    showTip(`<div class="tt-title">${d.id}</div><div class="tt-row"><span>${d.kind==='inv'?'Type':'Layer'}</span><span>${d.kind==='inv'?(d.t==='strategic'?'Strategic':'Financial'):d.l}</span></div><div class="tt-row"><span>Connections</span><span>${deg[d.id]||0}</span></div>`, e);
+  }).on('mousemove', moveTip).on('mouseleave',()=>{
+    node.attr('opacity',1); node.selectAll('.nlabel').attr('opacity', n=> n.kind==='inv'?1:0);
+    link.attr('stroke',C.ink15).attr('stroke-opacity',0.6); hideTip();
+  });
+}
+
+/* ─────────── 04 · VALUATION BEESWARM ─────────── */
+const COMPANIES = [
+  // val in $bn, raised in $bn, layer
+  {n:'Frontier Lab α',v:160,r:24,l:'Model'},{n:'Frontier Lab β',v:90,r:14,l:'Model'},{n:'Frontier Lab γ',v:40,r:9,l:'Model'},
+  {n:'Open Model Co',v:18,r:4,l:'Model'},{n:'Multimodal Co',v:12,r:3,l:'Model'},{n:'Domain Model',v:3.2,r:0.6,l:'Model'},{n:'Edge Model',v:1.1,r:0.3,l:'Model'},
+  {n:'Neocloud',v:32,r:11,l:'Infrastructure'},{n:'Accelerator Co',v:22,r:6,l:'Infrastructure'},{n:'Serving Co',v:6.5,r:1.6,l:'Infrastructure'},
+  {n:'GPU Cloud II',v:9,r:3,l:'Infrastructure'},{n:'Networking Co',v:2.4,r:0.5,l:'Infrastructure'},{n:'Power Co',v:4.5,r:1,l:'Infrastructure'},
+  {n:'Coding App',v:14,r:2.2,l:'Application'},{n:'Support App',v:6,r:1.1,l:'Application'},{n:'Search Co',v:8,r:1.5,l:'Application'},
+  {n:'Agent Co',v:4,r:1.3,l:'Application'},{n:'Health AI',v:3.6,r:0.7,l:'Application'},{n:'Legal AI',v:2.2,r:0.4,l:'Application'},
+  {n:'Marketing AI',v:1.4,r:0.5,l:'Application'},{n:'Consumer Co',v:5.5,r:1.8,l:'Application'},{n:'Design AI',v:2,r:0.4,l:'Application'},
+  {n:'Vertical SaaS',v:1.2,r:0.25,l:'Application'},{n:'Sales AI',v:0.9,r:0.3,l:'Application'},
+  {n:'Eval Co',v:1.6,r:0.3,l:'Tooling'},{n:'Vector Co',v:2.8,r:0.5,l:'Tooling'},{n:'Orchestration',v:1.1,r:0.35,l:'Tooling'},
+  {n:'Guardrails Co',v:0.7,r:0.18,l:'Tooling'},{n:'Labeling Co',v:1.9,r:0.4,l:'Tooling'},{n:'Observability',v:0.6,r:0.2,l:'Tooling'}
+];
+function drawBeeswarm(){
+  const box = document.querySelector('#viz-beeswarm');
+  const w = Math.min(box.clientWidth, 1100), h = 360, m={t:24,r:20,b:48,l:20};
+  const svg = d3.select('#viz-beeswarm').append('svg').attr('viewBox',`0 0 ${w} ${h}`).attr('width','100%').attr('height',h);
+  const x = d3.scaleLog().domain([0.4, 200]).range([m.l, w-m.r]);
+  const ticks = [0.5,1,2,5,10,20,50,100,200];
+  // gridlines
+  svg.append('g').attr('class','gridline').selectAll('line').data(ticks).join('line')
+    .attr('x1',d=>x(d)).attr('x2',d=>x(d)).attr('y1',m.t).attr('y2',h-m.b);
+  svg.append('g').attr('class','axis').attr('transform',`translate(0,${h-m.b})`)
+    .call(d3.axisBottom(x).tickValues(ticks).tickFormat(d=> d<1?'$'+(d*1000)+'M':'$'+d+'bn').tickSize(0).tickPadding(10))
+    .select('.domain').remove();
+  svg.append('text').attr('class','axis-title').attr('x',w/2).attr('y',h-6).attr('text-anchor','middle').text('Last private valuation (log scale)');
+  const r = d3.scaleSqrt().domain([0,24]).range([3,20]);
+  const sim = d3.forceSimulation(COMPANIES)
+    .force('x', d3.forceX(d=>x(d.v)).strength(1))
+    .force('y', d3.forceY(h*0.46).strength(0.08))
+    .force('collide', d3.forceCollide(d=>r(d.r)+1.5))
+    .stop();
+  for(let i=0;i<260;i++) sim.tick();
+  const g = svg.append('g').selectAll('circle').data(COMPANIES).join('circle')
+    .attr('cx',d=>d.x).attr('cy',d=>d.y).attr('r',d=>r(d.r))
+    .attr('fill',d=>LAYER[d.l]).attr('opacity',0.82).attr('stroke',C.cream).attr('stroke-width',1)
+    .on('mouseenter',(e,d)=>{ showTip(`<div class="tt-title">${d.n}</div><div class="tt-row"><span>Valuation</span><span>${d.v<1?'$'+d.v*1000+'M':'$'+d.v+'bn'}</span></div><div class="tt-row"><span>Raised</span><span>${d.r<1?'$'+d.r*1000+'M':'$'+d.r+'bn'}</span></div><div class="tt-row"><span>Layer</span><span>${d.l}</span></div>`, e); })
+    .on('mousemove',moveTip).on('mouseleave',hideTip);
+  if(!RM){ g.attr('opacity',0).transition().duration(700).delay((d,i)=>i*14).attr('opacity',0.82); }
+  // annotate the two clusters
+  svg.append('text').attr('x',x(120)).attr('y',m.t+8).attr('text-anchor','middle').attr('font-family','Sometype Mono').attr('font-size',10.5).attr('fill',C.ink50).text('— the few —');
+  svg.append('text').attr('x',x(2)).attr('y',m.t+8).attr('text-anchor','middle').attr('font-family','Sometype Mono').attr('font-size',10.5).attr('fill',C.ink50).text('— the long tail —');
+  d3.select('#bee-legend').html(Object.keys(LAYER).map(k=>`<span class="item"><span class="swatch" style="background:${LAYER[k]}"></span> ${k}</span>`).join('')+`<span class="item muted">size = total capital raised</span>`);
+}
+
+/* ─────────── 05a · REVENUE MULTIPLES ─────────── */
+function drawMultiples(){
+  const data = [
+    {cat:'Frontier model',x:48,l:'Model'},{cat:'Open model',x:30,l:'Model'},
+    {cat:'AI infrastructure',x:20,l:'Infrastructure'},{cat:'Inference serving',x:16,l:'Infrastructure'},
+    {cat:'Coding tools',x:34,l:'Application'},{cat:'Horizontal app',x:22,l:'Application'},
+    {cat:'Vertical app',x:14,l:'Application'},{cat:'Consumer',x:11,l:'Application'},
+    {cat:'Dev tooling',x:18,l:'Tooling'}
+  ].sort((a,b)=>b.x-a.x);
+  const box = document.querySelector('#viz-multiples');
+  const w = Math.min(box.clientWidth, 560), bar=26, h = data.length*(bar+10)+30, m={t:8,r:44,b:24,l:128};
+  const svg = d3.select('#viz-multiples').append('svg').attr('viewBox',`0 0 ${w} ${h}`).attr('width','100%').attr('height',h);
+  const x = d3.scaleLinear().domain([0,50]).range([m.l, w-m.r]);
+  const y = d3.scaleBand().domain(data.map(d=>d.cat)).range([m.t, h-m.b]).padding(0.32);
+  svg.append('g').attr('class','axis').attr('transform',`translate(0,${h-m.b})`).call(d3.axisBottom(x).ticks(5).tickFormat(d=>d+'×').tickSize(0).tickPadding(8)).select('.domain').remove();
+  // lollipop
+  const g = svg.selectAll('g.row').data(data).join('g').attr('class','row');
+  g.append('line').attr('x1',m.l).attr('x2',m.l).attr('y1',d=>y(d.cat)+y.bandwidth()/2).attr('y2',d=>y(d.cat)+y.bandwidth()/2).attr('stroke',C.ink15).attr('stroke-width',2)
+    .transition().duration(800).delay((d,i)=>i*60).attr('x2',d=>x(d.x));
+  g.append('circle').attr('cx',m.l).attr('cy',d=>y(d.cat)+y.bandwidth()/2).attr('r',6).attr('fill',d=>LAYER[d.l])
+    .transition().duration(800).delay((d,i)=>i*60).attr('cx',d=>x(d.x));
+  g.append('text').attr('x',m.l-10).attr('y',d=>y(d.cat)+y.bandwidth()/2+4).attr('text-anchor','end').attr('font-family','Manrope').attr('font-size',12.5).attr('fill',C.ink).text(d=>d.cat);
+  g.append('text').attr('x',d=>x(d.x)+12).attr('y',d=>y(d.cat)+y.bandwidth()/2+4).attr('font-family','Sometype Mono').attr('font-size',11.5).attr('font-weight',600).attr('fill',C.ink70).attr('opacity',0).text(d=>d.x+'×')
+    .transition().duration(400).delay((d,i)=>i*60+600).attr('opacity',1);
+}
+
+/* ─────────── 05b · REVENUE QUALITY SCATTER ─────────── */
+function drawRevQuality(){
+  const data = [
+    {n:'Infra platform',gm:62,nrr:128,arr:9,l:'Infrastructure'},{n:'Serving',gm:55,nrr:118,arr:3,l:'Infrastructure'},
+    {n:'Frontier API',gm:50,nrr:135,arr:12,l:'Model'},{n:'Open model',gm:44,nrr:112,arr:3,l:'Model'},
+    {n:'Coding tool',gm:78,nrr:130,arr:4,l:'Application'},{n:'Support app',gm:72,nrr:121,arr:2,l:'Application'},
+    {n:'Agent co',gm:58,nrr:88,arr:0.6,l:'Application'},{n:'Marketing app',gm:68,nrr:84,arr:0.8,l:'Application'},
+    {n:'Consumer',gm:74,nrr:79,arr:1.4,l:'Application'},{n:'Vertical SaaS',gm:80,nrr:124,arr:0.9,l:'Application'},
+    {n:'Eval tool',gm:82,nrr:114,arr:0.5,l:'Tooling'},{n:'Vector db',gm:76,nrr:120,arr:1,l:'Tooling'}
+  ];
+  const box = document.querySelector('#viz-revquality');
+  const w = Math.min(box.clientWidth, 560), h=360, m={t:18,r:18,b:46,l:50};
+  const svg = d3.select('#viz-revquality').append('svg').attr('viewBox',`0 0 ${w} ${h}`).attr('width','100%').attr('height',h);
+  const x = d3.scaleLinear().domain([40,90]).range([m.l,w-m.r]);
+  const y = d3.scaleLinear().domain([70,140]).range([h-m.b,m.t]);
+  const r = d3.scaleSqrt().domain([0,12]).range([4,20]);
+  // quadrant shading: top-right durable
+  svg.append('rect').attr('x',x(65)).attr('y',m.t).attr('width',w-m.r-x(65)).attr('height',y(100)-m.t).attr('fill',C.orangeSoft);
+  svg.append('line').attr('x1',x(65)).attr('x2',x(65)).attr('y1',m.t).attr('y2',h-m.b).attr('stroke',C.ink15).attr('stroke-dasharray','3 3');
+  svg.append('line').attr('x1',m.l).attr('x2',w-m.r).attr('y1',y(100)).attr('y2',y(100)).attr('stroke',C.ink15).attr('stroke-dasharray','3 3');
+  svg.append('text').attr('x',w-m.r-6).attr('y',m.t+14).attr('text-anchor','end').attr('font-family','Sometype Mono').attr('font-size',10).attr('letter-spacing','0.06em').attr('fill',C.orange).text('DURABLE');
+  svg.append('g').attr('class','axis').attr('transform',`translate(0,${h-m.b})`).call(d3.axisBottom(x).ticks(5).tickFormat(d=>d+'%').tickSize(0).tickPadding(8)).select('.domain').remove();
+  svg.append('g').attr('class','axis').attr('transform',`translate(${m.l},0)`).call(d3.axisLeft(y).ticks(5).tickFormat(d=>d+'%').tickSize(0).tickPadding(8)).select('.domain').remove();
+  svg.append('text').attr('class','axis-title').attr('x',w/2).attr('y',h-6).attr('text-anchor','middle').text('Gross margin →');
+  svg.append('text').attr('class','axis-title').attr('transform',`translate(14,${h/2}) rotate(-90)`).attr('text-anchor','middle').text('Net revenue retention →');
+  const node = svg.selectAll('circle.pt').data(data).join('circle').attr('class','pt')
+    .attr('cx',d=>x(d.gm)).attr('cy',d=>y(d.nrr)).attr('r',d=>r(d.arr))
+    .attr('fill',d=>LAYER[d.l]).attr('opacity',0.78).attr('stroke',C.cream).attr('stroke-width',1)
+    .on('mouseenter',(e,d)=>showTip(`<div class="tt-title">${d.n}</div><div class="tt-row"><span>Gross margin</span><span>${d.gm}%</span></div><div class="tt-row"><span>Net retention</span><span>${d.nrr}%</span></div><div class="tt-row"><span>ARR</span><span>$${d.arr<1?d.arr*1000+'M':d.arr+'bn'}</span></div>`,e))
+    .on('mousemove',moveTip).on('mouseleave',hideTip);
+  if(!RM) node.attr('r',0).transition().duration(700).delay((d,i)=>i*30).attr('r',d=>r(d.arr));
+}
+
+/* ─────────── 06 · POSITIONING MATRIX ─────────── */
+function drawMatrix(){
+  // x defensibility 0-10, y growth 0-100
+  const data = [
+    {n:'Frontier Lab α',x:8.5,y:78,f:24,l:'Model'},{n:'Frontier Lab β',x:7.5,y:70,f:14,l:'Model'},{n:'Open Model',x:5,y:60,f:4,l:'Model'},{n:'Edge Model',x:3.5,y:34,f:0.3,l:'Model'},
+    {n:'Neocloud',x:7,y:92,f:11,l:'Infrastructure'},{n:'Accelerator',x:9,y:64,f:6,l:'Infrastructure'},{n:'Serving Co',x:5.5,y:80,f:1.6,l:'Infrastructure'},{n:'Power Co',x:8,y:48,f:1,l:'Infrastructure'},
+    {n:'Coding App',x:6.5,y:96,f:2.2,l:'Application'},{n:'Support App',x:5.5,y:74,f:1.1,l:'Application'},{n:'Agent Co',x:2.5,y:88,f:1.3,l:'Application'},{n:'Marketing AI',x:2,y:52,f:0.5,l:'Application'},
+    {n:'Health AI',x:7,y:66,f:0.7,l:'Application'},{n:'Legal AI',x:6,y:58,f:0.4,l:'Application'},{n:'Consumer Co',x:3,y:70,f:1.8,l:'Application'},{n:'Vertical SaaS',x:7.5,y:44,f:0.25,l:'Application'},
+    {n:'Eval Co',x:4,y:62,f:0.3,l:'Tooling'},{n:'Vector Co',x:4.5,y:56,f:0.5,l:'Tooling'},{n:'Orchestration',x:2.2,y:40,f:0.35,l:'Tooling'},{n:'Guardrails',x:3.5,y:50,f:0.18,l:'Tooling'}
+  ];
+  const box = document.querySelector('#viz-matrix');
+  const w = Math.min(box.clientWidth, 760), h=Math.max(420,w*0.62), m={t:30,r:24,b:48,l:54};
+  const svg = d3.select('#viz-matrix').append('svg').attr('viewBox',`0 0 ${w} ${h}`).attr('width','100%').attr('height',h);
+  const x = d3.scaleLinear().domain([0,10]).range([m.l,w-m.r]);
+  const y = d3.scaleLinear().domain([20,100]).range([h-m.b,m.t]);
+  const r = d3.scaleSqrt().domain([0,24]).range([5,30]);
+  // quadrants
+  const mx = x(5.5), my = y(68);
+  svg.append('rect').attr('x',mx).attr('y',m.t).attr('width',w-m.r-mx).attr('height',my-m.t).attr('fill',C.orangeSoft);
+  svg.append('line').attr('x1',mx).attr('x2',mx).attr('y1',m.t).attr('y2',h-m.b).attr('stroke',C.ink15).attr('stroke-dasharray','3 3');
+  svg.append('line').attr('x1',m.l).attr('x2',w-m.r).attr('y1',my).attr('y2',my).attr('stroke',C.ink15).attr('stroke-dasharray','3 3');
+  const qlab = (tx,ty,t,anchor,col)=> svg.append('text').attr('x',tx).attr('y',ty).attr('text-anchor',anchor).attr('font-family','Sometype Mono').attr('font-size',10).attr('letter-spacing','0.06em').attr('fill',col||C.ink50).text(t);
+  qlab(w-m.r-6,m.t+14,'COMPOUNDERS','end',C.orange);
+  qlab(m.l+6,m.t+14,'HYPE-PRICED','start');
+  qlab(w-m.r-6,h-m.b-8,'CASH COWS','end');
+  qlab(m.l+6,h-m.b-8,'AT RISK','start');
+  svg.append('g').attr('class','axis').attr('transform',`translate(0,${h-m.b})`).call(d3.axisBottom(x).ticks(5).tickSize(0).tickPadding(8)).select('.domain').remove();
+  svg.append('g').attr('class','axis').attr('transform',`translate(${m.l},0)`).call(d3.axisLeft(y).ticks(5).tickFormat(d=>d+'%').tickSize(0).tickPadding(8)).select('.domain').remove();
+  svg.append('text').attr('class','axis-title').attr('x',w/2).attr('y',h-6).attr('text-anchor','middle').text('Defensibility →');
+  svg.append('text').attr('class','axis-title').attr('transform',`translate(16,${h/2}) rotate(-90)`).attr('text-anchor','middle').text('Revenue growth →');
+  const node = svg.selectAll('circle.pt').data(data).join('circle').attr('class','pt')
+    .attr('cx',d=>x(d.x)).attr('cy',d=>y(d.y)).attr('r',d=>r(d.f))
+    .attr('fill',d=>LAYER[d.l]).attr('opacity',0.72).attr('stroke',C.cream).attr('stroke-width',1.2)
+    .on('mouseenter',function(e,d){ d3.select(this).attr('opacity',1).attr('stroke',C.ink); showTip(`<div class="tt-title">${d.n}</div><div class="tt-row"><span>Defensibility</span><span>${d.x}/10</span></div><div class="tt-row"><span>Growth</span><span>${d.y}%</span></div><div class="tt-row"><span>Funding</span><span>$${d.f<1?d.f*1000+'M':d.f+'bn'}</span></div><div class="tt-row"><span>Layer</span><span>${d.l}</span></div>`,e); })
+    .on('mousemove',moveTip).on('mouseleave',function(){ d3.select(this).attr('opacity',0.72).attr('stroke',C.cream); hideTip(); });
+  if(!RM) node.attr('r',0).transition().duration(750).delay((d,i)=>i*25).attr('r',d=>r(d.f));
+}
+
+/* ─────────── 07 · ADOPTION S-CURVES ─────────── */
+const ADOPT = {
+  quarters: ['Q1','Q2','Q3','Q4','Q5','Q6','Q7','Q8','Q9','Q10','Q11','Q12'],
+  series: [
+    {n:'Code assistance', l:'Application', adopt:[4,8,15,24,34,44,53,60,66,71,75,78], retain:[100,108,114,120,124,128,130,131,132,133,133,134]},
+    {n:'Support automation', l:'Application', adopt:[3,6,11,18,26,35,43,50,56,61,65,68], retain:[100,104,110,114,118,120,122,123,124,124,125,125]},
+    {n:'Search & RAG', l:'Application', adopt:[2,5,9,14,20,27,34,40,45,49,52,55], retain:[100,103,107,110,112,114,115,116,117,117,118,118]},
+    {n:'Marketing content', l:'Application', adopt:[5,10,16,22,27,31,34,36,37,38,38,38], retain:[100,98,96,93,90,88,86,85,84,84,83,83]},
+    {n:'General agents', l:'Application', adopt:[2,6,12,18,22,24,25,25,24,24,23,23], retain:[100,95,90,85,82,80,79,80,80,81,82,84]}
+  ]
+};
+function drawAdopt(mode='adopt'){
+  d3.select('#viz-adopt').selectAll('*').remove();
+  const box = document.querySelector('#viz-adopt');
+  const w = Math.min(box.clientWidth, 1000), h=380, m={t:20,r:120,b:42,l:46};
+  const svg = d3.select('#viz-adopt').append('svg').attr('viewBox',`0 0 ${w} ${h}`).attr('width','100%').attr('height',h);
+  const x = d3.scalePoint().domain(ADOPT.quarters).range([m.l,w-m.r]);
+  const isAdopt = mode==='adopt';
+  const y = d3.scaleLinear().domain(isAdopt?[0,80]:[78,138]).range([h-m.b,m.t]);
+  // gridlines
+  svg.append('g').attr('class','gridline').selectAll('line').data(y.ticks(5)).join('line').attr('x1',m.l).attr('x2',w-m.r).attr('y1',d=>y(d)).attr('y2',d=>y(d));
+  svg.append('g').attr('class','axis').attr('transform',`translate(0,${h-m.b})`).call(d3.axisBottom(x).tickSize(0).tickPadding(8)).select('.domain').remove();
+  svg.append('g').attr('class','axis').attr('transform',`translate(${m.l},0)`).call(d3.axisLeft(y).ticks(5).tickFormat(d=>d+'%').tickSize(0).tickPadding(8)).select('.domain').remove();
+  if(!isAdopt) svg.append('line').attr('x1',m.l).attr('x2',w-m.r).attr('y1',y(100)).attr('y2',y(100)).attr('stroke',C.ink30).attr('stroke-dasharray','4 3');
+  const palette = [C.orange, C.ink, C.blue, C.ink50, C.ink30];
+  const line = d3.line().x((d,i)=>x(ADOPT.quarters[i])).y(d=>y(d)).curve(d3.curveMonotoneX);
+  ADOPT.series.forEach((s,si)=>{
+    const vals = isAdopt? s.adopt : s.retain;
+    const col = palette[si];
+    const path = svg.append('path').datum(vals).attr('fill','none').attr('stroke',col)
+      .attr('stroke-width', si===0?3:2).attr('opacity', si===0?1:0.85).attr('d',line);
+    if(!RM){ const L=path.node().getTotalLength(); path.attr('stroke-dasharray',`${L} ${L}`).attr('stroke-dashoffset',L).transition().duration(1100).delay(si*120).attr('stroke-dashoffset',0); }
+    svg.append('text').attr('x',w-m.r+8).attr('y',y(vals[vals.length-1])+4).attr('font-family','Sometype Mono').attr('font-size',11).attr('font-weight', si===0?600:500).attr('fill',col).text(s.n);
+    // end dot
+    svg.append('circle').attr('cx',x('Q12')).attr('cy',y(vals[vals.length-1])).attr('r',3.5).attr('fill',col);
+  });
+  svg.append('text').attr('class','axis-title').attr('transform',`translate(14,${h/2}) rotate(-90)`).attr('text-anchor','middle').text(isAdopt?'Share in production →':'Net revenue retention →');
+  d3.select('#adopt-legend').html(`<span class="item muted">${isAdopt?'Cumulative share of enterprises running each use case in production':'Net revenue retention — values above 100% mean expanding accounts'}</span>`);
+}
+
+/* ─────────── 08 · COMPUTE COST CURVES ─────────── */
+function drawCompute(){
+  const months = d3.range(0,25); // 0..24 months
+  const tiers = [
+    {n:'Frontier tier', l:'Model', start:60, decay:0.91, col:C.orange},
+    {n:'Mid tier', l:'Model', start:12, decay:0.90, col:C.ink},
+    {n:'Open / efficient', l:'Tooling', start:3, decay:0.89, col:C.blue}
+  ];
+  const box = document.querySelector('#viz-compute');
+  const w = Math.min(box.clientWidth, 720), h=Math.max(360,w*0.62), m={t:18,r:18,b:44,l:56};
+  const svg = d3.select('#viz-compute').append('svg').attr('viewBox',`0 0 ${w} ${h}`).attr('width','100%').attr('height',h);
+  const x = d3.scaleLinear().domain([0,24]).range([m.l,w-m.r]);
+  const y = d3.scaleLog().domain([0.02,80]).range([h-m.b,m.t]);
+  const yticks=[0.02,0.1,0.5,2,10,50];
+  svg.append('g').attr('class','gridline').selectAll('line').data(yticks).join('line').attr('x1',m.l).attr('x2',w-m.r).attr('y1',d=>y(d)).attr('y2',d=>y(d));
+  svg.append('g').attr('class','axis').attr('transform',`translate(0,${h-m.b})`).call(d3.axisBottom(x).tickValues([0,6,12,18,24]).tickFormat(d=>'M'+d).tickSize(0).tickPadding(8)).select('.domain').remove();
+  svg.append('g').attr('class','axis').attr('transform',`translate(${m.l},0)`).call(d3.axisLeft(y).tickValues(yticks).tickFormat(d=>'$'+d).tickSize(0).tickPadding(8)).select('.domain').remove();
+  svg.append('text').attr('class','axis-title').attr('x',w/2).attr('y',h-6).attr('text-anchor','middle').text('Months from frontier release →');
+  svg.append('text').attr('class','axis-title').attr('transform',`translate(15,${h/2}) rotate(-90)`).attr('text-anchor','middle').text('Cost / 1M tokens (log)');
+  const line = d3.line().x(d=>x(d.m)).y(d=>y(d.c)).curve(d3.curveMonotoneX);
+  tiers.forEach((t,ti)=>{
+    const pts = months.map(mo=>({m:mo, c: Math.max(0.02, t.start*Math.pow(t.decay,mo))}));
+    const path = svg.append('path').datum(pts).attr('fill','none').attr('stroke',t.col).attr('stroke-width', ti===0?3:2).attr('d',line);
+    if(!RM){ const L=path.node().getTotalLength(); path.attr('stroke-dasharray',`${L} ${L}`).attr('stroke-dashoffset',L).transition().duration(1200).delay(ti*150).attr('stroke-dashoffset',0); }
+    svg.append('text').attr('x',x(24)).attr('y',y(pts[pts.length-1].c)-8).attr('text-anchor','end').attr('font-family','Sometype Mono').attr('font-size',10.5).attr('font-weight',600).attr('fill',t.col).text(t.n);
+  });
+  // commodity band annotation
+  svg.append('text').attr('x',x(12)).attr('y',y(0.04)).attr('font-family','Sometype Mono').attr('font-size',10).attr('fill',C.ink50).text('↓ commoditization floor');
+  d3.select('#compute-legend').html(tiers.map(t=>`<span class="item"><span class="swatch swatch--line" style="background:${t.col}"></span> ${t.n}</span>`).join(''));
+}
+
+/* ─────────── 09 · DURABILITY QUADRANT ─────────── */
+function drawDurability(){
+  // x revenue durability 0-10, y moat depth 0-10
+  const data = [
+    {n:'Infra platform',x:8,y:8.5,v:32,l:'Infrastructure'},{n:'Accelerator',x:7,y:9,v:22,l:'Infrastructure'},{n:'Neocloud',x:6.5,y:6,v:32,l:'Infrastructure'},
+    {n:'Frontier Lab α',x:6,y:7.5,v:160,l:'Model'},{n:'Frontier Lab β',x:5.5,y:6.5,v:90,l:'Model'},{n:'Open Model',x:4,y:4,v:18,l:'Model'},{n:'Edge Model',x:3,y:2.5,v:1.1,l:'Model'},
+    {n:'Coding App',x:7,y:6,v:14,l:'Application'},{n:'Support App',x:6,y:5,v:6,l:'Application'},{n:'Health AI',x:7.5,y:6.5,v:3.6,l:'Application'},{n:'Vertical SaaS',x:7.5,y:5.5,v:1.2,l:'Application'},
+    {n:'Agent Co',x:2.5,y:2,v:4,l:'Application'},{n:'Marketing AI',x:2,y:1.5,v:1.4,l:'Application'},{n:'Consumer Co',x:3,y:2.5,v:5.5,l:'Application'},{n:'Search Co',x:4.5,y:4,v:8,l:'Application'},
+    {n:'Eval Co',x:5,y:4.5,v:1.6,l:'Tooling'},{n:'Vector Co',x:5,y:5,v:2.8,l:'Tooling'},{n:'Guardrails',x:3.5,y:3,v:0.7,l:'Tooling'},{n:'Orchestration',x:2.8,y:2.2,v:1.1,l:'Tooling'}
+  ];
+  const box = document.querySelector('#viz-durability');
+  const w = Math.min(box.clientWidth, 1100), h=Math.max(440,Math.min(560,w*0.5)), m={t:24,r:24,b:48,l:54};
+  const svg = d3.select('#viz-durability').append('svg').attr('viewBox',`0 0 ${w} ${h}`).attr('width','100%').attr('height',h);
+  const x = d3.scaleLinear().domain([0,10]).range([m.l,w-m.r]);
+  const y = d3.scaleLinear().domain([0,10]).range([h-m.b,m.t]);
+  const r = d3.scaleSqrt().domain([0,160]).range([5,40]);
+  const mx=x(5), my=y(5);
+  svg.append('rect').attr('x',mx).attr('y',m.t).attr('width',w-m.r-mx).attr('height',my-m.t).attr('fill',C.orangeSoft);
+  svg.append('rect').attr('x',m.l).attr('y',my).attr('width',mx-m.l).attr('height',h-m.b-my).attr('fill','hsl(53,100%,58%,0.10)');
+  svg.append('line').attr('x1',mx).attr('x2',mx).attr('y1',m.t).attr('y2',h-m.b).attr('stroke',C.ink15).attr('stroke-dasharray','3 3');
+  svg.append('line').attr('x1',m.l).attr('x2',w-m.r).attr('y1',my).attr('y2',my).attr('stroke',C.ink15).attr('stroke-dasharray','3 3');
+  svg.append('text').attr('x',w-m.r-8).attr('y',m.t+16).attr('text-anchor','end').attr('font-family','Sometype Mono').attr('font-size',11).attr('letter-spacing','0.08em').attr('fill',C.orange).attr('font-weight',600).text('DURABLE BUSINESS');
+  svg.append('text').attr('x',m.l+8).attr('y',h-m.b-8).attr('font-family','Sometype Mono').attr('font-size',11).attr('letter-spacing','0.08em').attr('fill','hsl(45,80%,42%)').attr('font-weight',600).text('HYPE-DRIVEN');
+  svg.append('text').attr('x',m.l+8).attr('y',m.t+16).attr('font-family','Sometype Mono').attr('font-size',10).attr('fill',C.ink50).text('FRAGILE MOAT');
+  svg.append('text').attr('x',w-m.r-8).attr('y',h-m.b-8).attr('text-anchor','end').attr('font-family','Sometype Mono').attr('font-size',10).attr('fill',C.ink50).text('COMMODITIZING');
+  svg.append('g').attr('class','axis').attr('transform',`translate(0,${h-m.b})`).call(d3.axisBottom(x).ticks(5).tickSize(0).tickPadding(8)).select('.domain').remove();
+  svg.append('g').attr('class','axis').attr('transform',`translate(${m.l},0)`).call(d3.axisLeft(y).ticks(5).tickSize(0).tickPadding(8)).select('.domain').remove();
+  svg.append('text').attr('class','axis-title').attr('x',w/2).attr('y',h-6).attr('text-anchor','middle').text('Revenue durability →');
+  svg.append('text').attr('class','axis-title').attr('transform',`translate(16,${h/2}) rotate(-90)`).attr('text-anchor','middle').text('Moat depth →');
+  const g = svg.selectAll('g.pt').data(data).join('g').attr('class','pt');
+  g.append('circle').attr('cx',d=>x(d.x)).attr('cy',d=>y(d.y)).attr('r',d=>r(d.v)).attr('fill',d=>LAYER[d.l]).attr('opacity',0.66).attr('stroke',C.cream).attr('stroke-width',1.2);
+  g.append('text').attr('x',d=>x(d.x)).attr('y',d=>y(d.y)+3).attr('text-anchor','middle').attr('font-family','Sometype Mono').attr('font-size',9).attr('fill',d=> d.v>20?C.white:C.ink).attr('pointer-events','none').attr('opacity',d=>r(d.v)>16?1:0).text(d=>d.n.split(' ')[0]);
+  g.on('mouseenter',function(e,d){ d3.select(this).select('circle').attr('opacity',0.95).attr('stroke',C.ink); showTip(`<div class="tt-title">${d.n}</div><div class="tt-row"><span>Durability</span><span>${d.x}/10</span></div><div class="tt-row"><span>Moat</span><span>${d.y}/10</span></div><div class="tt-row"><span>Valuation</span><span>${d.v<1?'$'+d.v*1000+'M':'$'+d.v+'bn'}</span></div>`,e); })
+   .on('mousemove',moveTip).on('mouseleave',function(){ d3.select(this).select('circle').attr('opacity',0.66).attr('stroke',C.cream); hideTip(); });
+  if(!RM) g.selectAll('circle').attr('r',0).transition().duration(800).delay((d,i)=>i*30).attr('r',d=>r(d.v));
+}
+
+/* ─────────── 10a · ACQUISITION CHORD ─────────── */
+function drawChord(){
+  const layers = ['Hyperscaler','Model','Infrastructure','Application','Tooling'];
+  // matrix[i][j] = value flowing from acquired layer j into acquirer i ; we use acquirer rows
+  const M = [
+  // from:  Hyp  Mod  Inf  App  Too   (acquired)
+        [0,   6,   4,   9,   3],  // Hyperscaler acquires
+        [0,   2,   1,   5,   4],  // Model-layer acquires
+        [0,   1,   3,   2,   2],  // Infra acquires
+        [0,   0,   0,   3,   3],  // App acquires (rollups)
+        [0,   0,   0,   1,   1]   // Tooling acquires
+  ];
+  const colMap = [C.ink, C.orange, C.ink70, C.blue, C.ink50];
+  const box = document.querySelector('#viz-chord');
+  const size = Math.min(box.clientWidth, 460); const r0 = size/2-78, r1=r0+12;
+  const svg = d3.select('#viz-chord').append('svg').attr('viewBox',`0 0 ${size} ${size}`).attr('width','100%').attr('height',size);
+  const g = svg.append('g').attr('transform',`translate(${size/2},${size/2})`);
+  const chord = d3.chordDirected().padAngle(0.06).sortSubgroups(d3.descending)(M);
+  const arc = d3.arc().innerRadius(r0).outerRadius(r1);
+  const ribbon = d3.ribbonArrow().radius(r0-2);
+  // groups
+  const grp = g.append('g').selectAll('g').data(chord.groups).join('g');
+  grp.append('path').attr('d',arc).attr('fill',d=>colMap[d.index]).attr('stroke',C.cream);
+  grp.append('text').each(d=>{ d.angle=(d.startAngle+d.endAngle)/2; })
+    .attr('dy','0.35em')
+    .attr('transform',d=>`rotate(${d.angle*180/Math.PI-90}) translate(${r1+8}) ${d.angle>Math.PI?'rotate(180)':''}`)
+    .attr('text-anchor',d=>d.angle>Math.PI?'end':'start')
+    .attr('font-family','Sometype Mono').attr('font-size',10.5).attr('fill',C.ink).text(d=>layers[d.index]);
+  // ribbons
+  g.append('g').attr('fill-opacity',0.62).selectAll('path').data(chord).join('path')
+    .attr('d',ribbon).attr('fill',d=>colMap[d.target.index]).attr('stroke','hsl(36,24%,96%,0.6)')
+    .on('mouseenter',(e,d)=>showTip(`<div class="tt-title">Acquisition flow</div><div class="tt-row"><span>Acquirer</span><span>${layers[d.source.index]}</span></div><div class="tt-row"><span>Target layer</span><span>${layers[d.target.index]}</span></div><div class="tt-row"><span>Rel. value</span><span>${d.source.value}</span></div>`,e))
+    .on('mousemove',moveTip).on('mouseleave',hideTip);
+}
+
+/* ─────────── 10b · DEAL LEDGER ─────────── */
+function drawLedger(){
+  const deals = [
+    {target:'Agent Co', layer:'Application', buyer:'Hyperscaler A', type:'Acqui-hire', val:'$0.6bn', hot:true},
+    {target:'Serving Co', layer:'Infrastructure', buyer:'Hyperscaler B', type:'Strategic', val:'$2.1bn', hot:true},
+    {target:'Marketing AI', layer:'Application', buyer:'Enterprise SaaS', type:'Tuck-in', val:'$0.3bn'},
+    {target:'Open Model Co', layer:'Model', buyer:'Chipmaker Corp', type:'Vertical', val:'$1.4bn', hot:true},
+    {target:'Vector Co', layer:'Tooling', buyer:'Model Lab β', type:'Platform', val:'$0.5bn'},
+    {target:'Consumer Co', layer:'Application', buyer:'Private Equity', type:'Take-private', val:'$1.1bn'},
+    {target:'Guardrails Co', layer:'Tooling', buyer:'Frontier Lab α', type:'Safety', val:'$0.2bn'}
+  ];
+  const t = d3.select('#deal-ledger');
+  t.append('thead').append('tr').html('<th>Target</th><th>Layer</th><th>Acquirer</th><th>Rationale</th><th class="num">Value</th>');
+  const tb = t.append('tbody');
+  tb.selectAll('tr').data(deals).join('tr').html(d=>`
+    <td><strong>${d.target}</strong></td>
+    <td><span class="tag ${d.hot?'tag--hot':''}">${d.layer}</span></td>
+    <td class="muted">${d.buyer}</td>
+    <td class="muted">${d.type}</td>
+    <td class="num">${d.val}</td>`);
+}
+
+/* ─────────── 11 · VALUE WATERFALL ─────────── */
+function drawWaterfall(){
+  // start at $1.00 end-user value; each layer "keeps" some, passes rest down
+  const steps = [
+    {label:'End-user value', val:100, type:'total'},
+    {label:'Application keeps', val:-22, type:'keep', who:'Application'},
+    {label:'Model keeps', val:-26, type:'keep', who:'Model'},
+    {label:'Infrastructure keeps', val:-38, type:'keep', who:'Infrastructure'},
+    {label:'Tooling keeps', val:-9, type:'keep', who:'Tooling'},
+    {label:'Margin to founders', val:5, type:'final'}
+  ];
+  const box = document.querySelector('#viz-waterfall');
+  const w = Math.min(box.clientWidth, 620), h=Math.max(360,w*0.7), m={t:24,r:20,b:64,l:44};
+  const svg = d3.select('#viz-waterfall').append('svg').attr('viewBox',`0 0 ${w} ${h}`).attr('width','100%').attr('height',h);
+  const x = d3.scaleBand().domain(steps.map(d=>d.label)).range([m.l,w-m.r]).padding(0.34);
+  const y = d3.scaleLinear().domain([0,100]).range([h-m.b,m.t]);
+  // gridlines
+  svg.append('g').attr('class','gridline').selectAll('line').data(y.ticks(5)).join('line').attr('x1',m.l).attr('x2',w-m.r).attr('y1',d=>y(d)).attr('y2',d=>y(d)).attr('stroke','hsl(30,1%,32%)');
+  let cum=0; const bars=[];
+  steps.forEach((s,i)=>{
+    if(s.type==='total'){ bars.push({...s, y0:0, y1:s.val}); cum=s.val; }
+    else if(s.type==='final'){ bars.push({...s, y0:0, y1:cum}); }
+    else { bars.push({...s, y0:cum, y1:cum+s.val}); cum+=s.val; }
+  });
+  const colFor = b => b.type==='total'?C.ink30 : b.type==='final'?C.orange : (LAYER[b.who]||C.ink50);
+  const g = svg.selectAll('g.bar').data(bars).join('g').attr('class','bar');
+  g.append('rect').attr('x',d=>x(d.label)).attr('width',x.bandwidth())
+    .attr('y',d=>y(Math.max(d.y0,d.y1))).attr('height',d=>Math.abs(y(d.y0)-y(d.y1)))
+    .attr('fill',d=>colFor(d)).attr('opacity',0.9).attr('rx',2)
+    .on('mouseenter',(e,d)=>showTip(`<div class="tt-title">${d.label}</div><div class="tt-row"><span>${d.type==='keep'?'Captured':'Value'}</span><span>${Math.abs(d.val)}¢</span></div>`,e))
+    .on('mousemove',moveTip).on('mouseleave',hideTip);
+  // connector lines
+  for(let i=0;i<bars.length-1;i++){ const a=bars[i], b=bars[i+1]; const yv = a.type==='total'? a.y1 : a.y0+ (a.type==='keep'? a.val : 0); }
+  g.append('text').attr('x',d=>x(d.label)+x.bandwidth()/2).attr('y',d=>y(Math.max(d.y0,d.y1))-8).attr('text-anchor','middle')
+    .attr('font-family','Sometype Mono').attr('font-size',12).attr('font-weight',600).attr('fill',C.cream).text(d=>Math.abs(d.val)+'¢');
+  // labels
+  svg.selectAll('text.xl').data(bars).join('text').attr('class','xl')
+    .attr('x',d=>x(d.label)+x.bandwidth()/2).attr('y',h-m.b+16).attr('text-anchor','middle')
+    .attr('font-family','Sometype Mono').attr('font-size',9.5).attr('fill',C.ink30)
+    .each(function(d){ const words=d.label.split(' '); const t=d3.select(this); words.forEach((wd,wi)=> t.append('tspan').attr('x',x(d.label)+x.bandwidth()/2).attr('dy',wi===0?0:11).text(wd)); });
+  svg.append('g').attr('class','axis').attr('transform',`translate(${m.l},0)`).call(d3.axisLeft(y).ticks(5).tickFormat(d=>d+'¢').tickSize(0).tickPadding(8)).select('.domain').remove();
+  if(!RM){ g.selectAll('rect').attr('opacity',0).transition().duration(600).delay((d,i)=>i*150).attr('opacity',0.9); }
+}
+
+/* ════════ ORCHESTRATION: lazy-init each viz when in view ════════ */
+const VIZ = {
+  s0: drawFlow, s1: drawStream, s2: drawMap, s3: drawNetwork, s4: drawBeeswarm,
+  s5: ()=>{ drawMultiples(); drawRevQuality(); }, s6: drawMatrix, s7: ()=>drawAdopt('adopt'),
+  s8: drawCompute, s9: drawDurability, s10: ()=>{ drawChord(); drawLedger(); }, s11: drawWaterfall
+};
+const done = {};
+const io = new IntersectionObserver((entries)=>{
+  entries.forEach(en=>{
+    if(en.isIntersecting){
+      // reveal children
+      en.target.querySelectorAll('.reveal').forEach(r=>r.classList.add('in'));
+      const id = en.target.id;
+      if(VIZ[id] && !done[id]){ done[id]=true; try{ VIZ[id](); }catch(err){ console.error('viz',id,err); } }
+    }
+  });
+},{ threshold: 0.18 });
+document.querySelectorAll('.section').forEach(s=>io.observe(s));
+
+/* build the nav rail */
+const sections = [...document.querySelectorAll('.section')];
+const rail = document.getElementById('rail');
+sections.forEach((s,i)=>{
+  const b = document.createElement('button');
+  b.setAttribute('aria-label', s.dataset.title);
+  b.innerHTML = `<span class="tick">${String(i).padStart(2,'0')} · ${s.dataset.title}</span><span class="dot"></span>`;
+  b.onclick = ()=> s.scrollIntoView({behavior: RM?'auto':'smooth'});
+  rail.appendChild(b);
+});
+const railBtns = [...rail.children];
+const railIO = new IntersectionObserver((entries)=>{
+  entries.forEach(en=>{ if(en.isIntersecting){
+    const i=sections.indexOf(en.target);
+    railBtns.forEach((b,j)=>b.setAttribute('aria-current', j===i?'true':'false'));
+    // recolor fixed overlays for the current section's background (replaces mix-blend-mode)
+    document.body.classList.toggle('over-dark', en.target.classList.contains('section--dark'));
+  } });
+},{ threshold: 0.5 });
+sections.forEach(s=>railIO.observe(s));
+
+/* keyboard nav */
+const deck = document.getElementById('deck');
+function currentIndex(){ const st = deck.scrollTop; let best=0,bd=1e9; sections.forEach((s,i)=>{ const d=Math.abs(s.offsetTop-st); if(d<bd){bd=d;best=i;} }); return best; }
+addEventListener('keydown',(e)=>{
+  if(['ArrowDown','PageDown',' '].includes(e.key)){ e.preventDefault(); const n=Math.min(sections.length-1,currentIndex()+1); sections[n].scrollIntoView({behavior:RM?'auto':'smooth'}); }
+  else if(['ArrowUp','PageUp'].includes(e.key)){ e.preventDefault(); const n=Math.max(0,currentIndex()-1); sections[n].scrollIntoView({behavior:RM?'auto':'smooth'}); }
+  else if(e.key==='Home'){ e.preventDefault(); sections[0].scrollIntoView({behavior:RM?'auto':'smooth'}); }
+  else if(e.key==='End'){ e.preventDefault(); sections[sections.length-1].scrollIntoView({behavior:RM?'auto':'smooth'}); }
+});
+
+/* adoption toggle */
+document.querySelectorAll('#adopt-toggle button').forEach(btn=>{
+  btn.onclick = ()=>{ document.querySelectorAll('#adopt-toggle button').forEach(b=>b.setAttribute('aria-pressed','false')); btn.setAttribute('aria-pressed','true'); drawAdopt(btn.dataset.mode); };
+});
+
+/* lucide icons */
+window.addEventListener('load', ()=>{ if(window.lucide) lucide.createIcons(); });
+/* redraw-on-resize (debounced) for responsive viz */
+let rt; addEventListener('resize',()=>{ clearTimeout(rt); rt=setTimeout(()=>{
+  Object.keys(VIZ).forEach(id=>{ if(done[id]){ const host=document.querySelector('#'+id); host.querySelectorAll('.viz').forEach(v=>v.innerHTML=''); try{VIZ[id]();}catch(e){} } });
+},260); });
+</script>
+</body>
+</html>

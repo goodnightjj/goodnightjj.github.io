@@ -75,21 +75,32 @@ header.top{border-bottom:1px solid var(--divider);background:var(--surface);posi
 .top-meta span{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase}
 @media(max-width:760px){.top-meta{display:none}.brand .sub{display:none}}
 
+/* ---------- layout ---------- */
+.content{min-width:0}
+
 /* ---------- hero ---------- */
-.hero{padding:calc(var(--u)*2.5) 0 calc(var(--u)*1.5);max-width:720px}
+.hero{padding:calc(var(--u)*5.3 + 150px) 0 calc(var(--u)*1.5);max-width:720px;margin:0 auto;text-align:center}
 .eyebrow{font-family:"Sometype Mono";font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:12px}
 .hero h1{font-size:48px;line-height:1.08}
-.hero .context{color:var(--foreground-muted);margin:18px 0 0;font-size:15px;max-width:680px}
-.hero .source{display:inline-flex;align-items:center;gap:7px;margin-top:14px;font-family:"Sometype Mono";font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--foreground-muted);text-decoration:none;border-bottom:1px solid var(--divider-strong);padding-bottom:2px}
-.hero .source:hover{color:var(--accent);border-color:var(--accent)}
+.hero .context{color:var(--foreground-muted);margin:18px auto 0;font-size:15px;max-width:680px}
+.hero .source{display:inline-flex;align-items:center;gap:7px;margin-top:14px;font-family:"Sometype Mono";font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--foreground-muted);text-decoration:none}
+.hero .source:hover{color:var(--accent)}
 .hero .source svg{width:14px;height:14px}
+
+/* ---------- scroll cue ---------- */
+.scroll-cue{display:flex;flex-direction:column;align-items:center;gap:8px;width:max-content;margin:calc(var(--u)*2.25 + 100px) auto 0;padding:6px 8px;text-decoration:none;color:var(--foreground-muted);font-family:"Sometype Mono";font-size:11px;letter-spacing:.14em;text-transform:uppercase;transition:color .15s}
+.scroll-cue:hover,.scroll-cue:focus-visible{color:var(--accent);outline:none}
+.scroll-cue svg{width:18px;height:18px;animation:cue-bob 2.8s ease-in-out infinite}
+@keyframes cue-bob{0%,100%{transform:translateY(-1px)}50%{transform:translateY(2px)}}
+@media(prefers-reduced-motion:reduce){.scroll-cue svg{animation:none}}
 
 /* ---------- transcript rows ---------- */
 .qrow{
   display:grid;grid-template-columns:minmax(360px,420px) 1fr;gap:calc(var(--u)*3);
-  border-top:1px solid var(--divider);padding:calc(var(--u)*2.5) 0;align-items:start;
+  border-top:1px solid var(--divider);padding:calc(var(--u)*6.5) 0;align-items:start;
 }
-.qrow:last-child{border-bottom:1px solid var(--divider)}
+.qrow{scroll-margin-top:84px}
+#feed .qrow:first-child{border-top:none;padding-top:calc(var(--u)*6)}
 @media(max-width:920px){.qrow{grid-template-columns:1fr;gap:calc(var(--u)*1.5)}}
 
 /* left: question + analysis + reasoning */
@@ -160,8 +171,15 @@ svg.chart{width:100%;height:auto;display:block;overflow:visible}
 .takeaway svg{width:17px;height:17px;color:var(--accent);flex:none;margin-top:2px}
 .takeaway p{margin:0;font-size:14px}.takeaway b{font-weight:600}
 
-footer{border-top:1px solid var(--divider);color:var(--foreground-subtle);font-size:12px;padding:calc(var(--u)*1.5) 0;margin-top:var(--u)}
-footer .wrap{display:flex;justify-content:space-between;gap:var(--u);flex-wrap:wrap}
+/* ---------- colophon ---------- */
+.colophon{border-top:1px solid var(--divider);margin-top:calc(var(--u)*4);padding:calc(var(--u)*3) 0 calc(var(--u)*4)}
+.colophon .col-eyebrow{font-family:"Sometype Mono";font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:calc(var(--u)*1.5)}
+.col-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:calc(var(--u)*2)}
+@media(max-width:760px){.col-grid{grid-template-columns:1fr}}
+.col-item h4{font-family:"Sometype Mono";font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--foreground);margin-bottom:9px}
+.col-item p{margin:0;font-size:13px;color:var(--foreground-muted);line-height:1.6}
+.col-item a{color:var(--accent-strong);text-decoration:none}
+.col-item a:hover{text-decoration:underline}
 
 .tip{position:fixed;pointer-events:none;z-index:50;opacity:0;transition:opacity .1s;background:var(--foreground);color:var(--surface);border-radius:var(--radius);padding:9px 11px;font-size:12px;line-height:1.45;box-shadow:var(--shadow);max-width:220px}
 .tip .t{font-family:"Sometype Mono";font-size:11px;margin-bottom:5px;color:hsl(var(--neutral-300))}
@@ -171,41 +189,57 @@ footer .wrap{display:flex;justify-content:space-between;gap:var(--u);flex-wrap:w
 </head>
 <body>
 
-<header class="top">
-  <div class="top-inner">
-    <a class="brand" href="#top">
-      <span class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-5 3 3 5-7"/></svg></span>
-      <span class="name">FIFA world cup</span><span class="sub">Match Intelligence</span>
-    </a>
-    <span class="top-spacer"></span>
-    <div class="top-meta">
-      <div><b id="m-matches">661</b><span>Matches</span></div>
-      <div><b>14</b><span>Editions</span></div>
-      <div><b>1970–22</b><span>Span</span></div>
-    </div>
-  </div>
-</header>
-
-<main id="top" class="wrap">
+<main id="top" class="wrap layout">
+  <div class="content">
   <div class="hero">
-    <div class="eyebrow">Tournament dataset · 1970–2022</div>
+    <div class="eyebrow">FIFA World Cup Tournament · 1970–2022</div>
     <h1>Half a century of matches, asking what actually decides them.</h1>
     <p class="context">A machine-learning-ready dataset of 1,322 Men’s FIFA World Cup matches from 1970–2022, designed for predicting match outcomes such as win, draw, or loss. Unlike standard match logs, it includes 70 curated columns with advanced pre-match and per-half features engineered specifically for football predictive modeling.</p>
     <a class="source" href="https://www.kaggle.com/datasets/isfakiqbalchowdhuruy/fifa-mens-world-cup-dataset-1970-2022" target="_blank" rel="noopener">Data source</a>
   </div>
+  <a href="#possession" class="scroll-cue" aria-label="Scroll to the first question">
+    Scroll down
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+  </a>
   <div id="feed"></div>
-</main>
 
-<footer><div class="wrap">
-  <span>FIFA World Cup · Match Intelligence</span>
-  <span class="mono">661 matches · 14 editions · figures rounded</span>
-</div></footer>
+  <section class="colophon" id="methodology">
+    <div class="col-eyebrow">Methodology</div>
+    <div class="col-grid">
+      <div class="col-item">
+        <h4>Source</h4>
+        <p>1,322 team-match records across 14 tournaments, 1970–2022, with 70 engineered columns. <a href="https://www.kaggle.com/datasets/isfakiqbalchowdhuruy/fifa-mens-world-cup-dataset-1970-2022" target="_blank" rel="noopener">View the dataset</a>.</p>
+      </div>
+      <div class="col-item">
+        <h4>How to read it</h4>
+        <p>Every match appears twice — once from each team’s point of view. A “team-match” is one of those rows, so all rates are shares of team-matches, not of fixtures.</p>
+      </div>
+      <div class="col-item">
+        <h4>Coverage</h4>
+        <p>Possession, shots, passes and the per-half splits are recorded only for 2002–2022 (768 team-matches). Goals, results, cards, home/host and prior-form features span all 14 editions.</p>
+      </div>
+      <div class="col-item">
+        <h4>Definitions</h4>
+        <p>Form bands use each team’s prior win rate going into a match, limited to teams with five or more previous matches. “Host” is the tournament’s host nation; “home” is the match’s nominal home side.</p>
+      </div>
+      <div class="col-item">
+        <h4>Caveats</h4>
+        <p>Figures are rounded to whole percentages, so segments may not total exactly 100. Small samples — the 70%+ possession band (n=21), four-plus first-half shots on target (n=93) — carry wider uncertainty.</p>
+      </div>
+      <div class="col-item">
+        <h4>Build</h4>
+        <p>Charts are hand-built SVG with no charting libraries; all figures are computed directly from the source rows. Relationships shown are associations, not proven cause and effect.</p>
+      </div>
+    </div>
+  </section>
+  </div>
+</main>
 
 <div class="tip" id="tip" role="status" aria-live="polite"></div>
 
 <script>
 "use strict";
-const DATA = {"meta":{"team_matches":1322,"matches":661,"editions":14,"span":"1970–2022"},"possession":[{"bucket":30,"n":127,"win":32,"draw":17,"loss":51},{"bucket":40,"n":240,"win":39,"draw":18,"loss":43},{"bucket":50,"n":254,"win":43,"draw":18,"loss":39},{"bucket":60,"n":126,"win":48,"draw":17,"loss":35},{"bucket":70,"n":21,"win":52,"draw":14,"loss":33}],"home":{"home":{"n":657,"win":46,"draw":20,"loss":34},"away":{"n":665,"win":33,"draw":19,"loss":48},"host":{"n":62,"win":60,"draw":11,"loss":29},"field":{"n":1260,"win":39,"draw":20,"loss":41}},"hosts":[{"year":1970,"team":"Mexico","played":2,"won":1,"gf":1},{"year":1978,"team":"Argentina","played":3,"won":3,"gf":7},{"year":1982,"team":"Spain","played":3,"won":1,"gf":3},{"year":1986,"team":"Mexico","played":3,"won":1,"gf":3},{"year":1990,"team":"Italy","played":5,"won":4,"gf":7},{"year":1994,"team":"United States","played":4,"won":1,"gf":3},{"year":1998,"team":"France","played":6,"won":6,"gf":14},{"year":2002,"team":"Japan","played":4,"won":2,"gf":5},{"year":2002,"team":"South Korea","played":7,"won":4,"gf":8},{"year":2006,"team":"Germany","played":7,"won":6,"gf":14},{"year":2010,"team":"South Africa","played":3,"won":1,"gf":3},{"year":2014,"team":"Brazil","played":7,"won":4,"gf":11},{"year":2018,"team":"Russia","played":5,"won":3,"gf":11},{"year":2022,"team":"Qatar","played":3,"won":0,"gf":1}],"favorites":[{"band":0,"n":155,"win":28},{"band":20,"n":322,"win":32},{"band":40,"n":512,"win":47},{"band":60,"n":139,"win":60}],"evolution":[{"year":1970,"goals":2.73,"yellow":1.73,"red":0,"draw":20},{"year":1974,"goals":2.39,"yellow":1.71,"red":0.098,"draw":29},{"year":1978,"goals":2.81,"yellow":1.44,"red":0.094,"draw":25},{"year":1982,"goals":2.58,"yellow":1.5,"red":0.076,"draw":29},{"year":1986,"goals":2.47,"yellow":1.79,"red":0.104,"draw":26},{"year":1990,"goals":2.27,"yellow":1.98,"red":0.193,"draw":14},{"year":1994,"goals":2.69,"yellow":2.33,"red":0.153,"draw":16},{"year":1998,"goals":2.6,"yellow":2.17,"red":0.188,"draw":25},{"year":2002,"goals":2.52,"yellow":2.08,"red":0.133,"draw":22},{"year":2006,"goals":2.3,"yellow":2.55,"red":0.219,"draw":17},{"year":2010,"goals":2.27,"yellow":1.98,"red":0.133,"draw":22},{"year":2014,"goals":2.67,"yellow":1.44,"red":0.078,"draw":14},{"year":2018,"goals":2.64,"yellow":1.73,"red":0.031,"draw":14},{"year":2022,"goals":2.69,"yellow":1.75,"red":0.031,"draw":16}]};
+const DATA = {"meta":{"team_matches":1322,"matches":661,"editions":14,"span":"1970–2022"},"possession":[{"bucket":30,"n":127,"win":32,"draw":17,"loss":51},{"bucket":40,"n":240,"win":39,"draw":18,"loss":43},{"bucket":50,"n":254,"win":43,"draw":18,"loss":39},{"bucket":60,"n":126,"win":48,"draw":17,"loss":35},{"bucket":70,"n":21,"win":52,"draw":14,"loss":33}],"home":{"home":{"n":657,"win":46,"draw":20,"loss":34},"away":{"n":665,"win":33,"draw":19,"loss":48},"host":{"n":62,"win":60,"draw":11,"loss":29},"field":{"n":1260,"win":39,"draw":20,"loss":41}},"hosts":[{"year":1970,"team":"Mexico","played":2,"won":1,"gf":1},{"year":1978,"team":"Argentina","played":3,"won":3,"gf":7},{"year":1982,"team":"Spain","played":3,"won":1,"gf":3},{"year":1986,"team":"Mexico","played":3,"won":1,"gf":3},{"year":1990,"team":"Italy","played":5,"won":4,"gf":7},{"year":1994,"team":"United States","played":4,"won":1,"gf":3},{"year":1998,"team":"France","played":6,"won":6,"gf":14},{"year":2002,"team":"Japan","played":4,"won":2,"gf":5},{"year":2002,"team":"South Korea","played":7,"won":4,"gf":8},{"year":2006,"team":"Germany","played":7,"won":6,"gf":14},{"year":2010,"team":"South Africa","played":3,"won":1,"gf":3},{"year":2014,"team":"Brazil","played":7,"won":4,"gf":11},{"year":2018,"team":"Russia","played":5,"won":3,"gf":11},{"year":2022,"team":"Qatar","played":3,"won":0,"gf":1}],"favorites":[{"band":0,"n":155,"win":28},{"band":20,"n":322,"win":32},{"band":40,"n":512,"win":47},{"band":60,"n":139,"win":60}],"evolution":[{"year":1970,"goals":2.73,"yellow":1.73,"red":0,"draw":20},{"year":1974,"goals":2.39,"yellow":1.71,"red":0.098,"draw":29},{"year":1978,"goals":2.81,"yellow":1.44,"red":0.094,"draw":25},{"year":1982,"goals":2.58,"yellow":1.5,"red":0.076,"draw":29},{"year":1986,"goals":2.47,"yellow":1.79,"red":0.104,"draw":26},{"year":1990,"goals":2.27,"yellow":1.98,"red":0.193,"draw":14},{"year":1994,"goals":2.69,"yellow":2.33,"red":0.153,"draw":16},{"year":1998,"goals":2.6,"yellow":2.17,"red":0.188,"draw":25},{"year":2002,"goals":2.52,"yellow":2.08,"red":0.133,"draw":22},{"year":2006,"goals":2.3,"yellow":2.55,"red":0.219,"draw":17},{"year":2010,"goals":2.27,"yellow":1.98,"red":0.133,"draw":22},{"year":2014,"goals":2.67,"yellow":1.44,"red":0.078,"draw":14},{"year":2018,"goals":2.64,"yellow":1.73,"red":0.031,"draw":14},{"year":2022,"goals":2.69,"yellow":1.75,"red":0.031,"draw":16}],"halves":{"escalate":[{"m":"Shots","h1":5.92,"h2":7.32,"pct":24},{"m":"Shots on target","h1":1.82,"h2":2.44,"pct":34},{"m":"Yellow cards","h1":0.75,"h2":1.15,"pct":53},{"m":"Red cards","h1":0.03,"h2":0.06,"pct":92}],"result":[{"r":"Win","h1":2.38,"h2":3.08},{"r":"Draw","h1":1.6,"h2":2.19},{"r":"Loss","h1":1.34,"h2":1.91}],"tell":[{"sot":"0","n":144,"win":22},{"sot":"1","n":229,"win":32},{"sot":"2","n":178,"win":45},{"sot":"3","n":124,"win":49},{"sot":"4+","n":93,"win":75}]},"discipline":{"split":[{"label":"Shown a red card","n":143,"win":22,"draw":20,"loss":59},{"label":"Kept eleven","n":1179,"win":42,"draw":20,"loss":39}],"yellows":[{"yc":"0","n":107,"win":53},{"yc":"1","n":466,"win":39},{"yc":"2","n":385,"win":41},{"yc":"3","n":221,"win":34},{"yc":"4+","n":143,"win":36}]}};
 
 /* ---------- icons ---------- */
 const ICON={
@@ -304,7 +338,27 @@ const ANALYSES=[
   render:renderFavorites
 },
 {
-  id:'evolution',idx:'Q04',tag:'The game over time',
+  id:'halves',idx:'Q04',tag:'First half vs second',
+  question:'When is a match won — early or late?',
+  analysis:'Per-half data exists for the 2002–2022 editions — <b>768 team-matches</b>. The game physically opens up after the break: shots, shots on target and cards all climb. But the first half is the tell — teams that land <b>four or more shots on target before half-time win 75%</b> of the time.',
+  reasoning:[
+    ['think','Ask when a match tips — and whether the first half foreshadows it'],
+    ['filter','Use the per-half columns','2002–2022 · 768 team-matches'],
+    ['compute','Compare first- vs second-half intensity per team'],
+    ['compute','Win rate by first-half shots on target'],
+    ['chart','Make chart: First half vs second half'],
+    ['write','Conclude: games open up late, but the first half tells']
+  ],
+  stats:[{v:'+34%',l:'More shots on target after the break',a:true},{v:'75%',l:'Win rate with 4+ first-half SoT'},{v:'+53%',l:'More yellow cards in the second half'}],
+  panelTitle:'First half versus second half',
+  views:[{key:'escalate',label:'Second-half surge',cap:'How much each metric rises from the first half to the second, averaged per team.'},
+         {key:'result',label:'By result',cap:'Shots on target per half, split by how the match ended.'},
+         {key:'tell',label:'First-half tell',cap:'Win rate by number of shots on target landed in the first half.'}],
+  takeaway:'Matches open up late — more shots, more bookings after the break. But the result is often <b>signalled early</b>: a sharp first half, not a frantic finish, is what separates winners.',
+  render:renderHalves
+},
+{
+  id:'evolution',idx:'Q05',tag:'The game over time',
   question:'Has the modern game gotten cleaner, not lower-scoring?',
   analysis:'Scoring has barely moved — every edition lands between 2.3 and 2.8 goals per match. What <b>has</b> changed is conduct: red cards climbed to a 2006 high of 0.22 per team, then collapsed to <b>0.03</b> in 2018 and 2022. The modern game isn’t tighter; it’s cleaner.',
   reasoning:[
@@ -323,6 +377,24 @@ const ANALYSES=[
          {key:'draw',label:'Draw rate',cap:'Share of matches ending level, by edition.'}],
   takeaway:'The cliché of the dull, cynical modern match doesn’t survive the data. Goals are <b>steady</b>; what fell off a cliff was the red card — discipline tightened while the spectacle held.',
   render:renderEvolution
+},
+{
+  id:'discipline',idx:'Q06',tag:'Discipline & outcome',
+  question:'How much does a red card cost?',
+  analysis:'Across all <b>1,322 team-matches</b>, a sending-off is close to decisive. Teams shown a red card win just <b>22%</b> and lose <b>59%</b> — against 42% / 39% when they keep eleven on the pitch. Yellows track the same way: the cleanest sides win most.',
+  reasoning:[
+    ['think','Test whether losing discipline loses matches'],
+    ['compute','Split outcomes by whether a team was shown a red','1,322 team-matches'],
+    ['compute','Win rate by yellow-card count'],
+    ['chart','Make chart: The cost of indiscipline'],
+    ['write','Conclude: a red card roughly halves your chances']
+  ],
+  stats:[{v:'−20 pts',l:'Win-rate drop after a red card',a:true},{v:'59%',l:'Loss rate once a man down'},{v:'53%',l:'Win rate with a clean sheet of cards'}],
+  panelTitle:'The cost of indiscipline',
+  views:[{key:'cost',label:'Red card',cap:'Outcome split for teams shown a red card versus those that kept eleven on the pitch.'},
+         {key:'yellows',label:'Yellow cards',cap:'Win rate by the number of yellow cards a team picked up in a match.'}],
+  takeaway:'A red card roughly <b>halves a team’s win rate</b> and pushes losses up twenty points. Discipline isn’t a footnote to the result — it’s one of the clearest levers in the data.',
+  render:renderDiscipline
 }
 ];
 
@@ -492,10 +564,126 @@ function renderEvolution(mode){
 }
 
 /* =========================================================
+   CHART 4b — HALVES
+   ========================================================= */
+function renderHalves(mode){
+  const W=760;
+  if(mode==='escalate'){
+    const d=DATA.halves.escalate,H=300,m={t:18,r:54,b:46,l:132};
+    const iw=W-m.l-m.r,ih=H-m.t-m.b,rowH=ih/d.length,bh=Math.min(rowH*0.46,42),x=v=>(v/100)*iw;
+    const svg=el('svg',{class:'chart',viewBox:`0 0 ${W} ${H}`});
+    const g=el('g',{transform:`translate(${m.l},${m.t})`});svg.appendChild(g);
+    for(let v=0;v<=100;v+=25){g.appendChild(el('line',{class:'gridline',x1:x(v),y1:0,x2:x(v),y2:ih}));g.appendChild(el('text',{class:'tick',x:x(v),y:ih+20,'text-anchor':'middle'},'+'+v+'%'));}
+    d.forEach((it,i)=>{const cy=i*rowH+rowH/2;
+      g.appendChild(el('text',{class:'tick',x:-14,y:cy+4,'text-anchor':'end'},it.m));
+      const r=el('rect',{class:'barseg',x:0,y:cy-bh/2,width:x(it.pct),height:bh,fill:'var(--c-win)',rx:1});
+      attachTip(r,()=>`<div class="t">${it.m} · per team</div><div class="r"><span>First half</span><b>${it.h1}</b></div><div class="r"><span>Second half</span><b>${it.h2}</b></div><div class="r"><span>Change</span><b>+${it.pct}%</b></div>`,()=>readout(`<span class="mono">${it.m}</span> rise from <span class="mono">${it.h1}</span> (H1) to <span class="mono">${it.h2}</span> (H2) per team — <span class="mono">+${it.pct}%</span>.`));
+      g.appendChild(r);
+      g.appendChild(el('text',{class:'val-label',x:x(it.pct)+8,y:cy+4,'text-anchor':'start'},'+'+it.pct+'%'));
+    });
+    g.appendChild(el('text',{class:'axis-label',x:iw/2,y:ih+42,'text-anchor':'middle'},'Increase, first half → second half'));
+    setLegend([{c:'var(--c-win)',t:'Second-half increase (per team, 2002–2022)'}]);
+    CUR.chart.appendChild(svg);
+    readout('Every measure of action rises after the break — discipline most of all. Hover a bar for the raw per-half figures.');
+    return;
+  }
+  if(mode==='result'){
+    const d=DATA.halves.result,H=320,m={t:24,r:20,b:50,l:46};
+    const iw=W-m.l-m.r,ih=H-m.t-m.b,gw=iw/d.length,bw=gw*0.26,max=4,y=v=>ih-(v/max)*ih;
+    const svg=el('svg',{class:'chart',viewBox:`0 0 ${W} ${H}`});
+    const g=el('g',{transform:`translate(${m.l},${m.t})`});svg.appendChild(g);
+    for(let v=0;v<=max;v++){g.appendChild(el('line',{class:'gridline',x1:0,y1:y(v),x2:iw,y2:y(v)}));g.appendChild(el('text',{class:'tick',x:-10,y:y(v)+4,'text-anchor':'end'},v));}
+    g.appendChild(el('line',{class:'axis',x1:0,y1:ih,x2:iw,y2:ih}));
+    d.forEach((it,i)=>{const gc=i*gw+gw/2;
+      [['First half',it.h1,'var(--c-draw)',-bw-3],['Second half',it.h2,'var(--c-win)',3]].forEach(([lab,val,c,off])=>{
+        const xx=gc+off;
+        const r=el('rect',{class:'barseg',x:xx,y:y(val),width:bw,height:ih-y(val),fill:c,rx:1});
+        attachTip(r,()=>`<div class="t">${it.r} · ${lab.toLowerCase()}</div><div class="r"><span>Shots on target</span><b>${val.toFixed(2)}</b></div>`,()=>readout(`<span class="mono">${it.r}</span> teams averaged <span class="mono">${val.toFixed(2)}</span> shots on target in the ${lab.toLowerCase()}.`));
+        g.appendChild(r);
+        g.appendChild(el('text',{class:'val-label',x:xx+bw/2,y:y(val)-8,'text-anchor':'middle',style:'font-size:10px'},val.toFixed(1)));
+      });
+      g.appendChild(el('text',{class:'tick',x:gc,y:ih+22,'text-anchor':'middle'},it.r));
+    });
+    g.appendChild(el('text',{class:'axis-label',x:-ih/2,y:-40,'text-anchor':'middle',transform:'rotate(-90)'},'Shots on target / team'));
+    setLegend([{c:'var(--c-draw)',t:'First half'},{c:'var(--c-win)',t:'Second half'}]);
+    CUR.chart.appendChild(svg);
+    readout('Winners are sharper in <span class="mono">both</span> halves — and stretch the gap after the break. Hover a bar for the figure.');
+    return;
+  }
+  // tell — win rate by first-half shots on target
+  const d=DATA.halves.tell,H=330,m={t:22,r:20,b:58,l:46};
+  const iw=W-m.l-m.r,ih=H-m.t-m.b,bw=iw/d.length,bar=bw*0.5,y=v=>ih-(v/100)*ih;
+  const svg=el('svg',{class:'chart',viewBox:`0 0 ${W} ${H}`});
+  const g=el('g',{transform:`translate(${m.l},${m.t})`});svg.appendChild(g);
+  for(let v=0;v<=100;v+=25){g.appendChild(el('line',{class:'gridline',x1:0,y1:y(v),x2:iw,y2:y(v)}));g.appendChild(el('text',{class:'tick',x:-10,y:y(v)+4,'text-anchor':'end'},v+'%'));}
+  g.appendChild(el('line',{class:'axis',x1:0,y1:ih,x2:iw,y2:ih}));
+  d.forEach((it,i)=>{const cx=i*bw+bw/2;
+    const r=el('rect',{class:'barseg',x:cx-bar/2,y:y(it.win),width:bar,height:ih-y(it.win),fill:'var(--c-win)',rx:1});
+    attachTip(r,()=>`<div class="t">${it.sot} first-half SoT · n=${it.n}</div><div class="r"><span>Win rate</span><b>${it.win}%</b></div>`,()=>readout(`Teams with <span class="mono">${it.sot}</span> first-half shots on target won <span class="mono">${it.win}%</span> of ${it.n} matches.`));
+    g.appendChild(r);
+    g.appendChild(el('text',{class:'val-label',x:cx,y:y(it.win)-9,'text-anchor':'middle'},it.win+'%'));
+    g.appendChild(el('text',{class:'tick',x:cx,y:ih+22,'text-anchor':'middle'},it.sot));
+    g.appendChild(el('text',{class:'axis-label',x:cx,y:ih+38,'text-anchor':'middle'},'n='+it.n));
+  });
+  g.appendChild(el('text',{class:'axis-label',x:iw/2,y:H-m.t-2,'text-anchor':'middle'},'Shots on target, first half'));
+  setLegend([{c:'var(--c-win)',t:'Win rate by first-half shots on target'}]);
+  CUR.chart.appendChild(svg);
+  readout('Win rate climbs from <span class="mono">22%</span> with no first-half threat to <span class="mono">75%</span> with four or more. Hover a bar for the sample.');
+}
+
+/* =========================================================
+   CHART 6 — DISCIPLINE
+   ========================================================= */
+function renderDiscipline(mode){
+  const W=760;
+  if(mode==='yellows'){
+    const d=DATA.discipline.yellows,H=330,m={t:22,r:20,b:58,l:46};
+    const iw=W-m.l-m.r,ih=H-m.t-m.b,bw=iw/d.length,bar=bw*0.5,y=v=>ih-(v/100)*ih;
+    const svg=el('svg',{class:'chart',viewBox:`0 0 ${W} ${H}`});
+    const g=el('g',{transform:`translate(${m.l},${m.t})`});svg.appendChild(g);
+    for(let v=0;v<=100;v+=25){g.appendChild(el('line',{class:'gridline',x1:0,y1:y(v),x2:iw,y2:y(v)}));g.appendChild(el('text',{class:'tick',x:-10,y:y(v)+4,'text-anchor':'end'},v+'%'));}
+    g.appendChild(el('line',{class:'axis',x1:0,y1:ih,x2:iw,y2:ih}));
+    d.forEach((it,i)=>{const cx=i*bw+bw/2;
+      const r=el('rect',{class:'barseg',x:cx-bar/2,y:y(it.win),width:bar,height:ih-y(it.win),fill:'var(--c-win)',rx:1});
+      attachTip(r,()=>`<div class="t">${it.yc} yellow card${it.yc==='1'?'':'s'} · n=${it.n}</div><div class="r"><span>Win rate</span><b>${it.win}%</b></div>`,()=>readout(`Teams with <span class="mono">${it.yc}</span> yellow card${it.yc==='1'?'':'s'} won <span class="mono">${it.win}%</span> of ${it.n} matches.`));
+      g.appendChild(r);
+      g.appendChild(el('text',{class:'val-label',x:cx,y:y(it.win)-9,'text-anchor':'middle'},it.win+'%'));
+      g.appendChild(el('text',{class:'tick',x:cx,y:ih+22,'text-anchor':'middle'},it.yc));
+      g.appendChild(el('text',{class:'axis-label',x:cx,y:ih+38,'text-anchor':'middle'},'n='+it.n));
+    });
+    g.appendChild(el('text',{class:'axis-label',x:iw/2,y:H-m.t-2,'text-anchor':'middle'},'Yellow cards in the match'));
+    setLegend([{c:'var(--c-win)',t:'Win rate by yellow-card count'}]);
+    CUR.chart.appendChild(svg);
+    readout('A clean sheet of cards wins most — <span class="mono">53%</span> with zero, settling near <span class="mono">35%</span> once they pile up.');
+    return;
+  }
+  // cost — two donut charts (sent off vs kept eleven)
+  const d=DATA.discipline.split,H=320,R=104,ri=58,cy=150;
+  const cxs=[W*0.27,W*0.73];
+  const svg=el('svg',{class:'chart',viewBox:`0 0 ${W} ${H}`});
+  const donut=(cx,cy,R,r,a0,a1)=>{const p=(rad,a)=>[cx+rad*Math.cos(a),cy+rad*Math.sin(a)];const[ox0,oy0]=p(R,a0),[ox1,oy1]=p(R,a1),[ix1,iy1]=p(r,a1),[ix0,iy0]=p(r,a0);const lg=(a1-a0)>Math.PI?1:0;return `M${ox0.toFixed(2)} ${oy0.toFixed(2)} A${R} ${R} 0 ${lg} 1 ${ox1.toFixed(2)} ${oy1.toFixed(2)} L${ix1.toFixed(2)} ${iy1.toFixed(2)} A${r} ${r} 0 ${lg} 0 ${ix0.toFixed(2)} ${iy0.toFixed(2)} Z`;};
+  d.forEach((o,i)=>{
+    const cx=cxs[i],segs=[['Win',o.win,'var(--c-win)'],['Draw',o.draw,'var(--c-draw)'],['Loss',o.loss,'var(--c-loss)']];
+    const tot=o.win+o.draw+o.loss;let a=-Math.PI/2;
+    segs.forEach(([lab,val,c])=>{
+      const a1=a+(val/tot)*Math.PI*2;
+      const path=el('path',{class:'barseg',d:donut(cx,cy,R,ri,a,a1),fill:c,stroke:'var(--surface)','stroke-width':2});
+      attachTip(path,()=>`<div class="t">${o.label} · n=${o.n}</div><div class="r"><span>${lab}</span><b>${val}%</b></div>`,()=>readout(`<span class="mono">${o.label}</span>: <span class="mono">${o.win}%</span> win · ${o.draw}% draw · ${o.loss}% loss across ${o.n} matches.`));
+      svg.appendChild(path);
+      a=a1;
+    });
+    svg.appendChild(el('text',{class:'tick',x:cx,y:cy+R+30,'text-anchor':'middle',style:'font-size:12.5px;fill:var(--foreground)'},o.label));
+    svg.appendChild(el('text',{class:'axis-label',x:cx,y:cy+R+46,'text-anchor':'middle'},'n='+o.n));
+  });
+  setLegend([{c:'var(--c-win)',t:'Win'},{c:'var(--c-draw)',t:'Draw'},{c:'var(--c-loss)',t:'Loss'}]);
+  CUR.chart.appendChild(svg);
+  readout('A sending-off flips the picture — win rate falls from <span class="mono">42%</span> to <span class="mono">22%</span> and losses climb to <span class="mono">59%</span>. Hover a slice for the split.');
+}
+
+/* =========================================================
    BUILD TRANSCRIPT
    ========================================================= */
 function buildFeed(){
-  document.getElementById('m-matches').textContent=DATA.meta.matches;
   const feed=document.getElementById('feed');
   ANALYSES.forEach(a=>{
     const row=document.createElement('section');row.className='qrow';row.id=a.id;
@@ -508,8 +696,8 @@ function buildFeed(){
       <div class="q-meta"><span class="q-idx">${a.idx}</span><span class="q-tag">${a.tag}</span></div>
       <h2>${a.question}</h2>
       <p class="analysis">${a.analysis}</p>
-      <div class="reason" data-open="true">
-        <button class="reason-head" aria-expanded="true">
+      <div class="reason" data-open="false">
+        <button class="reason-head" aria-expanded="false">
           <span class="dot"></span>Thought process
           <span class="count">· ${a.reasoning.length} steps</span>
           <span class="spacer"></span>

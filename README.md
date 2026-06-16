@@ -1,4 +1,4 @@
-# ◾️
+# ◾️ Another Studio
 
 [![cat preview](http://www.jjmoi.com/img/cat.png)](http://www.jjmoi.com/img/cat.png)
 

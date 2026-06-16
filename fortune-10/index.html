@@ -1,0 +1,1060 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Revenue Scale vs. Financial Quality — 2025 Fortune 10</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&family=Sometype+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* brand color primitives (HSL channels) */
+  --c-orange: 15 88% 55%;
+  --c-orange-hover: 22 100% 68%;
+  --c-black-900: 0 0% 10%;
+  --c-black-800: 30 1% 20%;
+  --c-black-500: 30 1% 50%;
+  --c-black-300: 30 2% 69%;
+  --c-black-200: 30 4% 79%;
+  --c-black-100: 30 17% 91%;
+  --c-black-50:  36 24% 96%;
+  --c-babyblue:  190 49% 67%;
+  --c-yellow:    53 100% 58%;
+  --c-white:     0 0% 100%;
+  /* semantic — light theme */
+  --paper:          hsl(var(--c-black-50));
+  --surface:        hsl(var(--c-white));
+  --surface-raised: hsl(var(--c-black-100));
+  --ink:            hsl(0 0% 0%);
+  --ink-soft:       hsl(var(--c-black-800));
+  --ink-faint:      hsl(var(--c-black-500));
+  --line:           hsl(var(--c-black-100));
+  --line-strong:    hsl(var(--c-black-200));
+  --accent:         hsl(var(--c-orange));
+  /* sector hues — on-brand categorical */
+  --retail:  hsl(var(--c-babyblue));
+  --health:  hsl(var(--c-black-800));
+  --tech:    hsl(var(--c-orange));
+  --energy:  hsl(var(--c-black-500));
+  --holdco:  hsl(var(--c-black-300));
+  /* type — no serif in the brand; alias kept so --serif resolves to Manrope */
+  --sans:  'Manrope', system-ui, sans-serif;
+  --mono:  'Sometype Mono', ui-monospace, monospace;
+  --serif: 'Manrope', system-ui, sans-serif;
+  --fs-mega: clamp(2.4rem, 5vw, 3.6rem);
+  --fs-h2: 1.75rem;
+  --fs-h3: 1.18rem;
+  --fs-body: 1.02rem;
+  --fs-small: 0.86rem;
+  --fs-micro: 0.74rem;
+  /* spacing */
+  --s1: 0.25rem; --s2: 0.5rem; --s3: 0.75rem; --s4: 1rem;
+  --s5: 1.5rem; --s6: 2rem; --s7: 3rem; --s8: 4.5rem;
+  --radius: 2px;
+  --radius-lg: 2px;
+  --maxw: 960px;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; background: var(--paper); color: var(--ink);
+  font-family: var(--sans); font-size: var(--fs-body); line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 var(--s5); }
+
+/* ---- masthead ---- */
+.masthead { border-bottom: 3px solid var(--ink); padding: var(--s8) 0 var(--s6); margin-bottom: var(--s7); }
+.kicker { font-family: var(--mono); font-size: var(--fs-micro); letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--accent); margin: 0 0 var(--s4); }
+h1 { font-family: var(--sans); font-size: var(--fs-mega); line-height: 1.06;
+  font-weight: 300; margin: 0 0 var(--s4); letter-spacing: -0.02em; }
+.dek { font-size: 1.2rem; color: var(--ink-soft); max-width: 40em; margin: 0; }
+.byline { font-family: var(--mono); font-size: var(--fs-micro); color: var(--ink-faint);
+  margin-top: var(--s5); letter-spacing: 0.04em; }
+
+/* ---- sections ---- */
+section { margin-bottom: var(--s8); }
+h2 { font-family: var(--sans); font-size: var(--fs-h2); font-weight: 300; letter-spacing: -0.02em;
+  margin: 0 0 var(--s2); padding-top: var(--s5); }
+.section-num { font-family: var(--mono); font-size: var(--fs-micro); color: var(--accent);
+  letter-spacing: 0.18em; text-transform: uppercase; display: block; margin-bottom: var(--s2); }
+h3 { font-size: var(--fs-h3); font-weight: 650; margin: var(--s6) 0 var(--s2); }
+p { margin: 0 0 var(--s4); max-width: 42em; }
+.lead { font-size: 1.12rem; color: var(--ink-soft); }
+a { color: var(--accent); }
+
+/* ---- KPI cards ---- */
+.kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: var(--s3); margin: var(--s5) 0; }
+@media (max-width: 560px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+.kpi { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg);
+  padding: var(--s5) var(--s4); }
+.kpi .v { font-family: var(--serif); font-size: 1.9rem; font-weight: 600; line-height: 1; display: block; }
+.kpi .l { font-size: var(--fs-small); color: var(--ink-faint); margin-top: var(--s2); display: block; }
+.kpi .sub { font-family: var(--mono); font-size: var(--fs-micro); color: var(--ink-faint);
+  margin-top: var(--s2); display: block; letter-spacing: 0.04em; }
+.kpi { border-top: 2px solid var(--accent); }
+
+/* ---- takeaways ---- */
+.takeaways { list-style: none; counter-reset: t; padding: 0; margin: var(--s5) 0; }
+.takeaways li { counter-increment: t; position: relative; padding: var(--s4) 0 var(--s4) var(--s8);
+  border-top: 1px solid var(--line); max-width: 46em; }
+.takeaways li::before { content: counter(t,decimal-leading-zero); position: absolute; left: 0; top: var(--s4);
+  font-family: var(--mono); font-size: var(--fs-small); color: var(--accent); font-weight: 600; }
+.takeaways strong { font-weight: 650; }
+
+/* ---- charts: CSS bars ---- */
+.chart { margin: var(--s5) 0; background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius-lg); padding: var(--s5); }
+.chart figcaption { font-size: var(--fs-small); font-weight: 650; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--ink-faint); margin-bottom: var(--s4); }
+.bar-row { display: grid; grid-template-columns: 160px 1fr 92px; align-items: center;
+  gap: var(--s3); margin-bottom: var(--s2); }
+.bar-label { font-size: var(--fs-small); text-align: right; color: var(--ink-soft); }
+.bar-track { background: var(--paper); border-radius: var(--radius); height: 22px; overflow: hidden; }
+.bar-fill { height: 100%; width: var(--w); border-radius: var(--radius);
+  transition: width .6s ease; min-width: 2px; }
+.bar-val { font-family: var(--mono); font-size: var(--fs-small); text-align: right; color: var(--ink); }
+.chart-note { font-size: var(--fs-small); color: var(--ink-faint); margin: var(--s4) 0 0; max-width: none; }
+
+/* sector colors */
+.retail { background: var(--retail); } .health { background: var(--health); }
+.tech { background: var(--tech); } .energy { background: var(--energy); }
+.holdco { background: var(--holdco); }
+
+/* ---- legend ---- */
+.legend { display: flex; flex-wrap: wrap; gap: var(--s4); margin: var(--s4) 0; font-size: var(--fs-small); }
+.legend-item { display: inline-flex; align-items: center; gap: var(--s2); color: var(--ink-soft); }
+.swatch { width: 13px; height: 13px; border-radius: 3px; display: inline-block; }
+
+/* ---- SVG charts ---- */
+.slopechart, .quadchart { width: 100%; height: auto; display: block; margin: var(--s4) auto; }
+.slope { fill: none; stroke-width: 2; opacity: 0.8; }
+.slope.retail { stroke: var(--retail);} .slope.health { stroke: var(--health);}
+.slope.tech { stroke: var(--tech);} .slope.energy { stroke: var(--energy);}
+.slope.holdco { stroke: var(--holdco);}
+.dot.retail { fill: var(--retail);} .dot.health { fill: var(--health);}
+.dot.tech { fill: var(--tech);} .dot.energy { fill: var(--energy);} .dot.holdco { fill: var(--holdco);}
+.slope-lbl { font-family: var(--sans); font-size: 12px; fill: var(--ink-soft); }
+.slope-hdr { font-family: var(--mono); font-size: 11px; fill: var(--ink-faint); letter-spacing: 0.1em; }
+.qaxis { stroke: var(--line-strong); stroke-width: 1.5; }
+.qmid { stroke: var(--line); stroke-width: 1; stroke-dasharray: 4 4; }
+.qaxis-lbl { font-family: var(--mono); font-size: 11px; fill: var(--ink-faint); }
+.qlbl { font-family: var(--sans); font-size: 11px; fill: var(--ink-soft); }
+.qdot { opacity: 0.62; }
+
+/* ---- interactivity ---- */
+#tip { position: fixed; z-index: 50; pointer-events: none; left: 0; top: 0;
+  background: var(--ink); color: var(--surface); border-top: 2px solid var(--accent);
+  border-radius: var(--radius); padding: var(--s2) var(--s3); max-width: 280px;
+  box-shadow: 0 6px 22px rgba(0,0,0,0.20); opacity: 0; transform: translateY(2px);
+  transition: opacity .12s ease, transform .12s ease; }
+#tip.on { opacity: 1; transform: translateY(0); }
+#tip .tt-l { display: block; font-weight: 600; font-size: var(--fs-small); }
+#tip .tt-v { display: block; font-family: var(--mono); font-size: var(--fs-small); margin-top: 3px; }
+#tip .tt-s { display: block; font-family: var(--mono); font-size: var(--fs-micro);
+  color: hsl(var(--c-black-300)); letter-spacing: 0.03em; margin-top: 3px; }
+
+.bar-row { cursor: default; transition: background .12s ease; }
+.bar-row:hover { background: var(--paper); }
+.bar-row:hover .bar-val { color: var(--accent); }
+.bar-row:hover .bar-fill { filter: saturate(1.15) brightness(0.96); }
+
+.slope-group { cursor: default; transition: opacity .15s ease; }
+.slope-group .slope { transition: stroke-width .15s ease, opacity .15s ease; }
+.slopechart:hover .slope-group:not(:hover) { opacity: 0.18; }
+.slope-group:hover .slope { stroke-width: 3.5; opacity: 1; }
+.slope-group:hover .slope-lbl { fill: var(--ink); font-weight: 600; }
+
+.qgroup { cursor: default; transition: opacity .15s ease; }
+.qgroup .qdot { transition: opacity .15s ease; }
+.quadchart:hover .qgroup:not(:hover) { opacity: 0.22; }
+.qgroup:hover .qdot { opacity: 0.95; stroke: var(--ink); stroke-width: 1.5; }
+.qgroup:hover .qlbl { font-weight: 600; }
+
+/* ---- data table ---- */
+.table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius-lg); }
+.data-table { border-collapse: collapse; width: 100%; font-size: var(--fs-small); background: var(--surface); }
+.data-table th, .data-table td { padding: var(--s2) var(--s3); border-bottom: 1px solid var(--line);
+  white-space: nowrap; }
+.data-table thead th { position: sticky; top: 0; background: var(--ink); color: var(--paper);
+  font-size: var(--fs-micro); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+.data-table td.r, .data-table th.r { text-align: right; font-family: var(--mono); }
+.data-table tbody tr:hover { background: var(--paper); }
+.data-table td:first-child { font-weight: 600; font-family: var(--sans); border-left: 3px solid transparent; }
+.row-retail td:first-child { border-left-color: var(--retail); }
+.row-health td:first-child { border-left-color: var(--health); }
+.row-tech td:first-child { border-left-color: var(--tech); }
+.row-energy td:first-child { border-left-color: var(--energy); }
+.row-holdco td:first-child { border-left-color: var(--holdco); }
+
+/* ---- callout ---- */
+.callout { border-left: 3px solid var(--accent); padding: var(--s2) 0 var(--s2) var(--s5);
+  margin: var(--s5) 0; font-family: var(--serif); font-size: 1.18rem; color: var(--ink); max-width: 40em; }
+.method { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg);
+  padding: var(--s5) var(--s6); }
+.method dl { display: grid; grid-template-columns: 180px 1fr; gap: var(--s2) var(--s4); margin: 0; }
+.method dt { font-weight: 650; color: var(--ink-soft); }
+.method dd { margin: 0; color: var(--ink-soft); }
+.footnote { font-size: var(--fs-small); color: var(--ink-faint); border-top: 1px solid var(--line);
+  padding-top: var(--s4); margin-top: var(--s6); }
+.footnote code { font-family: var(--mono); font-size: 0.82em; }
+
+/* business model matrix */
+.bm-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); gap: var(--s3); margin: var(--s5) 0; }
+.bm-card { border: 1px solid var(--line); border-radius: var(--radius-lg); padding: var(--s4) var(--s5);
+  background: var(--surface); border-top: 4px solid var(--line-strong); }
+.bm-card.retail { border-top-color: var(--retail); background: var(--surface); }
+.bm-card.health { border-top-color: var(--health); }
+.bm-card.tech { border-top-color: var(--tech); }
+.bm-card.energy { border-top-color: var(--energy); }
+.bm-card.holdco { border-top-color: var(--holdco); }
+.bm-card h4 { margin: 0 0 var(--s2); font-size: var(--fs-body); }
+.bm-card .members { font-family: var(--mono); font-size: var(--fs-micro); color: var(--ink-faint);
+  letter-spacing: 0.03em; margin-bottom: var(--s3); }
+.bm-card p { font-size: var(--fs-small); color: var(--ink-soft); margin: 0; }
+.bm-card .stat { font-family: var(--mono); font-size: var(--fs-small); color: var(--ink); margin-top: var(--s3); display:block;}
+
+@media (max-width: 680px) {
+  .bar-row { grid-template-columns: 96px 1fr 78px; }
+  .method dl { grid-template-columns: 1fr; }
+  .method dt { margin-top: var(--s2); }
+}
+@media print {
+  body { background: #fff; }
+  .chart, .kpi, .method, .bm-card, .table-scroll { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="kicker">Financial Analysis · 2025 Fortune 10 Public Companies</p>
+    <h1>Revenue Scale vs.<br>Financial Quality</h1>
+    <p class="dek">The ten largest U.S. public companies by revenue share the same tier of the Fortune list — and almost nothing else. Scale explains who is at the top. Margin, capital efficiency, and cash generation explain who is actually winning.</p>
+    <p class="byline">Primary source: SEC EDGAR XBRL CompanyFacts API · Fiscal years ending 2024-03-31 – 2025-01-31 · Ranked by FY2024 revenue (Fortune 2025 basis)</p>
+  </header>
+
+  <section id="summary">
+    <span class="section-num">01 — Executive Summary</span>
+    <h2>Size and strength are not the same thing</h2>
+    <p class="lead">Together these ten companies booked <strong>$4,157B</strong> of revenue and <strong>$422B</strong> of net income in their most recent fiscal year. But the revenue ranking and the profit ranking are nearly inverted at the extremes: the #1 and #2 companies by revenue (Walmart, Amazon) earn thinner margins than three companies ranked below them.</p>
+
+    <div class="kpi-grid">
+      <div class="kpi"><span class="v">$4,157.0B</span><span class="l">Combined revenue</span><span class="sub">FY2024 basis</span></div>
+      <div class="kpi"><span class="v">$422B</span><span class="l">Combined net income</span><span class="sub">10.2% blended margin</span></div>
+      <div class="kpi"><span class="v">Walmart</span><span class="l">Revenue leader</span><span class="sub">$681B</span></div>
+      <div class="kpi"><span class="v">Alphabet</span><span class="l">Profit leader</span><span class="sub">$100.1B</span></div>
+      <div class="kpi"><span class="v">29%</span><span class="l">Highest net margin</span><span class="sub">Alphabet</span></div>
+      <div class="kpi"><span class="v">67%</span><span class="l">Of all profit from 3 firms</span><span class="sub">Apple · Alphabet · Berkshire</span></div>
+    </div>
+
+    <h3>The five patterns that matter</h3>
+    <ol class="takeaways">
+      <li><strong>Revenue rank ≠ profit rank.</strong> Walmart leads revenue at $681B but nets 3.0%. Alphabet, ranked 7th by revenue, earns the most profit of any company here ($100.1B).</li>
+      <li><strong>Profit is far more concentrated than revenue.</strong> The top three revenue firms hold 41% of revenue; the top three profit firms hold 67% of all net income.</li>
+      <li><strong>Business model sets the margin ceiling.</strong> Technology platforms clear 24–29% net margins; health-care distributors (McKesson, Cencora, CVS) operate on 0.5–1.2%.</li>
+      <li><strong>Capital efficiency splits the field.</strong> Apple returns 26% on assets; Berkshire, sitting on $1,154B of assets, returns 7.8%.</li>
+      <li><strong>Distributors run on negative or razor-thin equity.</strong> McKesson carries negative book equity; Cencora's is near zero — they fund enormous throughput with supplier float, not capital.</li>
+    </ol>
+
+    <div class="legend"><span class="legend-item"><span class="swatch retail"></span>Retail / e-commerce</span><span class="legend-item"><span class="swatch health"></span>Health care & distribution</span><span class="legend-item"><span class="swatch tech"></span>Technology platform</span><span class="legend-item"><span class="swatch energy"></span>Energy</span><span class="legend-item"><span class="swatch holdco"></span>Conglomerate / insurance</span></div>
+  </section>
+
+  <section id="method">
+    <span class="section-num">02 — Data & Method</span>
+    <h2>Where the numbers come from</h2>
+    <div class="method">
+      <dl>
+        <dt>Universe</dt><dd>The 2025 Fortune 10 public companies, ranked by fiscal-2024 revenue.</dd>
+        <dt>Primary source</dt><dd>SEC EDGAR XBRL <code>companyfacts</code> API — values pulled directly from each company's 10-K filings.</dd>
+        <dt>Fiscal period</dt><dd>Each company's fiscal year matching the Fortune 2025 list (period ending Feb 2024 – Jan 2025). Year-ends differ: Walmart (Jan), Apple &amp; Cencora (Sep), McKesson (Mar), the rest (Dec).</dd>
+        <dt>From SEC data</dt><dd>Revenue, net income, operating income, gross profit, assets, equity, cash, operating cash flow, capex, debt, current assets/liabilities — plus every ratio derived from them.</dd>
+        <dt>Estimated (not SEC)</dt><dd>Market capitalization (~mid-2025) and employee headcount. Marked with <code>*</code> throughout and used only for valuation and productivity views.</dd>
+        <dt>Normalization</dt><dd>All figures in USD. Net income is total (may include amounts attributable to non-controlling interests for Berkshire and UnitedHealth).</dd>
+      </dl>
+    </div>
+  </section>
+
+  <section id="revenue">
+    <span class="section-num">03 — Revenue Scale</span>
+    <h2>Who is largest</h2>
+    <p>The ten companies cluster remarkably tightly: from Walmart at $681B down to Cencora at $294B, the entire list fits inside a 2.3× revenue band. Five distinct business models are represented, and health-care &amp; distribution alone accounts for four of the ten names.</p>
+      <figure class="chart">
+        <figcaption>Revenue by company, FY2024 ($B)</figcaption>
+        <div class="bar-row" data-label="Walmart" data-value="$681B" data-sub="Retail / e-commerce">
+          <div class="bar-label">Walmart</div>
+          <div class="bar-track"><div class="bar-fill retail" style="--w:100.0%"></div></div>
+          <div class="bar-val">$681B</div>
+        </div>
+        <div class="bar-row" data-label="Amazon" data-value="$638B" data-sub="Retail / e-commerce">
+          <div class="bar-label">Amazon</div>
+          <div class="bar-track"><div class="bar-fill retail" style="--w:93.7%"></div></div>
+          <div class="bar-val">$638B</div>
+        </div>
+        <div class="bar-row" data-label="UnitedHealth Group" data-value="$400B" data-sub="Health care & distribution">
+          <div class="bar-label">UnitedHealth Group</div>
+          <div class="bar-track"><div class="bar-fill health" style="--w:58.8%"></div></div>
+          <div class="bar-val">$400B</div>
+        </div>
+        <div class="bar-row" data-label="Apple" data-value="$391B" data-sub="Technology platform">
+          <div class="bar-label">Apple</div>
+          <div class="bar-track"><div class="bar-fill tech" style="--w:57.4%"></div></div>
+          <div class="bar-val">$391B</div>
+        </div>
+        <div class="bar-row" data-label="CVS Health" data-value="$373B" data-sub="Health care & distribution">
+          <div class="bar-label">CVS Health</div>
+          <div class="bar-track"><div class="bar-fill health" style="--w:54.7%"></div></div>
+          <div class="bar-val">$373B</div>
+        </div>
+        <div class="bar-row" data-label="Berkshire Hathaway" data-value="$371B" data-sub="Conglomerate / insurance">
+          <div class="bar-label">Berkshire Hathaway</div>
+          <div class="bar-track"><div class="bar-fill holdco" style="--w:54.5%"></div></div>
+          <div class="bar-val">$371B</div>
+        </div>
+        <div class="bar-row" data-label="Alphabet" data-value="$350B" data-sub="Technology platform">
+          <div class="bar-label">Alphabet</div>
+          <div class="bar-track"><div class="bar-fill tech" style="--w:51.4%"></div></div>
+          <div class="bar-val">$350B</div>
+        </div>
+        <div class="bar-row" data-label="Exxon Mobil" data-value="$350B" data-sub="Energy">
+          <div class="bar-label">Exxon Mobil</div>
+          <div class="bar-track"><div class="bar-fill energy" style="--w:51.3%"></div></div>
+          <div class="bar-val">$350B</div>
+        </div>
+        <div class="bar-row" data-label="McKesson" data-value="$309B" data-sub="Health care & distribution">
+          <div class="bar-label">McKesson</div>
+          <div class="bar-track"><div class="bar-fill health" style="--w:45.4%"></div></div>
+          <div class="bar-val">$309B</div>
+        </div>
+        <div class="bar-row" data-label="Cencora" data-value="$294B" data-sub="Health care & distribution">
+          <div class="bar-label">Cencora</div>
+          <div class="bar-track"><div class="bar-fill health" style="--w:43.2%"></div></div>
+          <div class="bar-val">$294B</div>
+        </div>
+        
+      </figure>
+    <p>Concentration is modest: the top three (Walmart, Amazon, UnitedHealth) generate 41% of combined revenue. Revenue, in other words, is spread fairly evenly — which makes the profit picture all the more lopsided.</p>
+  </section>
+
+  <section id="profit">
+    <span class="section-num">04 — Profitability</span>
+    <h2>Who converts revenue into earnings</h2>
+    <p>Net income tells a completely different story from revenue. Alphabet and Apple — 7th and 4th by sales — are 1st and 3rd by profit. Berkshire Hathaway, 6th by revenue, is 2nd by profit. Meanwhile CVS, McKesson, and Cencora move hundreds of billions in revenue while keeping less than 1.5 cents of every dollar.</p>
+      <figure class="chart">
+        <figcaption>Net income by company, FY2024 ($B)</figcaption>
+        <div class="bar-row" data-label="Alphabet" data-value="$100.1B" data-sub="Technology platform">
+          <div class="bar-label">Alphabet</div>
+          <div class="bar-track"><div class="bar-fill tech" style="--w:100.0%"></div></div>
+          <div class="bar-val">$100.1B</div>
+        </div>
+        <div class="bar-row" data-label="Apple" data-value="$93.7B" data-sub="Technology platform">
+          <div class="bar-label">Apple</div>
+          <div class="bar-track"><div class="bar-fill tech" style="--w:93.6%"></div></div>
+          <div class="bar-val">$93.7B</div>
+        </div>
+        <div class="bar-row" data-label="Berkshire Hathaway" data-value="$89.6B" data-sub="Conglomerate / insurance">
+          <div class="bar-label">Berkshire Hathaway</div>
+          <div class="bar-track"><div class="bar-fill holdco" style="--w:89.5%"></div></div>
+          <div class="bar-val">$89.6B</div>
+        </div>
+        <div class="bar-row" data-label="Amazon" data-value="$59.2B" data-sub="Retail / e-commerce">
+          <div class="bar-label">Amazon</div>
+          <div class="bar-track"><div class="bar-fill retail" style="--w:59.2%"></div></div>
+          <div class="bar-val">$59.2B</div>
+        </div>
+        <div class="bar-row" data-label="Exxon Mobil" data-value="$35.1B" data-sub="Energy">
+          <div class="bar-label">Exxon Mobil</div>
+          <div class="bar-track"><div class="bar-fill energy" style="--w:35.0%"></div></div>
+          <div class="bar-val">$35.1B</div>
+        </div>
+        <div class="bar-row" data-label="Walmart" data-value="$20.2B" data-sub="Retail / e-commerce">
+          <div class="bar-label">Walmart</div>
+          <div class="bar-track"><div class="bar-fill retail" style="--w:20.1%"></div></div>
+          <div class="bar-val">$20.2B</div>
+        </div>
+        <div class="bar-row" data-label="UnitedHealth Group" data-value="$15.2B" data-sub="Health care & distribution">
+          <div class="bar-label">UnitedHealth Group</div>
+          <div class="bar-track"><div class="bar-fill health" style="--w:15.2%"></div></div>
+          <div class="bar-val">$15.2B</div>
+        </div>
+        <div class="bar-row" data-label="CVS Health" data-value="$4.6B" data-sub="Health care & distribution">
+          <div class="bar-label">CVS Health</div>
+          <div class="bar-track"><div class="bar-fill health" style="--w:4.6%"></div></div>
+          <div class="bar-val">$4.6B</div>
+        </div>
+        <div class="bar-row" data-label="McKesson" data-value="$3.2B" data-sub="Health care & distribution">
+          <div class="bar-label">McKesson</div>
+          <div class="bar-track"><div class="bar-fill health" style="--w:3.2%"></div></div>
+          <div class="bar-val">$3.2B</div>
+        </div>
+        <div class="bar-row" data-label="Cencora" data-value="$1.5B" data-sub="Health care & distribution">
+          <div class="bar-label">Cencora</div>
+          <div class="bar-track"><div class="bar-fill health" style="--w:1.5%"></div></div>
+          <div class="bar-val">$1.5B</div>
+        </div>
+        
+      </figure>
+      <figure class="chart">
+        <figcaption>Net profit margin by company</figcaption>
+        <div class="bar-row" data-label="Alphabet" data-value="28.6%" data-sub="Technology platform">
+          <div class="bar-label">Alphabet</div>
+          <div class="bar-track"><div class="bar-fill tech" style="--w:100.0%"></div></div>
+          <div class="bar-val">28.6%</div>
+        </div>
+        <div class="bar-row" data-label="Berkshire Hathaway" data-value="24.1%" data-sub="Conglomerate / insurance">
+          <div class="bar-label">Berkshire Hathaway</div>
+          <div class="bar-track"><div class="bar-fill holdco" style="--w:84.3%"></div></div>
+          <div class="bar-val">24.1%</div>
+        </div>
+        <div class="bar-row" data-label="Apple" data-value="24.0%" data-sub="Technology platform">
+          <div class="bar-label">Apple</div>
+          <div class="bar-track"><div class="bar-fill tech" style="--w:83.8%"></div></div>
+          <div class="bar-val">24.0%</div>
+        </div>
+        <div class="bar-row" data-label="Exxon Mobil" data-value="10.0%" data-sub="Energy">
+          <div class="bar-label">Exxon Mobil</div>
+          <div class="bar-track"><div class="bar-fill energy" style="--w:35.1%"></div></div>
+          <div class="bar-val">10.0%</div>
+        </div>
+        <div class="bar-row" data-label="Amazon" data-value="9.3%" data-sub="Retail / e-commerce">
+          <div class="bar-label">Amazon</div>
+          <div class="bar-track"><div class="bar-fill retail" style="--w:32.5%"></div></div>
+          <div class="bar-val">9.3%</div>
+        </div>
+        <div class="bar-row" data-label="UnitedHealth Group" data-value="3.8%" data-sub="Health care & distribution">
+          <div class="bar-label">UnitedHealth Group</div>
+          <div class="bar-track"><div class="bar-fill health" style="--w:13.3%"></div></div>
+          <div class="bar-val">3.8%</div>
+        </div>
+        <div class="bar-row" data-label="Walmart" data-value="3.0%" data-sub="Retail / e-commerce">
+          <div class="bar-label">Walmart</div>
+          <div class="bar-track"><div class="bar-fill retail" style="--w:10.3%"></div></div>
+          <div class="bar-val">3.0%</div>
+        </div>
+        <div class="bar-row" data-label="CVS Health" data-value="1.2%" data-sub="Health care & distribution">
+          <div class="bar-label">CVS Health</div>
+          <div class="bar-track"><div class="bar-fill health" style="--w:4.3%"></div></div>
+          <div class="bar-val">1.2%</div>
+        </div>
+        <div class="bar-row" data-label="McKesson" data-value="1.0%" data-sub="Health care & distribution">
+          <div class="bar-label">McKesson</div>
+          <div class="bar-track"><div class="bar-fill health" style="--w:3.6%"></div></div>
+          <div class="bar-val">1.0%</div>
+        </div>
+        <div class="bar-row" data-label="Cencora" data-value="0.5%" data-sub="Health care & distribution">
+          <div class="bar-label">Cencora</div>
+          <div class="bar-track"><div class="bar-fill health" style="--w:1.8%"></div></div>
+          <div class="bar-val">0.5%</div>
+        </div>
+        
+      </figure>
+    <div class="callout">A small cluster of high-margin firms dominates earnings: Apple, Alphabet, and Berkshire together produce 67% of the group's net income while generating only 27% of its revenue.</div>
+  </section>
+
+  <section id="rank">
+    <span class="section-num">05 — The Rank Mismatch</span>
+    <h2>Revenue, profit, and market value rank differently</h2>
+    <p>Reading left to right, each line tracks one company's position across three ladders. Lines that plunge or climb steeply are companies the market values very differently from where Fortune ranks them. Apple and Alphabet rise; Walmart, CVS, and the distributors fall away on profit and valuation.</p>
+    <figure class="chart">
+      <figcaption>Rank by revenue, then net income, then market value*</figcaption>
+      <svg class="slopechart" viewBox="0 0 720 440" role="img" aria-label="Rank comparison across revenue, profit, and market value"><text class="slope-hdr" x="150" y="22" text-anchor="end">REVENUE</text><text class="slope-hdr" x="360.0" y="22" text-anchor="middle">PROFIT</text><text class="slope-hdr" x="570" y="22" text-anchor="start">MARKET VALUE</text><g class="slope-group" data-label="Walmart" data-value="Revenue #1 · Profit #6 · Market value #5" data-sub="Retail / e-commerce"><polyline class="slope retail" points="150,40 360.0,240 570,200"/><circle class="dot retail" cx="150" cy="40" r="4"/><circle class="dot retail" cx="360.0" cy="240" r="4"/><circle class="dot retail" cx="570" cy="200" r="4"/><text class="slope-lbl" x="140" y="44" text-anchor="end">1. Walmart</text><text class="slope-lbl" x="580" y="204" text-anchor="start">Walmart</text></g><g class="slope-group" data-label="Amazon" data-value="Revenue #2 · Profit #4 · Market value #2" data-sub="Retail / e-commerce"><polyline class="slope retail" points="150,80 360.0,160 570,80"/><circle class="dot retail" cx="150" cy="80" r="4"/><circle class="dot retail" cx="360.0" cy="160" r="4"/><circle class="dot retail" cx="570" cy="80" r="4"/><text class="slope-lbl" x="140" y="84" text-anchor="end">2. Amazon</text><text class="slope-lbl" x="580" y="84" text-anchor="start">Amazon</text></g><g class="slope-group" data-label="UnitedHealth Group" data-value="Revenue #3 · Profit #7 · Market value #7" data-sub="Health care & distribution"><polyline class="slope health" points="150,120 360.0,280 570,280"/><circle class="dot health" cx="150" cy="120" r="4"/><circle class="dot health" cx="360.0" cy="280" r="4"/><circle class="dot health" cx="570" cy="280" r="4"/><text class="slope-lbl" x="140" y="124" text-anchor="end">3. UnitedHealth Group</text><text class="slope-lbl" x="580" y="284" text-anchor="start">UnitedHealth Group</text></g><g class="slope-group" data-label="Apple" data-value="Revenue #4 · Profit #2 · Market value #1" data-sub="Technology platform"><polyline class="slope tech" points="150,160 360.0,80 570,40"/><circle class="dot tech" cx="150" cy="160" r="4"/><circle class="dot tech" cx="360.0" cy="80" r="4"/><circle class="dot tech" cx="570" cy="40" r="4"/><text class="slope-lbl" x="140" y="164" text-anchor="end">4. Apple</text><text class="slope-lbl" x="580" y="44" text-anchor="start">Apple</text></g><g class="slope-group" data-label="CVS Health" data-value="Revenue #5 · Profit #8 · Market value #9" data-sub="Health care & distribution"><polyline class="slope health" points="150,200 360.0,320 570,360"/><circle class="dot health" cx="150" cy="200" r="4"/><circle class="dot health" cx="360.0" cy="320" r="4"/><circle class="dot health" cx="570" cy="360" r="4"/><text class="slope-lbl" x="140" y="204" text-anchor="end">5. CVS Health</text><text class="slope-lbl" x="580" y="364" text-anchor="start">CVS Health</text></g><g class="slope-group" data-label="Berkshire Hathaway" data-value="Revenue #6 · Profit #3 · Market value #4" data-sub="Conglomerate / insurance"><polyline class="slope holdco" points="150,240 360.0,120 570,160"/><circle class="dot holdco" cx="150" cy="240" r="4"/><circle class="dot holdco" cx="360.0" cy="120" r="4"/><circle class="dot holdco" cx="570" cy="160" r="4"/><text class="slope-lbl" x="140" y="244" text-anchor="end">6. Berkshire Hathaway</text><text class="slope-lbl" x="580" y="164" text-anchor="start">Berkshire Hathaway</text></g><g class="slope-group" data-label="Alphabet" data-value="Revenue #7 · Profit #1 · Market value #3" data-sub="Technology platform"><polyline class="slope tech" points="150,280 360.0,40 570,120"/><circle class="dot tech" cx="150" cy="280" r="4"/><circle class="dot tech" cx="360.0" cy="40" r="4"/><circle class="dot tech" cx="570" cy="120" r="4"/><text class="slope-lbl" x="140" y="284" text-anchor="end">7. Alphabet</text><text class="slope-lbl" x="580" y="124" text-anchor="start">Alphabet</text></g><g class="slope-group" data-label="Exxon Mobil" data-value="Revenue #8 · Profit #5 · Market value #6" data-sub="Energy"><polyline class="slope energy" points="150,320 360.0,200 570,240"/><circle class="dot energy" cx="150" cy="320" r="4"/><circle class="dot energy" cx="360.0" cy="200" r="4"/><circle class="dot energy" cx="570" cy="240" r="4"/><text class="slope-lbl" x="140" y="324" text-anchor="end">8. Exxon Mobil</text><text class="slope-lbl" x="580" y="244" text-anchor="start">Exxon Mobil</text></g><g class="slope-group" data-label="McKesson" data-value="Revenue #9 · Profit #9 · Market value #8" data-sub="Health care & distribution"><polyline class="slope health" points="150,360 360.0,360 570,320"/><circle class="dot health" cx="150" cy="360" r="4"/><circle class="dot health" cx="360.0" cy="360" r="4"/><circle class="dot health" cx="570" cy="320" r="4"/><text class="slope-lbl" x="140" y="364" text-anchor="end">9. McKesson</text><text class="slope-lbl" x="580" y="324" text-anchor="start">McKesson</text></g><g class="slope-group" data-label="Cencora" data-value="Revenue #10 · Profit #10 · Market value #10" data-sub="Health care & distribution"><polyline class="slope health" points="150,400 360.0,400 570,400"/><circle class="dot health" cx="150" cy="400" r="4"/><circle class="dot health" cx="360.0" cy="400" r="4"/><circle class="dot health" cx="570" cy="400" r="4"/><text class="slope-lbl" x="140" y="404" text-anchor="end">10. Cencora</text><text class="slope-lbl" x="580" y="404" text-anchor="start">Cencora</text></g></svg>
+      <p class="chart-note">Market value is an approximate mid-2025 estimate, not SEC-sourced. Lower position = higher rank (1 = largest).</p>
+    </figure>
+  </section>
+
+  <section id="growth">
+    <span class="section-num">06 — Growth Momentum</span>
+    <h2>Who has momentum</h2>
+    <p>Growth does not follow size. The distributors and Alphabet posted double-digit revenue growth; the energy and conglomerate names were roughly flat. Amazon stands out as the only mega-scale company still compounding revenue above 10%.</p>
+      <figure class="chart">
+        <figcaption>Year-over-year revenue growth</figcaption>
+        <div class="bar-row" data-label="Alphabet" data-value="13.9%" data-sub="Technology platform">
+          <div class="bar-label">Alphabet</div>
+          <div class="bar-track"><div class="bar-fill tech" style="--w:100.0%"></div></div>
+          <div class="bar-val">13.9%</div>
+        </div>
+        <div class="bar-row" data-label="Cencora" data-value="12.1%" data-sub="Health care & distribution">
+          <div class="bar-label">Cencora</div>
+          <div class="bar-track"><div class="bar-fill health" style="--w:87.4%"></div></div>
+          <div class="bar-val">12.1%</div>
+        </div>
+        <div class="bar-row" data-label="McKesson" data-value="11.7%" data-sub="Health care & distribution">
+          <div class="bar-label">McKesson</div>
+          <div class="bar-track"><div class="bar-fill health" style="--w:84.0%"></div></div>
+          <div class="bar-val">11.7%</div>
+        </div>
+        <div class="bar-row" data-label="Amazon" data-value="11.0%" data-sub="Retail / e-commerce">
+          <div class="bar-label">Amazon</div>
+          <div class="bar-track"><div class="bar-fill retail" style="--w:79.3%"></div></div>
+          <div class="bar-val">11.0%</div>
+        </div>
+        <div class="bar-row" data-label="UnitedHealth Group" data-value="7.7%" data-sub="Health care & distribution">
+          <div class="bar-label">UnitedHealth Group</div>
+          <div class="bar-track"><div class="bar-fill health" style="--w:55.6%"></div></div>
+          <div class="bar-val">7.7%</div>
+        </div>
+        <div class="bar-row" data-label="Walmart" data-value="5.1%" data-sub="Retail / e-commerce">
+          <div class="bar-label">Walmart</div>
+          <div class="bar-track"><div class="bar-fill retail" style="--w:36.6%"></div></div>
+          <div class="bar-val">5.1%</div>
+        </div>
+        <div class="bar-row" data-label="CVS Health" data-value="4.2%" data-sub="Health care & distribution">
+          <div class="bar-label">CVS Health</div>
+          <div class="bar-track"><div class="bar-fill health" style="--w:30.3%"></div></div>
+          <div class="bar-val">4.2%</div>
+        </div>
+        <div class="bar-row" data-label="Apple" data-value="2.0%" data-sub="Technology platform">
+          <div class="bar-label">Apple</div>
+          <div class="bar-track"><div class="bar-fill tech" style="--w:14.6%"></div></div>
+          <div class="bar-val">2.0%</div>
+        </div>
+        <div class="bar-row" data-label="Berkshire Hathaway" data-value="1.9%" data-sub="Conglomerate / insurance">
+          <div class="bar-label">Berkshire Hathaway</div>
+          <div class="bar-track"><div class="bar-fill holdco" style="--w:13.8%"></div></div>
+          <div class="bar-val">1.9%</div>
+        </div>
+        <div class="bar-row" data-label="Exxon Mobil" data-value="1.5%" data-sub="Energy">
+          <div class="bar-label">Exxon Mobil</div>
+          <div class="bar-track"><div class="bar-fill energy" style="--w:10.5%"></div></div>
+          <div class="bar-val">1.5%</div>
+        </div>
+        
+      </figure>
+    <p>The more revealing split is growth in <em>profit</em>: Amazon nearly doubled net income year over year (+95%) and Alphabet grew it +36%, while UnitedHealth and CVS saw profit fall sharply on medical-cost pressure and one-time charges.</p>
+  </section>
+
+  <section id="valuation">
+    <span class="section-num">07 — Market Valuation</span>
+    <h2>How the market prices them</h2>
+    <p>The stock market rewards future economics, not current sales. Apple and Alphabet carry trillion-dollar-plus valuations on revenue that ranks mid-pack here. The distributors and CVS — huge by revenue — command the smallest market values, reflecting their thin margins and limited pricing power.</p>
+      <figure class="chart">
+        <figcaption>Price / earnings* (market value ÷ net income)</figcaption>
+        <div class="bar-row" data-label="Amazon" data-value="39.7×" data-sub="Retail / e-commerce">
+          <div class="bar-label">Amazon</div>
+          <div class="bar-track"><div class="bar-fill retail" style="--w:100.0%"></div></div>
+          <div class="bar-val">39.7×</div>
+        </div>
+        <div class="bar-row" data-label="Walmart" data-value="38.2×" data-sub="Retail / e-commerce">
+          <div class="bar-label">Walmart</div>
+          <div class="bar-track"><div class="bar-fill retail" style="--w:96.3%"></div></div>
+          <div class="bar-val">38.2×</div>
+        </div>
+        <div class="bar-row" data-label="Cencora" data-value="37.5×" data-sub="Health care & distribution">
+          <div class="bar-label">Cencora</div>
+          <div class="bar-track"><div class="bar-fill health" style="--w:94.6%"></div></div>
+          <div class="bar-val">37.5×</div>
+        </div>
+        <div class="bar-row" data-label="Apple" data-value="34.1×" data-sub="Technology platform">
+          <div class="bar-label">Apple</div>
+          <div class="bar-track"><div class="bar-fill tech" style="--w:86.1%"></div></div>
+          <div class="bar-val">34.1×</div>
+        </div>
+        <div class="bar-row" data-label="McKesson" data-value="27.8×" data-sub="Health care & distribution">
+          <div class="bar-label">McKesson</div>
+          <div class="bar-track"><div class="bar-fill health" style="--w:70.2%"></div></div>
+          <div class="bar-val">27.8×</div>
+        </div>
+        <div class="bar-row" data-label="Alphabet" data-value="21.0×" data-sub="Technology platform">
+          <div class="bar-label">Alphabet</div>
+          <div class="bar-track"><div class="bar-fill tech" style="--w:52.9%"></div></div>
+          <div class="bar-val">21.0×</div>
+        </div>
+        <div class="bar-row" data-label="UnitedHealth Group" data-value="19.0×" data-sub="Health care & distribution">
+          <div class="bar-label">UnitedHealth Group</div>
+          <div class="bar-track"><div class="bar-fill health" style="--w:48.0%"></div></div>
+          <div class="bar-val">19.0×</div>
+        </div>
+        <div class="bar-row" data-label="CVS Health" data-value="18.4×" data-sub="Health care & distribution">
+          <div class="bar-label">CVS Health</div>
+          <div class="bar-track"><div class="bar-fill health" style="--w:46.4%"></div></div>
+          <div class="bar-val">18.4×</div>
+        </div>
+        <div class="bar-row" data-label="Exxon Mobil" data-value="13.7×" data-sub="Energy">
+          <div class="bar-label">Exxon Mobil</div>
+          <div class="bar-track"><div class="bar-fill energy" style="--w:34.5%"></div></div>
+          <div class="bar-val">13.7×</div>
+        </div>
+        <div class="bar-row" data-label="Berkshire Hathaway" data-value="11.2×" data-sub="Conglomerate / insurance">
+          <div class="bar-label">Berkshire Hathaway</div>
+          <div class="bar-track"><div class="bar-fill holdco" style="--w:28.2%"></div></div>
+          <div class="bar-val">11.2×</div>
+        </div>
+        <p class="chart-note">Market capitalization is an approximate mid-2025 estimate, not from SEC data. UnitedHealth and CVS multiples reflect depressed mid-2025 prices.</p>
+      </figure>
+      <figure class="chart">
+        <figcaption>Price / sales* (market value ÷ revenue)</figcaption>
+        <div class="bar-row" data-label="Apple" data-value="8.18×" data-sub="Technology platform">
+          <div class="bar-label">Apple</div>
+          <div class="bar-track"><div class="bar-fill tech" style="--w:100.0%"></div></div>
+          <div class="bar-val">8.18×</div>
+        </div>
+        <div class="bar-row" data-label="Alphabet" data-value="6.00×" data-sub="Technology platform">
+          <div class="bar-label">Alphabet</div>
+          <div class="bar-track"><div class="bar-fill tech" style="--w:73.3%"></div></div>
+          <div class="bar-val">6.00×</div>
+        </div>
+        <div class="bar-row" data-label="Amazon" data-value="3.68×" data-sub="Retail / e-commerce">
+          <div class="bar-label">Amazon</div>
+          <div class="bar-track"><div class="bar-fill retail" style="--w:45.0%"></div></div>
+          <div class="bar-val">3.68×</div>
+        </div>
+        <div class="bar-row" data-label="Berkshire Hathaway" data-value="2.69×" data-sub="Conglomerate / insurance">
+          <div class="bar-label">Berkshire Hathaway</div>
+          <div class="bar-track"><div class="bar-fill holdco" style="--w:32.9%"></div></div>
+          <div class="bar-val">2.69×</div>
+        </div>
+        <div class="bar-row" data-label="Exxon Mobil" data-value="1.37×" data-sub="Energy">
+          <div class="bar-label">Exxon Mobil</div>
+          <div class="bar-track"><div class="bar-fill energy" style="--w:16.8%"></div></div>
+          <div class="bar-val">1.37×</div>
+        </div>
+        <div class="bar-row" data-label="Walmart" data-value="1.13×" data-sub="Retail / e-commerce">
+          <div class="bar-label">Walmart</div>
+          <div class="bar-track"><div class="bar-fill retail" style="--w:13.8%"></div></div>
+          <div class="bar-val">1.13×</div>
+        </div>
+        <div class="bar-row" data-label="UnitedHealth Group" data-value="0.72×" data-sub="Health care & distribution">
+          <div class="bar-label">UnitedHealth Group</div>
+          <div class="bar-track"><div class="bar-fill health" style="--w:8.9%"></div></div>
+          <div class="bar-val">0.72×</div>
+        </div>
+        <div class="bar-row" data-label="McKesson" data-value="0.28×" data-sub="Health care & distribution">
+          <div class="bar-label">McKesson</div>
+          <div class="bar-track"><div class="bar-fill health" style="--w:3.5%"></div></div>
+          <div class="bar-val">0.28×</div>
+        </div>
+        <div class="bar-row" data-label="CVS Health" data-value="0.23×" data-sub="Health care & distribution">
+          <div class="bar-label">CVS Health</div>
+          <div class="bar-track"><div class="bar-fill health" style="--w:2.8%"></div></div>
+          <div class="bar-val">0.23×</div>
+        </div>
+        <div class="bar-row" data-label="Cencora" data-value="0.19×" data-sub="Health care & distribution">
+          <div class="bar-label">Cencora</div>
+          <div class="bar-track"><div class="bar-fill health" style="--w:2.4%"></div></div>
+          <div class="bar-val">0.19×</div>
+        </div>
+        
+      </figure>
+    <div class="callout">Investors pay roughly 8.2× sales for Apple and 6.0× for Alphabet, versus under 0.2× for McKesson and Cencora. The market is pricing margin durability and growth optionality, not revenue scale.</div>
+  </section>
+
+  <section id="productivity">
+    <span class="section-num">08 — Productivity</span>
+    <h2>Revenue per employee</h2>
+    <p>Workforce scale and workforce productivity are opposite axes. Walmart and Amazon employ over 1.5 million people each; Cencora and McKesson move comparable revenue with ~50,000. Per head, the asset-light distributors and energy look extraordinarily productive on revenue — but that revenue is almost all pass-through cost of goods.</p>
+      <figure class="chart">
+        <figcaption>Revenue per employee* ($M)</figcaption>
+        <div class="bar-row" data-label="Cencora" data-value="$6.39M" data-sub="Health care & distribution">
+          <div class="bar-label">Cencora</div>
+          <div class="bar-track"><div class="bar-fill health" style="--w:100.0%"></div></div>
+          <div class="bar-val">$6.39M</div>
+        </div>
+        <div class="bar-row" data-label="McKesson" data-value="$6.06M" data-sub="Health care & distribution">
+          <div class="bar-label">McKesson</div>
+          <div class="bar-track"><div class="bar-fill health" style="--w:94.8%"></div></div>
+          <div class="bar-val">$6.06M</div>
+        </div>
+        <div class="bar-row" data-label="Exxon Mobil" data-value="$5.73M" data-sub="Energy">
+          <div class="bar-label">Exxon Mobil</div>
+          <div class="bar-track"><div class="bar-fill energy" style="--w:89.7%"></div></div>
+          <div class="bar-val">$5.73M</div>
+        </div>
+        <div class="bar-row" data-label="Apple" data-value="$2.38M" data-sub="Technology platform">
+          <div class="bar-label">Apple</div>
+          <div class="bar-track"><div class="bar-fill tech" style="--w:37.3%"></div></div>
+          <div class="bar-val">$2.38M</div>
+        </div>
+        <div class="bar-row" data-label="Alphabet" data-value="$1.91M" data-sub="Technology platform">
+          <div class="bar-label">Alphabet</div>
+          <div class="bar-track"><div class="bar-fill tech" style="--w:29.9%"></div></div>
+          <div class="bar-val">$1.91M</div>
+        </div>
+        <div class="bar-row" data-label="CVS Health" data-value="$1.24M" data-sub="Health care & distribution">
+          <div class="bar-label">CVS Health</div>
+          <div class="bar-track"><div class="bar-fill health" style="--w:19.4%"></div></div>
+          <div class="bar-val">$1.24M</div>
+        </div>
+        <div class="bar-row" data-label="Berkshire Hathaway" data-value="$0.95M" data-sub="Conglomerate / insurance">
+          <div class="bar-label">Berkshire Hathaway</div>
+          <div class="bar-track"><div class="bar-fill holdco" style="--w:14.8%"></div></div>
+          <div class="bar-val">$0.95M</div>
+        </div>
+        <div class="bar-row" data-label="UnitedHealth Group" data-value="$0.91M" data-sub="Health care & distribution">
+          <div class="bar-label">UnitedHealth Group</div>
+          <div class="bar-track"><div class="bar-fill health" style="--w:14.2%"></div></div>
+          <div class="bar-val">$0.91M</div>
+        </div>
+        <div class="bar-row" data-label="Amazon" data-value="$0.41M" data-sub="Retail / e-commerce">
+          <div class="bar-label">Amazon</div>
+          <div class="bar-track"><div class="bar-fill retail" style="--w:6.4%"></div></div>
+          <div class="bar-val">$0.41M</div>
+        </div>
+        <div class="bar-row" data-label="Walmart" data-value="$0.32M" data-sub="Retail / e-commerce">
+          <div class="bar-label">Walmart</div>
+          <div class="bar-track"><div class="bar-fill retail" style="--w:5.1%"></div></div>
+          <div class="bar-val">$0.32M</div>
+        </div>
+        <p class="chart-note">Headcount is an estimate, not SEC-sourced. High revenue-per-employee at distributors reflects pass-through drug costs, not value capture — pair this with the profit and margin views above.</p>
+      </figure>
+    <p>Profit per employee corrects the illusion: Apple generates roughly <strong>$0.57M</strong> of net income per employee and Alphabet <strong>$0.55M</strong>, while Walmart earns under $10K and the distributors a few thousand dollars per head.</p>
+  </section>
+
+  <section id="capital">
+    <span class="section-num">09 — Capital Efficiency</span>
+    <h2>Asset intensity vs. margin</h2>
+    <p>This is the clearest map of the group. The vertical axis is net margin; the horizontal is asset turnover (how much revenue each dollar of assets produces). Bubble size is revenue. The four quadrants sort the field into recognizable archetypes.</p>
+    <figure class="chart">
+      <figcaption>Asset turnover × net margin (bubble = revenue)</figcaption>
+      <svg class="quadchart" viewBox="0 0 720 520" role="img" aria-label="Asset turnover versus net margin, bubble sized by revenue"><line class="qaxis" x1="70" y1="450" x2="650" y2="450"/><line class="qaxis" x1="70" y1="70" x2="70" y2="450"/><line class="qmid" x1="281" y1="70" x2="281" y2="450"/><line class="qmid" x1="70" y1="328" x2="650" y2="328"/><text class="qaxis-lbl" x="650" y="478" text-anchor="end">Higher asset turnover (revenue ÷ assets)</text><text class="qaxis-lbl" x="58" y="50" text-anchor="start">Higher net profit margin</text><g class="qgroup" data-label="Walmart" data-value="Margin 3.0% · Turnover 2.61 · Rev $681B" data-sub="Retail / e-commerce"><circle class="qdot retail" cx="371" cy="416" r="22"/><text class="qlbl" x="371" y="390" text-anchor="middle">Walmart</text></g><g class="qgroup" data-label="Amazon" data-value="Margin 9.3% · Turnover 1.02 · Rev $638B" data-sub="Retail / e-commerce"><circle class="qdot retail" cx="188" cy="343" r="21"/><text class="qlbl" x="188" y="318" text-anchor="middle">Amazon</text></g><g class="qgroup" data-label="UnitedHealth Group" data-value="Margin 3.8% · Turnover 1.34 · Rev $400B" data-sub="Health care & distribution"><circle class="qdot health" cx="224" cy="406" r="16"/><text class="qlbl" x="224" y="386" text-anchor="middle">UnitedHealth Group</text></g><g class="qgroup" data-label="Apple" data-value="Margin 24.0% · Turnover 1.07 · Rev $391B" data-sub="Technology platform"><circle class="qdot tech" cx="193" cy="173" r="16"/><text class="qlbl" x="193" y="153" text-anchor="middle">Apple</text></g><g class="qgroup" data-label="CVS Health" data-value="Margin 1.2% · Turnover 1.47 · Rev $373B" data-sub="Health care & distribution"><circle class="qdot health" cx="239" cy="436" r="16"/><text class="qlbl" x="239" y="416" text-anchor="middle">CVS Health</text></g><g class="qgroup" data-label="Berkshire Hathaway" data-value="Margin 24.1% · Turnover 0.32 · Rev $371B" data-sub="Conglomerate / insurance"><circle class="qdot holdco" cx="107" cy="171" r="16"/><text class="qlbl" x="107" y="152" text-anchor="middle">Berkshire Hathaway</text></g><g class="qgroup" data-label="Alphabet" data-value="Margin 28.6% · Turnover 0.78 · Rev $350B" data-sub="Technology platform"><circle class="qdot tech" cx="159" cy="120" r="15"/><text class="qlbl" x="159" y="100" text-anchor="middle">Alphabet</text></g><g class="qgroup" data-label="Exxon Mobil" data-value="Margin 10.0% · Turnover 0.77 · Rev $350B" data-sub="Energy"><circle class="qdot energy" cx="159" cy="334" r="15"/><text class="qlbl" x="159" y="315" text-anchor="middle">Exxon Mobil</text></g><g class="qgroup" data-label="McKesson" data-value="Margin 1.0% · Turnover 4.58 · Rev $309B" data-sub="Health care & distribution"><circle class="qdot health" cx="597" cy="438" r="14"/><text class="qlbl" x="597" y="420" text-anchor="middle">McKesson</text></g><g class="qgroup" data-label="Cencora" data-value="Margin 0.5% · Turnover 4.38 · Rev $294B" data-sub="Health care & distribution"><circle class="qdot health" cx="574" cy="444" r="14"/><text class="qlbl" x="574" y="426" text-anchor="middle">Cencora</text></g></svg>
+      <p class="chart-note">Top-left: high-margin, asset-light platforms (Apple, Alphabet). Bottom-right: high-throughput, low-margin distributors (McKesson, Cencora). Berkshire sits far left — asset-heavy by design.</p>
+    </figure>
+      <figure class="chart">
+        <figcaption>Return on assets (net income ÷ total assets)</figcaption>
+        <div class="bar-row" data-label="Apple" data-value="25.7%" data-sub="Technology platform">
+          <div class="bar-label">Apple</div>
+          <div class="bar-track"><div class="bar-fill tech" style="--w:100.0%"></div></div>
+          <div class="bar-val">25.7%</div>
+        </div>
+        <div class="bar-row" data-label="Alphabet" data-value="22.2%" data-sub="Technology platform">
+          <div class="bar-label">Alphabet</div>
+          <div class="bar-track"><div class="bar-fill tech" style="--w:86.6%"></div></div>
+          <div class="bar-val">22.2%</div>
+        </div>
+        <div class="bar-row" data-label="Amazon" data-value="9.5%" data-sub="Retail / e-commerce">
+          <div class="bar-label">Amazon</div>
+          <div class="bar-track"><div class="bar-fill retail" style="--w:36.9%"></div></div>
+          <div class="bar-val">9.5%</div>
+        </div>
+        <div class="bar-row" data-label="Berkshire Hathaway" data-value="7.8%" data-sub="Conglomerate / insurance">
+          <div class="bar-label">Berkshire Hathaway</div>
+          <div class="bar-track"><div class="bar-fill holdco" style="--w:30.2%"></div></div>
+          <div class="bar-val">7.8%</div>
+        </div>
+        <div class="bar-row" data-label="Exxon Mobil" data-value="7.7%" data-sub="Energy">
+          <div class="bar-label">Exxon Mobil</div>
+          <div class="bar-track"><div class="bar-fill energy" style="--w:30.1%"></div></div>
+          <div class="bar-val">7.7%</div>
+        </div>
+        <div class="bar-row" data-label="Walmart" data-value="7.7%" data-sub="Retail / e-commerce">
+          <div class="bar-label">Walmart</div>
+          <div class="bar-track"><div class="bar-fill retail" style="--w:30.1%"></div></div>
+          <div class="bar-val">7.7%</div>
+        </div>
+        <div class="bar-row" data-label="UnitedHealth Group" data-value="5.1%" data-sub="Health care & distribution">
+          <div class="bar-label">UnitedHealth Group</div>
+          <div class="bar-track"><div class="bar-fill health" style="--w:19.9%"></div></div>
+          <div class="bar-val">5.1%</div>
+        </div>
+        <div class="bar-row" data-label="McKesson" data-value="4.7%" data-sub="Health care & distribution">
+          <div class="bar-label">McKesson</div>
+          <div class="bar-track"><div class="bar-fill health" style="--w:18.2%"></div></div>
+          <div class="bar-val">4.7%</div>
+        </div>
+        <div class="bar-row" data-label="Cencora" data-value="2.3%" data-sub="Health care & distribution">
+          <div class="bar-label">Cencora</div>
+          <div class="bar-track"><div class="bar-fill health" style="--w:8.8%"></div></div>
+          <div class="bar-val">2.3%</div>
+        </div>
+        <div class="bar-row" data-label="CVS Health" data-value="1.8%" data-sub="Health care & distribution">
+          <div class="bar-label">CVS Health</div>
+          <div class="bar-track"><div class="bar-fill health" style="--w:7.1%"></div></div>
+          <div class="bar-val">1.8%</div>
+        </div>
+        
+      </figure>
+    <p>Apple's 26% return on assets is more than triple Walmart's and more than ten times CVS's. Berkshire, holding $1,154B in assets — the largest base here by far — converts them at just 7.8%, the trade-off of a diversified insurance-and-investment model.</p>
+  </section>
+
+  <section id="cash">
+    <span class="section-num">10 — Cash Generation</span>
+    <h2>Free cash flow separates durable from accounting performers</h2>
+    <p>Cash is harder to manufacture than reported profit. Apple converts net income to operating cash almost dollar-for-dollar and throws off the most free cash flow of any company here. Amazon and Alphabet generate enormous operating cash but plow much of it back into capex — data centers, logistics, and AI infrastructure.</p>
+      <figure class="chart">
+        <figcaption>Free cash flow (operating cash flow − capex) ($B)</figcaption>
+        <div class="bar-row" data-label="Apple" data-value="$108.8B" data-sub="Technology platform">
+          <div class="bar-label">Apple</div>
+          <div class="bar-track"><div class="bar-fill tech" style="--w:100.0%"></div></div>
+          <div class="bar-val">$108.8B</div>
+        </div>
+        <div class="bar-row" data-label="Alphabet" data-value="$72.8B" data-sub="Technology platform">
+          <div class="bar-label">Alphabet</div>
+          <div class="bar-track"><div class="bar-fill tech" style="--w:66.9%"></div></div>
+          <div class="bar-val">$72.8B</div>
+        </div>
+        <div class="bar-row" data-label="Amazon" data-value="$32.9B" data-sub="Retail / e-commerce">
+          <div class="bar-label">Amazon</div>
+          <div class="bar-track"><div class="bar-fill retail" style="--w:30.2%"></div></div>
+          <div class="bar-val">$32.9B</div>
+        </div>
+        <div class="bar-row" data-label="Exxon Mobil" data-value="$30.7B" data-sub="Energy">
+          <div class="bar-label">Exxon Mobil</div>
+          <div class="bar-track"><div class="bar-fill energy" style="--w:28.2%"></div></div>
+          <div class="bar-val">$30.7B</div>
+        </div>
+        <div class="bar-row" data-label="UnitedHealth Group" data-value="$20.7B" data-sub="Health care & distribution">
+          <div class="bar-label">UnitedHealth Group</div>
+          <div class="bar-track"><div class="bar-fill health" style="--w:19.0%"></div></div>
+          <div class="bar-val">$20.7B</div>
+        </div>
+        <div class="bar-row" data-label="Walmart" data-value="$12.7B" data-sub="Retail / e-commerce">
+          <div class="bar-label">Walmart</div>
+          <div class="bar-track"><div class="bar-fill retail" style="--w:11.6%"></div></div>
+          <div class="bar-val">$12.7B</div>
+        </div>
+        <div class="bar-row" data-label="Berkshire Hathaway" data-value="$11.6B" data-sub="Conglomerate / insurance">
+          <div class="bar-label">Berkshire Hathaway</div>
+          <div class="bar-track"><div class="bar-fill holdco" style="--w:10.7%"></div></div>
+          <div class="bar-val">$11.6B</div>
+        </div>
+        <div class="bar-row" data-label="CVS Health" data-value="$6.3B" data-sub="Health care & distribution">
+          <div class="bar-label">CVS Health</div>
+          <div class="bar-track"><div class="bar-fill health" style="--w:5.8%"></div></div>
+          <div class="bar-val">$6.3B</div>
+        </div>
+        <div class="bar-row" data-label="McKesson" data-value="$3.6B" data-sub="Health care & distribution">
+          <div class="bar-label">McKesson</div>
+          <div class="bar-track"><div class="bar-fill health" style="--w:3.3%"></div></div>
+          <div class="bar-val">$3.6B</div>
+        </div>
+        <div class="bar-row" data-label="Cencora" data-value="$3.0B" data-sub="Health care & distribution">
+          <div class="bar-label">Cencora</div>
+          <div class="bar-track"><div class="bar-fill health" style="--w:2.8%"></div></div>
+          <div class="bar-val">$3.0B</div>
+        </div>
+        
+      </figure>
+      <figure class="chart">
+        <figcaption>Capex intensity (capex ÷ revenue)</figcaption>
+        <div class="bar-row" data-label="Alphabet" data-value="15.0%" data-sub="Technology platform">
+          <div class="bar-label">Alphabet</div>
+          <div class="bar-track"><div class="bar-fill tech" style="--w:100.0%"></div></div>
+          <div class="bar-val">15.0%</div>
+        </div>
+        <div class="bar-row" data-label="Amazon" data-value="13.0%" data-sub="Retail / e-commerce">
+          <div class="bar-label">Amazon</div>
+          <div class="bar-track"><div class="bar-fill retail" style="--w:86.7%"></div></div>
+          <div class="bar-val">13.0%</div>
+        </div>
+        <div class="bar-row" data-label="Exxon Mobil" data-value="7.0%" data-sub="Energy">
+          <div class="bar-label">Exxon Mobil</div>
+          <div class="bar-track"><div class="bar-fill energy" style="--w:46.3%"></div></div>
+          <div class="bar-val">7.0%</div>
+        </div>
+        <div class="bar-row" data-label="Berkshire Hathaway" data-value="5.1%" data-sub="Conglomerate / insurance">
+          <div class="bar-label">Berkshire Hathaway</div>
+          <div class="bar-track"><div class="bar-fill holdco" style="--w:34.0%"></div></div>
+          <div class="bar-val">5.1%</div>
+        </div>
+        <div class="bar-row" data-label="Walmart" data-value="3.5%" data-sub="Retail / e-commerce">
+          <div class="bar-label">Walmart</div>
+          <div class="bar-track"><div class="bar-fill retail" style="--w:23.3%"></div></div>
+          <div class="bar-val">3.5%</div>
+        </div>
+        <div class="bar-row" data-label="Apple" data-value="2.4%" data-sub="Technology platform">
+          <div class="bar-label">Apple</div>
+          <div class="bar-track"><div class="bar-fill tech" style="--w:16.1%"></div></div>
+          <div class="bar-val">2.4%</div>
+        </div>
+        <div class="bar-row" data-label="UnitedHealth Group" data-value="0.9%" data-sub="Health care & distribution">
+          <div class="bar-label">UnitedHealth Group</div>
+          <div class="bar-track"><div class="bar-fill health" style="--w:5.8%"></div></div>
+          <div class="bar-val">0.9%</div>
+        </div>
+        <div class="bar-row" data-label="CVS Health" data-value="0.7%" data-sub="Health care & distribution">
+          <div class="bar-label">CVS Health</div>
+          <div class="bar-track"><div class="bar-fill health" style="--w:5.0%"></div></div>
+          <div class="bar-val">0.7%</div>
+        </div>
+        <div class="bar-row" data-label="McKesson" data-value="0.2%" data-sub="Health care & distribution">
+          <div class="bar-label">McKesson</div>
+          <div class="bar-track"><div class="bar-fill health" style="--w:1.5%"></div></div>
+          <div class="bar-val">0.2%</div>
+        </div>
+        <div class="bar-row" data-label="Cencora" data-value="0.2%" data-sub="Health care & distribution">
+          <div class="bar-label">Cencora</div>
+          <div class="bar-track"><div class="bar-fill health" style="--w:1.1%"></div></div>
+          <div class="bar-val">0.2%</div>
+        </div>
+        <p class="chart-note">Alphabet, Amazon, and Exxon are the heaviest reinvestors — capacity build-out for AI/cloud and energy infrastructure.</p>
+      </figure>
+    <p>The asset-light distributors spend almost nothing on capex (under 0.3% of revenue) but generate little cash because margins are so thin. The capital-intensive names — Alphabet, Amazon, Exxon — spend the most, a deliberate bet on future capacity rather than a weakness.</p>
+  </section>
+
+  <section id="risk">
+    <span class="section-num">11 — Balance-Sheet Risk</span>
+    <h2>Leverage and liquidity</h2>
+    <p>Financial risk cannot be read from revenue. The leverage profiles range from Alphabet's near-debt-free balance sheet to the distributors' thin equity bases. A current ratio below 1.0 — common here — is normal for firms that run on supplier credit, but it signals reliance on continuous cash flow.</p>
+      <figure class="chart">
+        <figcaption>Total debt ÷ shareholders’ equity</figcaption>
+        <div class="bar-row" data-label="Cencora" data-value="6.31×" data-sub="Health care & distribution">
+          <div class="bar-label">Cencora</div>
+          <div class="bar-track"><div class="bar-fill health" style="--w:100.0%"></div></div>
+          <div class="bar-val">6.31×</div>
+        </div>
+        <div class="bar-row" data-label="Apple" data-value="1.89×" data-sub="Technology platform">
+          <div class="bar-label">Apple</div>
+          <div class="bar-track"><div class="bar-fill tech" style="--w:29.9%"></div></div>
+          <div class="bar-val">1.89×</div>
+        </div>
+        <div class="bar-row" data-label="UnitedHealth Group" data-value="0.78×" data-sub="Health care & distribution">
+          <div class="bar-label">UnitedHealth Group</div>
+          <div class="bar-track"><div class="bar-fill health" style="--w:12.4%"></div></div>
+          <div class="bar-val">0.78×</div>
+        </div>
+        <div class="bar-row" data-label="Walmart" data-value="0.40×" data-sub="Retail / e-commerce">
+          <div class="bar-label">Walmart</div>
+          <div class="bar-track"><div class="bar-fill retail" style="--w:6.4%"></div></div>
+          <div class="bar-val">0.40×</div>
+        </div>
+        <div class="bar-row" data-label="Amazon" data-value="0.22×" data-sub="Retail / e-commerce">
+          <div class="bar-label">Amazon</div>
+          <div class="bar-track"><div class="bar-fill retail" style="--w:3.5%"></div></div>
+          <div class="bar-val">0.22×</div>
+        </div>
+        <div class="bar-row" data-label="Alphabet" data-value="0.04×" data-sub="Technology platform">
+          <div class="bar-label">Alphabet</div>
+          <div class="bar-track"><div class="bar-fill tech" style="--w:0.6%"></div></div>
+          <div class="bar-val">0.04×</div>
+        </div>
+        <div class="bar-row" data-label="CVS Health" data-value="0.03×" data-sub="Health care & distribution">
+          <div class="bar-label">CVS Health</div>
+          <div class="bar-track"><div class="bar-fill health" style="--w:0.4%"></div></div>
+          <div class="bar-val">0.03×</div>
+        </div>
+        <div class="bar-row" data-label="Exxon Mobil" data-value="0.02×" data-sub="Energy">
+          <div class="bar-label">Exxon Mobil</div>
+          <div class="bar-track"><div class="bar-fill energy" style="--w:0.3%"></div></div>
+          <div class="bar-val">0.02×</div>
+        </div>
+        <div class="bar-row" data-label="Berkshire Hathaway" data-value="0.00×" data-sub="Conglomerate / insurance">
+          <div class="bar-label">Berkshire Hathaway</div>
+          <div class="bar-track"><div class="bar-fill holdco" style="--w:0.0%"></div></div>
+          <div class="bar-val">0.00×</div>
+        </div>
+        <p class="chart-note">McKesson is omitted: negative book equity (driven by buybacks) makes the ratio meaningless. Cencora’s near-zero equity inflates its ratio for the same reason.</p>
+      </figure>
+      <figure class="chart">
+        <figcaption>Current ratio (current assets ÷ current liabilities)</figcaption>
+        <div class="bar-row" data-label="Alphabet" data-value="1.84" data-sub="Technology platform">
+          <div class="bar-label">Alphabet</div>
+          <div class="bar-track"><div class="bar-fill tech" style="--w:100.0%"></div></div>
+          <div class="bar-val">1.84</div>
+        </div>
+        <div class="bar-row" data-label="Exxon Mobil" data-value="1.31" data-sub="Energy">
+          <div class="bar-label">Exxon Mobil</div>
+          <div class="bar-track"><div class="bar-fill energy" style="--w:71.2%"></div></div>
+          <div class="bar-val">1.31</div>
+        </div>
+        <div class="bar-row" data-label="Amazon" data-value="1.06" data-sub="Retail / e-commerce">
+          <div class="bar-label">Amazon</div>
+          <div class="bar-track"><div class="bar-fill retail" style="--w:57.9%"></div></div>
+          <div class="bar-val">1.06</div>
+        </div>
+        <div class="bar-row" data-label="McKesson" data-value="0.92" data-sub="Health care & distribution">
+          <div class="bar-label">McKesson</div>
+          <div class="bar-track"><div class="bar-fill health" style="--w:49.9%"></div></div>
+          <div class="bar-val">0.92</div>
+        </div>
+        <div class="bar-row" data-label="Cencora" data-value="0.88" data-sub="Health care & distribution">
+          <div class="bar-label">Cencora</div>
+          <div class="bar-track"><div class="bar-fill health" style="--w:47.9%"></div></div>
+          <div class="bar-val">0.88</div>
+        </div>
+        <div class="bar-row" data-label="Apple" data-value="0.87" data-sub="Technology platform">
+          <div class="bar-label">Apple</div>
+          <div class="bar-track"><div class="bar-fill tech" style="--w:47.2%"></div></div>
+          <div class="bar-val">0.87</div>
+        </div>
+        <div class="bar-row" data-label="UnitedHealth Group" data-value="0.83" data-sub="Health care & distribution">
+          <div class="bar-label">UnitedHealth Group</div>
+          <div class="bar-track"><div class="bar-fill health" style="--w:45.0%"></div></div>
+          <div class="bar-val">0.83</div>
+        </div>
+        <div class="bar-row" data-label="Walmart" data-value="0.82" data-sub="Retail / e-commerce">
+          <div class="bar-label">Walmart</div>
+          <div class="bar-track"><div class="bar-fill retail" style="--w:44.8%"></div></div>
+          <div class="bar-val">0.82</div>
+        </div>
+        <div class="bar-row" data-label="CVS Health" data-value="0.81" data-sub="Health care & distribution">
+          <div class="bar-label">CVS Health</div>
+          <div class="bar-track"><div class="bar-fill health" style="--w:44.2%"></div></div>
+          <div class="bar-val">0.81</div>
+        </div>
+        
+      </figure>
+    <p>Apple, Walmart, and the distributors all run current ratios below 1.0 — they are funded by payables and turn inventory faster than bills come due. Alphabet (1.84×) and Exxon (1.31×) carry the most liquidity cushion.</p>
+  </section>
+
+  <section id="models">
+    <span class="section-num">12 — Business-Model Insight</span>
+    <h2>Why these companies differ</h2>
+    <p>Group the ten by economic model and the financial differences stop looking random. Each model has a characteristic margin, capital intensity, and growth profile — and the financial outcomes follow directly from strategic positioning.</p>
+    <div class="bm-grid">
+      <div class="bm-card retail"><h4>Retail / e-commerce scale</h4><div class="members">Walmart · Amazon</div><p>Massive revenue on thin-to-moderate margins; Amazon's cloud and ads lift it well above Walmart's retail economics.</p><span class="stat">Net margin 3.0%–9.3%</span></div>
+      <div class="bm-card health"><h4>Health care &amp; distribution</h4><div class="members">UnitedHealth · CVS · McKesson · Cencora</div><p>Enormous throughput, structurally low margins, thin or negative equity. Volume businesses, not value-capture businesses.</p><span class="stat">Net margin 0.5%–3.8%</span></div>
+      <div class="bm-card tech"><h4>Technology platforms</h4><div class="members">Apple · Alphabet</div><p>Asset-light, high-margin, high return on assets. Mid-pack on revenue, dominant on profit and market value.</p><span class="stat">Net margin 24.0%–28.6%</span></div>
+      <div class="bm-card energy"><h4>Energy</h4><div class="members">Exxon Mobil</div><p>Capital-intensive and cyclical. Strong cash flow and double-digit margins, but earnings track commodity prices.</p><span class="stat">Net margin 10.0%</span></div>
+      <div class="bm-card holdco"><h4>Conglomerate / insurance</h4><div class="members">Berkshire Hathaway</div><p>The largest asset base here by 2.5×, funded by insurance float. Huge absolute profit, deliberately low asset turnover.</p><span class="stat">Net margin 24.1% · ROA 7.8%</span></div>
+    </div>
+  </section>
+
+  <section id="conclusion">
+    <span class="section-num">13 — Conclusion</span>
+    <h2>Scale gets you on the list; quality decides the rest</h2>
+    <p>The 2025 Fortune 10 proves that America's largest companies are not financially similar just because they are close in revenue. Across the lenses examined here, leadership keeps changing hands:</p>
+    <ul class="takeaways">
+      <li><strong>Revenue:</strong> Walmart ($681B).</li>
+      <li><strong>Profit:</strong> Alphabet ($100.1B).</li>
+      <li><strong>Margin &amp; capital efficiency:</strong> Apple (24.0% margin, 26% ROA).</li>
+      <li><strong>Free cash flow:</strong> Apple ($109B).</li>
+      <li><strong>Growth:</strong> Amazon among mega-caps; the distributors on a smaller base.</li>
+      <li><strong>Market value:</strong> Apple and Alphabet, on economics rather than scale.</li>
+    </ul>
+    <p>Revenue scale explains who appears at the top of the Fortune ranking. Margin quality, capital efficiency, cash generation, and growth expectations explain which of these companies actually create the most financial value — and on every one of those measures, the revenue leaders are not the leaders.</p>
+    <div class="callout">For deeper analysis: segment-level margins (AWS vs. Amazon retail; UnitedHealth's Optum vs. insurance), multi-year trend lines, and a true market-cap pull from a market-data feed to replace the estimates used in the valuation and productivity sections.</div>
+  </section>
+
+  <section id="appendix">
+    <span class="section-num">14 — Data Appendix</span>
+    <h2>Full dataset</h2>
+    <p>Every figure below is pulled from the SEC XBRL CompanyFacts API except those marked <code>*</code> (market cap, employees, and ratios derived from them), which are estimates.</p>
+    <div class="legend"><span class="legend-item"><span class="swatch retail"></span>Retail / e-commerce</span><span class="legend-item"><span class="swatch health"></span>Health care & distribution</span><span class="legend-item"><span class="swatch tech"></span>Technology platform</span><span class="legend-item"><span class="swatch energy"></span>Energy</span><span class="legend-item"><span class="swatch holdco"></span>Conglomerate / insurance</span></div>
+    <div class="table-scroll"><table class="data-table"><thead><tr><th class="l">Company</th><th class="l">FY end</th><th class="r">Revenue</th><th class="r">Rev growth</th><th class="r">Net income</th><th class="r">Net margin</th><th class="r">Op margin</th><th class="r">Assets</th><th class="r">ROA</th><th class="r">ROE</th><th class="r">Op cash flow</th><th class="r">Free cash flow</th><th class="r">Total debt</th><th class="r">Debt/equity</th><th class="r">Current ratio</th><th class="r">Mkt cap*</th><th class="r">Employees*</th><th class="r">Rev/emp*</th><th class="r">P/E*</th></tr></thead><tbody><tr class="row-retail"><td class="l">Walmart</td><td class="l">2025-01-31</td><td class="r">$681.0B</td><td class="r">5.1%</td><td class="r">$20.2B</td><td class="r">3.0%</td><td class="r">4.3%</td><td class="r">$261B</td><td class="r">7.7%</td><td class="r">20.7%</td><td class="r">$36.4B</td><td class="r">$12.7B</td><td class="r">$39.1B</td><td class="r">0.40</td><td class="r">0.82</td><td class="r">$770B</td><td class="r">2,100,000</td><td class="r">$0.32M</td><td class="r">38.2</td></tr><tr class="row-retail"><td class="l">Amazon</td><td class="l">2024-12-31</td><td class="r">$638.0B</td><td class="r">11.0%</td><td class="r">$59.2B</td><td class="r">9.3%</td><td class="r">10.8%</td><td class="r">$625B</td><td class="r">9.5%</td><td class="r">20.7%</td><td class="r">$115.9B</td><td class="r">$32.9B</td><td class="r">$63.0B</td><td class="r">0.22</td><td class="r">1.06</td><td class="r">$2.35T</td><td class="r">1,556,000</td><td class="r">$0.41M</td><td class="r">39.7</td></tr><tr class="row-health"><td class="l">UnitedHealth Group</td><td class="l">2024-12-31</td><td class="r">$400.3B</td><td class="r">7.7%</td><td class="r">$15.2B</td><td class="r">3.8%</td><td class="r">8.1%</td><td class="r">$298B</td><td class="r">5.1%</td><td class="r">15.5%</td><td class="r">$24.2B</td><td class="r">$20.7B</td><td class="r">$76.9B</td><td class="r">0.78</td><td class="r">0.83</td><td class="r">$290B</td><td class="r">440,000</td><td class="r">$0.91M</td><td class="r">19.0</td></tr><tr class="row-tech"><td class="l">Apple</td><td class="l">2024-09-28</td><td class="r">$391.0B</td><td class="r">2.0%</td><td class="r">$93.7B</td><td class="r">24.0%</td><td class="r">31.5%</td><td class="r">$365B</td><td class="r">25.7%</td><td class="r">164.6%</td><td class="r">$118.3B</td><td class="r">$108.8B</td><td class="r">$107.6B</td><td class="r">1.89</td><td class="r">0.87</td><td class="r">$3.20T</td><td class="r">164,000</td><td class="r">$2.38M</td><td class="r">34.1</td></tr><tr class="row-health"><td class="l">CVS Health</td><td class="l">2024-12-31</td><td class="r">$372.8B</td><td class="r">4.2%</td><td class="r">$4.6B</td><td class="r">1.2%</td><td class="r">2.3%</td><td class="r">$253B</td><td class="r">1.8%</td><td class="r">6.1%</td><td class="r">$9.1B</td><td class="r">$6.3B</td><td class="r">$2.1B</td><td class="r">0.03</td><td class="r">0.81</td><td class="r">$85B</td><td class="r">300,000</td><td class="r">$1.24M</td><td class="r">18.4</td></tr><tr class="row-holdco"><td class="l">Berkshire Hathaway</td><td class="l">2024-12-31</td><td class="r">$371.4B</td><td class="r">1.9%</td><td class="r">$89.6B</td><td class="r">24.1%</td><td class="r">—</td><td class="r">$1,154B</td><td class="r">7.8%</td><td class="r">13.7%</td><td class="r">$30.6B</td><td class="r">$11.6B</td><td class="r">$0.0B</td><td class="r">0.00</td><td class="r">—</td><td class="r">$1.00T</td><td class="r">392,000</td><td class="r">$0.95M</td><td class="r">11.2</td></tr><tr class="row-tech"><td class="l">Alphabet</td><td class="l">2024-12-31</td><td class="r">$350.0B</td><td class="r">13.9%</td><td class="r">$100.1B</td><td class="r">28.6%</td><td class="r">32.1%</td><td class="r">$450B</td><td class="r">22.2%</td><td class="r">30.8%</td><td class="r">$125.3B</td><td class="r">$72.8B</td><td class="r">$13.0B</td><td class="r">0.04</td><td class="r">1.84</td><td class="r">$2.10T</td><td class="r">183,000</td><td class="r">$1.91M</td><td class="r">21.0</td></tr><tr class="row-energy"><td class="l">Exxon Mobil</td><td class="l">2024-12-31</td><td class="r">$349.6B</td><td class="r">1.5%</td><td class="r">$35.1B</td><td class="r">10.0%</td><td class="r">—</td><td class="r">$453B</td><td class="r">7.7%</td><td class="r">13.0%</td><td class="r">$55.0B</td><td class="r">$30.7B</td><td class="r">$5.0B</td><td class="r">0.02</td><td class="r">1.31</td><td class="r">$480B</td><td class="r">61,000</td><td class="r">$5.73M</td><td class="r">13.7</td></tr><tr class="row-health"><td class="l">McKesson</td><td class="l">2024-03-31</td><td class="r">$309.0B</td><td class="r">11.7%</td><td class="r">$3.2B</td><td class="r">1.0%</td><td class="r">1.3%</td><td class="r">$67B</td><td class="r">4.7%</td><td class="r">—</td><td class="r">$4.3B</td><td class="r">$3.6B</td><td class="r">$5.6B</td><td class="r">—</td><td class="r">0.92</td><td class="r">$88B</td><td class="r">51,000</td><td class="r">$6.06M</td><td class="r">27.8</td></tr><tr class="row-health"><td class="l">Cencora</td><td class="l">2024-09-30</td><td class="r">$294.0B</td><td class="r">12.1%</td><td class="r">$1.5B</td><td class="r">0.5%</td><td class="r">0.7%</td><td class="r">$67B</td><td class="r">2.3%</td><td class="r">193.1%</td><td class="r">$3.5B</td><td class="r">$3.0B</td><td class="r">$5.0B</td><td class="r">6.31</td><td class="r">0.88</td><td class="r">$57B</td><td class="r">46,000</td><td class="r">$6.39M</td><td class="r">37.5</td></tr></tbody></table></div>
+    <p class="footnote">Source: SEC EDGAR <code>data.sec.gov/api/xbrl/companyfacts</code>, retrieved 2025-01-31 reporting cycle. Figures reflect each company's Fortune-2025 fiscal year. Net income is as-reported total (us-gaap:NetIncomeLoss / ProfitLoss). Gross margin shown only where companies tag GrossProfit. Market capitalization and headcount are approximate mid-2025 estimates supplied from general knowledge, not from SEC filings, and should be replaced with live market data for any decision use.</p>
+  </section>
+
+</div>
+
+<div id="tip" role="tooltip" aria-hidden="true"></div>
+<script>
+(function(){
+  var tip=document.getElementById('tip');
+  function show(e){
+    var d=e.currentTarget.dataset;
+    tip.innerHTML='<span class="tt-l">'+d.label+'</span>'+
+      '<span class="tt-v">'+d.value+'</span>'+
+      (d.sub?'<span class="tt-s">'+d.sub+'</span>':'');
+    tip.classList.add('on'); move(e);
+  }
+  function move(e){
+    var r=tip.getBoundingClientRect();
+    var nx=e.clientX+14, ny=e.clientY+14;
+    if(nx+r.width>window.innerWidth-8) nx=e.clientX-r.width-14;
+    if(ny+r.height>window.innerHeight-8) ny=e.clientY-r.height-14;
+    tip.style.left=nx+'px'; tip.style.top=ny+'px';
+  }
+  function hide(){ tip.classList.remove('on'); }
+  document.querySelectorAll('[data-label]').forEach(function(el){
+    el.addEventListener('mouseenter',show);
+    el.addEventListener('mousemove',move);
+    el.addEventListener('mouseleave',hide);
+  });
+})();
+</script>
+</body>
+</html>
